@@ -1,0 +1,26 @@
+{
+  "name": "plantodo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "planToDO — upload HTML plans and get a shareable URL",
+  "scripts": {
+    "dev": "pnpm -F @ptd/web dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm -F @ptd/web build",
+    "build:cli": "pnpm -F @ptd/cli build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.9.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}

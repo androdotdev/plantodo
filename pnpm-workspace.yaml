@@ -1,0 +1,13 @@
+packages:
+  - "web"
+  - "cli"
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: set this to true or false
+  sharp: true
+  unrs-resolver: true
+
+catalog:
+  typescript: 6.0.3
+  "@types/node": 26.0.1
