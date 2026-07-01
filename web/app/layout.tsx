@@ -14,8 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "planToDO — upload HTML plans, get a shareable URL",
-  description:
-    "Upload HTML plans and get a shareable URL. Manage drafts with the CLI or API.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "planToDO",
+    description: "Upload HTML plans and get a shareable URL.",
+    images: [{ url: "/me-og.png", width: 1200, height: 630 }],
+  },
 };
 
 export default function RootLayout({

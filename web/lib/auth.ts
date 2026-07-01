@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
-import { resend } from "@/lib/email"
 import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
@@ -15,15 +14,25 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
-    sendVerificationEmail: async ({user, url}, request) => {
-      await resend.emails.send({
-        from: "ptd <noreplay@mail.andro42.qzz.io>",
-        to: user.email,
-        subject: "Verify your email address",
-        html: `<a href="${url}">Verify Email</a>`,
-      })
-    }
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      try {
+        const res = await fetch(`${process.env.BETTER_AUTH_URL}/api/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email,
+            name: user.name ?? "",
+            url,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          console.error("sendVerificationEmail failed", res.status, err);
+        }
+      } catch (e) {
+        console.error("sendVerificationEmail error", e);
+      }
+    },
   },
 });
-
-
