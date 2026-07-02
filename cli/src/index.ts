@@ -1,28 +1,121 @@
-// planToDO CLI — upload / delete / list plans
-// Usage: ptd <command> [options]
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { Command } from "commander";
 
-const commands = ["upload", "delete", "list"] as const;
+import { loadConfig, saveConfig } from "./config.js";
+
+const config = loadConfig();
+const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
+const BASE_URL = (process.env.PTD_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
+async function api(path: string, init?: RequestInit) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      ...init?.headers,
+      "x-api-key": API_KEY,
+      "Content-Type": "application/json",
+    },
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    console.error(
+      `Error ${res.status}:`,
+      body.error ?? body.message ?? JSON.stringify(body),
+    );
+    process.exit(1);
+  }
+  return body;
+}
+
+const program = new Command()
+  .name("ptd")
+  .description("planToDO CLI — upload, list, delete, and replace plans")
+  .version("0.1.0");
+
+program
+  .command("upload <file>")
+  .description("Upload an HTML plan file")
+  .action(async (file: string) => {
+    const html = readFileSync(resolve(file), "utf-8");
+    const result = await api("/api/plans", {
+      method: "POST",
+      body: JSON.stringify({ html, title: file }),
+    });
+    console.log(result.url);
+  });
+
+program
+  .command("list")
+  .alias("ls")
+  .description("List your plans")
+  .action(async () => {
+    const plans = await api("/api/plans");
+    if (plans.length === 0) {
+      console.log("No plans found.");
+      return;
+    }
+    for (const p of plans) {
+      const title = p.title || "(untitled)";
+      const created = new Date(p.createdAt).toLocaleDateString();
+      console.log(`${p.id}  ${title}  ${created}`);
+    }
+  });
+
+program
+  .command("delete <id>")
+  .description("Delete a plan")
+  .action(async (id: string) => {
+    await api(`/api/plans/${id}`, { method: "DELETE" });
+    console.log(`Deleted ${id}`);
+  });
+
+program
+  .command("replace <id> <file>")
+  .description("Replace a plan with a new HTML file (preserves ID)")
+  .action(async (id: string, file: string) => {
+    const html = readFileSync(resolve(file), "utf-8");
+    const result = await api(`/api/plans/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ html }),
+    });
+    console.log(result.url);
+  });
+
+program
+  .command("setup")
+  .description("Save API key to ~/.ptd/config.json")
+  .option("-k, --key <key>", "API key (prompts if omitted)")
+  .action(async () => {
+    let key = program.opts().key as string | undefined;
+    if (!key) {
+      console.log(`Get your API key from: ${BASE_URL}/dashboard`);
+      const buf = await new Promise<string>((resolve) => {
+        process.stdout.write("Enter your API key: ");
+        process.stdin.setEncoding("utf-8");
+        process.stdin.once("data", (d) => resolve(d.trim()));
+      });
+      key = buf;
+    }
+    if (!key) {
+      console.error("No API key provided");
+      process.exit(1);
+    }
+    saveConfig({ api_key: key });
+    console.log("✓ saved to ~/.ptd/config.json");
+  });
 
 async function main() {
-  const [cmd, ...args] = process.argv.slice(2);
-
-  switch (cmd) {
-    case "upload":
-      console.log("upload — not implemented yet");
-      break;
-    case "delete":
-      console.log("delete — not implemented yet");
-      break;
-    case "list":
-      console.log("list — not implemented yet");
-      break;
-    default:
-      console.log(`Usage: ptd <${commands.join("|")}> [options]`);
-      process.exit(1);
+  if (!API_KEY) {
+    console.error(
+      "Set PTD_API_KEY or run 'ptd setup' to configure your API key.",
+    );
+    process.exit(1);
   }
+  await program.parseAsync(process.argv);
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

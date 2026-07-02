@@ -1,0 +1,23 @@
+# planToDO
+
+Upload HTML plans and get a shareable URL.
+
+## Stack
+- Next.js 16 App Router, Drizzle ORM, Neon Postgres
+- Better Auth (Google OAuth only) + `@better-auth/api-key` plugin
+- Backblaze B2 object storage
+- CLI: ptd/plantodo (npm package)
+
+## Key files
+- `web/lib/auth.ts` — Better Auth config
+- `web/lib/auth-client.ts` — auth client
+- `web/db/schema.ts` — Drizzle schema (6 tables)
+- `web/lib/b2.ts` — B2 S3 client
+- `web/app/page.tsx` — landing page + Google sign-in
+- `web/app/dashboard/page.tsx` — API key management UI
+
+## Auth flow
+1. User lands on `/` → clicks "Continue with Google"
+2. Google OAuth → Better Auth creates user + session
+3. Redirect to `/dashboard` → user creates API keys
+4. CLI uses Bearer token → `auth.api.verifyApiKey()` on plan API routes

@@ -2,118 +2,132 @@
 
 ## Overview
 
-planToDO lets users upload HTML plans and get a shareable URL. v2 adds:
-- DB-backed auth (API tokens) via `tokens` table
-- Draft limits per token
-- User-defined slugs
-- **Object storage** for plan HTML (R2 or B2) instead of cramming blobs into Postgres
+Upload HTML plans and get a shareable URL. Manage drafts via CLI or API.
 
 ## Architecture
 
 Monorepo (pnpm workspace, `@ptd` scope):
 
-- **web/** — `@ptd/web` — Next.js 15 app (App Router). Contains all API routes + public plan viewer.
-- **cli/** — `@ptd/cli` — npm package (`plantodo` / `ptd`). `npx plantodo upload/delete/list`.
-- **db/** — `@ptd/db` — shared Drizzle ORM schema + S3-compatible (R2/B2) storage helpers.
+- **web/** — `@ptd/web` — Next.js 16 (App Router). API routes + dashboard + public plan viewer.
+- **cli/** — `@ptd/cli` — npm package (`plantodo` / `ptd`). `upload`/`delete`/`list`/`replace`.
 
 ## Tech Stack
 
-- **Runtime:** Node 20+, Vercel Edge Runtime
-- **Framework (web):** Next.js 16 (App Router)
-- **Database:** Neon / Vercel Postgres (serverless Postgres)
+- **Runtime:** Node 20+
+- **Framework:** Next.js 16 (App Router)
+- **Database:** Neon (serverless Postgres)
 - **ORM:** Drizzle ORM v0.45 + drizzle-kit v0.31
-- **Object storage:** Cloudflare R2 (primary) / Backblaze B2 (fallback) — S3-compatible SDK
-- **CLI:** Node.js with native fetch, published to npm as both `ptd` and `plantodo`
+- **Auth:** Better Auth — Google OAuth only (no email/password)
+- **API Keys:** Better Auth `@better-auth/api-key` plugin (rate limiting, expiry)
+- **Object storage:** Backblaze B2 (S3-compatible)
+- **CLI:** Node.js native fetch, published as `ptd` / `plantodo`
 - **Package mgr:** pnpm v11
-- **Build:** tsup (cli, db), Next.js (web)
-- **Language:** TypeScript 6.0.3 (catalog)
+- **Build:** tsup (cli), Next.js (web)
+- **Language:** TypeScript 6.0.3
 
 ## Database
 
-Two tables — `tokens` and `plans`.
+5 tables from Better Auth + 1 custom:
 
-### `tokens`
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | TEXT PK | nanoid, acts as Bearer token value |
-| `name` | TEXT | "personal", "project-x" |
-| `plan_limit` | INT DEFAULT 50 | draft limit for this token |
-| `created` | TIMESTAMP | auto-set |
+### Better Auth tables (managed by Drizzle adapter)
+
+| Table | Purpose |
+|-------|---------|
+| `user` | User accounts (Google OAuth) |
+| `session` | Browser sessions |
+| `account` | OAuth provider links |
+| `verification` | (unused — Google-only auth) |
+| `apikey` | API keys with rate limiting, expiry, remaining count |
 
 ### `plans`
+
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | TEXT PK | nanoid |
-| `slug` | TEXT UNIQUE | user-provided or nanoid(8) |
-| `title` | TEXT DEFAULT '' | |
-| `html_key` | TEXT | S3 object key (e.g. `plans/{id}.html`) — HTML lives in R2/B2 |
-| `token_id` | TEXT FK → tokens.id | owner |
-| `created` | TIMESTAMP | auto-set |
-| `updated` | TIMESTAMP | set to NOW() on upsert |
-| `views` | INT DEFAULT 0 | incremented on every `GET /p/:slug` |
-
-> **Note:** `html` column was originally a TEXT blob in Postgres. Moving to object storage keeps the DB lean and saves on row size limits / cost.
+| `b2_key` | TEXT | B2 object key (e.g. `plans/{id}.html`) |
+| `key_id` | TEXT FK → apikey.id | Owner API key (cascade delete) |
+| `created_at` | TIMESTAMP | auto-set |
+| `updated_at` | TIMESTAMP | auto-updated |
 
 ## API Endpoints
 
-All mutating endpoints require `Authorization: Bearer <token>` header.
+### Auth (Better Auth — see [docs](https://better-auth.com))
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/upload` | Bearer token | Upload plan HTML → `{ url, id }`. Writes HTML to R2/B2, inserts row. |
-| DELETE | `/api/delete` | Bearer token | Delete plan by slug. Removes object from R2/B2 + deletes row. |
-| GET | `/api/plans` | Bearer token | List user's plans (metadata only, no HTML body). |
-| GET | `/p/:slug` | public | Fetch HTML from R2/B2 by `html_key` and serve it. |
+| GET/POST | `/api/auth/*` | — | Google OAuth, session, callback |
 
-## Slug Rules
+### API Key Management (dashboard)
 
-- Must match `/^[a-z0-9-]{1,48}$/`
-- Must be unique per DB
-- Falls back to nanoid(8) if not provided
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/keys` | Session | Create a new API key |
+| GET | `/api/keys` | Session | List user's API keys |
+| DELETE | `/api/keys/:id` | Session | Revoke an API key |
+
+### Plans
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/plans` | Bearer token | Upload plan HTML |
+| GET | `/api/plans` | Bearer token | List plans |
+| DELETE | `/api/plans/:id` | Bearer token | Delete one plan |
+| DELETE | `/api/plans` | Bearer token | Delete all plans |
+| GET | `/p/:slug` | public | Serve plan HTML from B2 |
 
 ## CLI Usage
 
 ```bash
-npx plantodo upload plan.html --slug my-plan
-npx plantodo delete my-plan
-npx plantodo list
-# or the shorter alias:
-npx ptd upload plan.html --slug my-plan
+npm i -g plantodo
+ptd upload index.html
+ptd ls
+ptd replace <plan-id> <new-index.html>
+ptd del <plan-id>
 ```
+
+## Page Routes
+
+| Path | Auth | Content |
+|------|------|---------|
+| `/` | public | Landing page + Google sign-in |
+| `/dashboard` | session | API key management (generate, list, revoke) |
+
+## Env Vars
+
+### Required
+- `DATABASE_URL` — Neon Postgres connection string
+- `BETTER_AUTH_SECRET` — Better Auth secret
+- `BETTER_AUTH_URL` — e.g. `http://localhost:3000`
+- `NEXT_PUBLIC_BETTER_AUTH_URL` — same for client
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
+- `B2_REGION` / `B2_BUCKET` — Backblaze B2 config
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — B2 application key
+
+### Orphan (can remove)
+- `RESEND_API_KEY` — no longer used
+- `EMAIL_FROM` — no longer used
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — unused
 
 ## Key Conventions
 
-- Plan HTML is stored in **R2 (preferred) or B2** — the DB only holds the S3 object key (`html_key`).
-- URL format: `https://plantodo.vercel.app/p/{slug}`
-- Token is generated as nanoid and stored in the `tokens` table — user shares it via env var.
-- Draft limit enforced per token (not globally).
-- `updated` timestamp is set to `NOW()` on upsert.
-- Views counter is incremented on every `GET /p/:slug`.
-- `@aws-sdk/client-s3` used for S3-compatible object storage (R2 / B2).
-- Env vars: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_ENDPOINT` (or `B2_*` equivalents).
+- API keys use Better Auth `apikey` plugin — dashboard creates them, plan API routes verify via `auth.api.verifyApiKey()`
+- Plan HTML stored in B2, DB only holds `b2_key`
+- Google OAuth is the only sign-in method
+- Rate limiting built into API key plugin (default: 10 req/day window)
 
 ## Dev Workflow
 
 ```bash
 pnpm install
-pnpm -C db build          # build shared schema + storage helpers
-pnpm -C db db:generate    # generate Drizzle migrations
-pnpm -C db db:push        # push schema to local Postgres
-pnpm -C web dev           # Next.js dev server
-pnpm -C cli build         # build CLI
-tsup
-pnpm -r test              # run all tests
+pnpm -C web db:generate    # generate Drizzle migration
+pnpm -C web db:migrate     # apply migration to DB
+pnpm -C web dev            # Next.js dev server
+pnpm -C cli build          # build CLI
+pnpm -r test               # run all tests
 ```
 
 ## Deployment
 
-- **Web:** `vercel --prod` from `web/` — deploys Next.js app (ensure R2/B2 env vars are set)
-- **CLI:** `npm publish` from `cli/` — publishes CLI to npm
-
-## Related
-
-- Agent usage: see `SKILL.md` for how Hermes interacts with planToDO.
-- llms.txt at repo root for LLM context.
-
-
-
+- **Web:** `vercel --prod` from `web/` — ensure all env vars set on Vercel
+- **CLI:** `npm publish` from `cli/`

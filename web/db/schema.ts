@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -12,6 +11,7 @@ export const plans = pgTable("plans", {
   id: text("id").primaryKey(),
   b2Key: text("b2_key").notNull(),
   keyId: text("key_id").notNull().references(() => apikey.id, { onDelete: "cascade"}),
+  title: text("title").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -121,23 +121,3 @@ export const apikey = pgTable(
     index("apikey_key_idx").on(table.key),
   ],
 );
-
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
-

@@ -28,7 +28,11 @@
     "lint": "echo \"No linter configured\" && exit 0"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "tsup": "^8.5.1",
     "typescript": "catalog:"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
   }
 }
