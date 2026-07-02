@@ -15,9 +15,16 @@ Upload HTML plans and get a shareable URL.
 - `web/lib/b2.ts` — B2 S3 client
 - `web/app/page.tsx` — landing page + Google sign-in
 - `web/app/dashboard/page.tsx` — API key management UI
+- `cli/src/index.ts` — CLI entrypoint (commander)
+- `cli/src/config.ts` — config file loader/saver
 
 ## Auth flow
-1. User lands on `/` → clicks "Continue with Google"
-2. Google OAuth → Better Auth creates user + session
-3. Redirect to `/dashboard` → user creates API keys
-4. CLI uses Bearer token → `auth.api.verifyApiKey()` on plan API routes
+1. User signs in with Google via landing page
+2. Session cookie for dashboard
+3. Dashboard generates API keys
+4. CLI uses `x-api-key` header → `auth.api.verifyApiKey()` on plan routes
+
+## API auth
+- Dashboard routes: session cookie
+- Plan/CLI routes: `x-api-key` header (verified via Better Auth `verifyApiKey`)
+- Public viewer `/p/:id`: no auth
