@@ -7,12 +7,12 @@ export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
-  const keys = await auth.api.listApiKeys({
+  const { apiKeys } = await auth.api.listApiKeys({
     query: { },
     headers: await headers()
   })
 
-  return NextResponse.json({ keys })
+  return NextResponse.json({ keys: apiKeys })
 }
 
 // POST /api/keys
