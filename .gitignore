@@ -43,5 +43,3 @@ next-env.d.ts
 
 # turbo
 .turbo/
-pnpm-lock.yaml
-pnpm-workspace.yaml
