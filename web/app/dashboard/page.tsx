@@ -56,7 +56,8 @@ export default function Dashboard() {
   async function fetchKeys() {
     const res = await fetch("/api/keys");
     if (res.ok) {
-      setKeys(await res.json());
+      const data = await res.json();
+      setKeys(data.keys ?? []);
     }
     setLoading(false);
   }
