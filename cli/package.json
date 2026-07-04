@@ -1,7 +1,6 @@
 {
-  "name": "@ptd/cli",
+  "name": "plantodo",
   "version": "0.1.0",
-  "private": true,
   "description": "planToDO — CLI tool to upload/delete/list plans",
   "type": "module",
   "bin": {
