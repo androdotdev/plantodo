@@ -49,7 +49,7 @@ async function api(path, init) {
   }
   return body;
 }
-var program = new Command().name("ptd").description("planToDO CLI \u2014 upload, list, delete, and replace plans").version("0.1.0");
+var program = new Command().name("ptd").description("PostHTML CLI \u2014 upload, list, delete, and replace plans").version("0.1.0");
 program.command("upload <file>").description("Upload an HTML plan file").action(async (file) => {
   const html = readFileSync2(resolve2(file), "utf-8");
   const result = await api("/api/plans", {

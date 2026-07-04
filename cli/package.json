@@ -1,9 +1,14 @@
 {
-  "name": "posthtml",
+  "name": "@androff/posthtml-cli",
   "version": "0.1.0",
   "description": "PostHTML — CLI tool to upload/delete/list plans",
   "license": "MIT",
-  "keywords": ["plantodo", "ptd", "plans", "html"],
+  "keywords": [
+    "plantodo",
+    "ptd",
+    "plans",
+    "html"
+  ],
   "homepage": "https://posthtml.vercel.app",
   "repository": {
     "type": "git",
@@ -40,5 +45,8 @@
   },
   "dependencies": {
     "commander": "^15.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
