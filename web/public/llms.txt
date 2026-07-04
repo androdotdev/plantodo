@@ -31,7 +31,7 @@ Upload HTML plans and get a shareable URL.
 
 ### CLI
 ```bash
-npm install -g posthtml
+npm install -g @androff/posthtml-cli
 ```
 
 Configure your API key:

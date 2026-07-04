@@ -3,7 +3,7 @@
 CLI tool to upload HTML plans and get a shareable URL.
 
 ```
-npm install -g posthtml
+npm install -g @androff/posthtml-cli
 ```
 
 ## Usage

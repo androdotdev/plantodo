@@ -58,7 +58,7 @@ After upload, the plan is viewable at `https://posthtml.vercel.app/p/{id}` (no a
 ## CLI
 
 ```bash
-npm i -g posthtml
+npm i -g @androff/posthtml-cli
 
 ptd setup --key <key>    # save key to ~/.ptd/config.json
 ptd upload index.html     # upload and get URL
