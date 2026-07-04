@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 interface ApiKey {
   id: string;
   name: string | null;
-  key: string;
   start: string;
   lastRequest: string | null;
   createdAt: string;
@@ -17,10 +16,6 @@ interface ApiKey {
 
 interface NewKeyForm {
   name: string;
-}
-function maskKey(key: string): string {
-  if (key.length <= 10) return key;
-  return `${key.slice(0, 7)}...${key.slice(-4)}`;
 }
 
 function formatDate(iso: string): string {
@@ -203,7 +198,7 @@ export default function Dashboard() {
                       {k.name || <span className="text-zinc-500 italic">unnamed</span>}
                     </span>
                     <code className="text-xs font-mono text-zinc-500 select-all">
-                      {k.key.length > 10 ? maskKey(k.key) : k.key}
+                      {k.start}
                     </code>
                   </div>
                   <p className="mt-1 text-xs text-zinc-600">
@@ -213,7 +208,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => copy(k.key)}
+                    onClick={() => copy(k.start)}
                     className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
                   >
                     Copy

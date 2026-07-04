@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!name?.trim()) {
     return NextResponse.json({ error: "name is required" }, { status: 400 })
   }
-  const key = await auth.api.createApiKey({
+  const { key: keyString } = await auth.api.createApiKey({
     body: {
       name: name,
       prefix: "ptd",
@@ -33,5 +33,5 @@ export async function POST(req: NextRequest) {
     }
   })
 
-  return NextResponse.json({ key })
+  return NextResponse.json({ key: keyString })
 }
