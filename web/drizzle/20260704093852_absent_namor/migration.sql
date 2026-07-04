@@ -1,0 +1,1 @@
+ALTER TABLE "plans" RENAME COLUMN "b2_key" TO "html";
