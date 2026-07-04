@@ -1,6 +1,6 @@
-# planToDO Agent Skill
+# PostHTML Agent Skill
 
-An AI agent can interact with planToDO via its HTTP API.
+An AI agent can interact with PostHTML via its HTTP API.
 
 ## Authentication
 
@@ -58,7 +58,7 @@ After upload, the plan is viewable at `https://posthtml.vercel.app/p/{id}` (no a
 ## CLI
 
 ```bash
-npm i -g plantodo
+npm i -g posthtml
 
 ptd setup --key <key>    # save key to ~/.ptd/config.json
 ptd upload index.html     # upload and get URL

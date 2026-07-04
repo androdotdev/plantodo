@@ -1,8 +1,8 @@
 {
-  "name": "@ptd/web",
+  "name": "@posthtml/web",
   "version": "0.1.0",
   "private": true,
-  "description": "planToDO — Next.js web app",
+  "description": "PostHTML — Next.js web app",
   "dependencies": {
     "@better-auth/api-key": "^1.6.23",
     "@better-auth/drizzle-adapter": "^1.6.22",

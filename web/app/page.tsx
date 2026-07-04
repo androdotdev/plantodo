@@ -32,9 +32,9 @@ export default function Home() {
       <div className="hidden lg:flex flex-1 flex-col justify-center px-16 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
         <div className="max-w-md">
           <div className="flex items-center gap-3">
-            <img src="/icon.svg" alt="planToDO logo" className="h-10 w-10" />
+            <img src="/icon.svg" alt="PostHTML logo" className="h-10 w-10" />
             <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-              planToDO
+              PostHTML
             </h1>
           </div>
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -42,7 +42,7 @@ export default function Home() {
             CLI or API.
           </p>
           <code className="mt-6 inline-block rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 font-mono">
-            npm i -g plantodo &amp;&amp; ptd upload index.html
+            npm i -g posthtml &amp;&amp; ptd upload index.html
           </code>
         </div>
       </div>
@@ -53,9 +53,9 @@ export default function Home() {
           {/* Mobile heading */}
           <div className="lg:hidden mb-10 text-center">
             <div className="flex items-center justify-center gap-2">
-              <img src="/icon.svg" alt="planToDO logo" className="h-8 w-8" />
+              <img src="/icon.svg" alt="PostHTML logo" className="h-8 w-8" />
               <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                planToDO
+                PostHTML
               </h1>
             </div>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">

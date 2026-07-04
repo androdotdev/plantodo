@@ -1,11 +1,11 @@
-# planToDO
+# PostHTML
 
 Upload HTML plans and get a shareable URL.
 
 ## Stack
 - Next.js 16 App Router, Drizzle ORM, Neon Postgres
 - Better Auth (Google OAuth only) + `@better-auth/api-key` plugin
-- CLI: ptd/plantodo (npm package)
+- CLI: ptd/posthtml (npm package)
 
 ## Key files
 - `web/lib/auth.ts` — Better Auth config
@@ -31,7 +31,7 @@ Upload HTML plans and get a shareable URL.
 
 ### CLI
 ```bash
-npm install -g plantodo
+npm install -g posthtml
 ```
 
 Configure your API key:

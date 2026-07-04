@@ -114,7 +114,7 @@ export default function Dashboard() {
         <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
-            <span className="font-semibold text-sm">planToDO</span>
+            <span className="font-semibold text-sm">PostHTML</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs text-zinc-500">{session?.user?.email}</span>

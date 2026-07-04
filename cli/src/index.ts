@@ -30,7 +30,7 @@ async function api(path: string, init?: RequestInit) {
 
 const program = new Command()
   .name("ptd")
-  .description("planToDO CLI — upload, list, delete, and replace plans")
+  .description("PostHTML CLI — upload, list, delete, and replace plans")
   .version("0.1.0");
 
 program

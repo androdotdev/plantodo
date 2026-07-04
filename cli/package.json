@@ -1,11 +1,10 @@
 {
-  "name": "plantodo",
+  "name": "posthtml",
   "version": "0.1.0",
-  "description": "planToDO — CLI tool to upload/delete/list plans",
+  "description": "PostHTML — CLI tool to upload/delete/list plans",
   "type": "module",
   "bin": {
-    "ptd": "./dist/index.js",
-    "plantodo": "./dist/index.js"
+    "ptd": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

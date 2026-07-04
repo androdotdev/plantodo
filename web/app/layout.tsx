@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "planToDO — upload HTML plans, get a shareable URL",
+  title: "PostHTML — upload HTML plans, get a shareable URL",
   icons: {
     icon: "/icon.svg",
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "planToDO",
+    title: "PostHTML",
     description: "Upload HTML plans and get a shareable URL.",
     images: [{ url: "/me-og.png", width: 1200, height: 630 }],
   },
