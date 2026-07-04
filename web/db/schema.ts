@@ -9,7 +9,7 @@ import {
 
 export const plans = pgTable("plans", {
   id: text("id").primaryKey(),
-  b2Key: text("b2_key").notNull(),
+  html: text("html").notNull(),
   keyId: text("key_id").notNull().references(() => apikey.id, { onDelete: "cascade"}),
   title: text("title").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),

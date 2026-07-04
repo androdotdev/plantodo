@@ -3,7 +3,6 @@ import { nanoid } from "nanoid";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { plans } from "@/db/schema";
-import { b2 } from "@/lib/b2";
 import { eq } from "drizzle-orm";
 
 const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
@@ -30,15 +29,11 @@ export async function POST(request: NextRequest) {
   if (!html || typeof html !== "string") {
     return NextResponse.json({ error: "html is required" }, { status: 400 });
   }
-
   const id = nanoid(16);
-  const b2Key = `plans/${id}.html`;
-
-  await b2.upload(b2Key, html);
 
   await db.insert(plans).values({
     id,
-    b2Key,
+    html,
     keyId: apiKey.id,
     title: title ?? "",
   });
@@ -60,7 +55,6 @@ export async function GET(request: NextRequest) {
     .select({
       id: plans.id,
       title: plans.title,
-      b2Key: plans.b2Key,
       createdAt: plans.createdAt,
       updatedAt: plans.updatedAt,
     })
@@ -77,16 +71,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userPlans = await db
-    .select({ id: plans.id, b2Key: plans.b2Key })
-    .from(plans)
-    .where(eq(plans.keyId, apiKey.id));
-
-  // Delete from B2
-  await Promise.all(userPlans.map((p) => b2.delete(p.b2Key).catch(() => {})));
-
-  // Delete from DB
   await db.delete(plans).where(eq(plans.keyId, apiKey.id));
-
-  return NextResponse.json({ success: true, deleted: userPlans.length });
+  return NextResponse.json({ success: true });
 }

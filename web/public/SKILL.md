@@ -26,7 +26,7 @@ GET /api/plans
 x-api-key: <key>
 ```
 
-Returns `[{ id, title, b2Key, createdAt, updatedAt }]`.
+Returns `[{ id, title, createdAt, updatedAt }]`.
 
 ### Replace plan content (preserves ID and URL)
 ```
@@ -53,7 +53,7 @@ x-api-key: <key>
 
 ## Plan URL
 
-After upload, the plan is viewable at `https://plantodo.vercel.app/p/{id}` (no auth needed).
+After upload, the plan is viewable at `https://posthtml.vercel.app/p/{id}` (no auth needed).
 
 ## CLI
 
@@ -65,4 +65,8 @@ ptd upload index.html     # upload and get URL
 ptd list                  # list plans
 ptd delete <id>           # delete plan
 ptd replace <id> file.html # replace content, same URL
+```
+## Quick test
+```bash
+PTD_URL=https://posthtml.vercel.app PTD_API_KEY=<your-key> ptd list
 ```

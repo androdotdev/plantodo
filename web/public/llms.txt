@@ -5,14 +5,12 @@ Upload HTML plans and get a shareable URL.
 ## Stack
 - Next.js 16 App Router, Drizzle ORM, Neon Postgres
 - Better Auth (Google OAuth only) + `@better-auth/api-key` plugin
-- Backblaze B2 object storage
 - CLI: ptd/plantodo (npm package)
 
 ## Key files
 - `web/lib/auth.ts` — Better Auth config
 - `web/lib/auth-client.ts` — auth client
 - `web/db/schema.ts` — Drizzle schema (6 tables)
-- `web/lib/b2.ts` — B2 S3 client
 - `web/app/page.tsx` — landing page + Google sign-in
 - `web/app/dashboard/page.tsx` — API key management UI
 - `cli/src/index.ts` — CLI entrypoint (commander)
@@ -28,3 +26,30 @@ Upload HTML plans and get a shareable URL.
 - Dashboard routes: session cookie
 - Plan/CLI routes: `x-api-key` header (verified via Better Auth `verifyApiKey`)
 - Public viewer `/p/:id`: no auth
+
+## Installation
+
+### CLI
+```bash
+npm install -g plantodo
+```
+
+Configure your API key:
+```bash
+ptd setup --key <your-key>
+# or set env vars:
+export PTD_API_KEY=<your-key>
+export PTD_URL=https://posthtml.vercel.app
+```
+
+### Commands
+```bash
+ptd upload index.html     # upload a plan
+ptd list                  # list your plans
+ptd delete <id>           # delete a plan
+ptd replace <id> file.html # update plan content
+```
+## Quick test
+```bash
+PTD_URL=https://posthtml.vercel.app PTD_API_KEY=<your-key> ptd list
+```

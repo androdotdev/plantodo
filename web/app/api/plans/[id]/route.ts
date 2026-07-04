@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { plans } from "@/db/schema";
-import { b2 } from "@/lib/b2";
 import { eq } from "drizzle-orm";
 
 async function verifyKey(request: NextRequest) {
@@ -29,7 +28,7 @@ export async function DELETE(
   const { id } = await params;
 
   const plan = await db
-    .select({ b2Key: plans.b2Key, keyId: plans.keyId })
+    .select({ keyId: plans.keyId })
     .from(plans)
     .where(eq(plans.id, id))
     .then((rows) => rows[0]);
@@ -42,10 +41,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await Promise.all([
-    b2.delete(plan.b2Key).catch(() => {}),
-    db.delete(plans).where(eq(plans.id, id)),
-  ]);
+  await db.delete(plans).where(eq(plans.id, id));
 
   return NextResponse.json({ success: true });
 }
@@ -67,7 +63,7 @@ export async function PATCH(
   }
 
   const plan = await db
-    .select({ b2Key: plans.b2Key, keyId: plans.keyId })
+    .select({ keyId: plans.keyId })
     .from(plans)
     .where(eq(plans.id, id))
     .then((rows) => rows[0]);
@@ -80,8 +76,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await b2.upload(plan.b2Key, html);
-  await db.update(plans).set({}).where(eq(plans.id, id));
+  await db.update(plans).set({ html }).where(eq(plans.id, id));
 
   const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
   return NextResponse.json({ id, url: `${BASE_URL}/p/${id}` });
