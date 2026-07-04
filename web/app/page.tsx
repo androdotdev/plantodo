@@ -27,10 +27,10 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-1 w-full">
-      {/* Hero */}
-      <div className="hidden lg:flex flex-1 flex-col justify-center px-16 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-md">
+    <div className="flex flex-col lg:flex-row flex-1 w-full">
+      {/* Hero — always visible */}
+      <div className="flex flex-col justify-center px-6 py-12 lg:px-16 lg:py-0 lg:flex-1 bg-zinc-50 dark:bg-zinc-950 lg:border-r border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-md mx-auto lg:mx-0">
           <div className="flex items-center gap-3">
             <img src="/icon.svg" alt="PostHTML logo" className="h-10 w-10" />
             <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -44,28 +44,22 @@ export default function Home() {
           <code className="mt-6 inline-block rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 font-mono">
             npm i -g @androff/posthtml-cli &amp;&amp; ptd upload index.html
           </code>
-          <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
-            AI agents → <a href="/llms.txt" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">/llms.txt</a>
-          </p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+            <span>
+              AI agents →{" "}
+              <a href="/llms.txt" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">/llms.txt</a>
+            </span>
+            <span>
+              Skill guide →{" "}
+              <a href="/SKILL.md" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">/SKILL.md</a>
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Sign in */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          {/* Mobile heading */}
-          <div className="lg:hidden mb-10 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <img src="/icon.svg" alt="PostHTML logo" className="h-8 w-8" />
-              <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                PostHTML
-              </h1>
-            </div>
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Upload HTML plans &mdash; get a shareable URL.
-            </p>
-          </div>
-
           <button
             type="button"
             onClick={() => authClient.signIn.social({ provider: "google" })}
