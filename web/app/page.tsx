@@ -28,7 +28,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col lg:flex-row flex-1 w-full">
-      {/* Hero — always visible */}
       <div className="flex flex-col justify-center px-6 py-12 lg:px-16 lg:py-0 lg:flex-1 bg-zinc-50 dark:bg-zinc-950 lg:border-r border-zinc-200 dark:border-zinc-800">
         <div className="max-w-md mx-auto lg:mx-0">
           <div className="flex items-center gap-3">
@@ -41,23 +40,45 @@ export default function Home() {
             Upload HTML plans and get a shareable URL. Manage drafts via the
             CLI or API.
           </p>
-          <code className="mt-6 inline-block rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 font-mono">
-            npm i -g @androff/posthtml-cli &amp;&amp; ptd upload index.html
-          </code>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+
+          <div className="mt-8 space-y-3">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Quick start</p>
+            <code className="block rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 font-mono">
+              npm i -g @androff/posthtml-cli &amp;&amp; ptd upload index.html
+            </code>
+          </div>
+
+          <div className="mt-8 space-y-2">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CLI commands</p>
+            <div className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400 font-mono">
+              <div>ptd <span className="text-zinc-500">setup</span> <span className="text-zinc-400"># save API key</span></div>
+              <div>ptd <span className="text-zinc-500">upload</span> <span className="text-zinc-400">index.html</span></div>
+              <div>ptd <span className="text-zinc-500">list</span></div>
+              <div>ptd <span className="text-zinc-500">delete</span> <span className="text-zinc-400">&lt;plan-id&gt;</span></div>
+              <div>ptd <span className="text-zinc-500">replace</span> <span className="text-zinc-400">&lt;plan-id&gt; &lt;file&gt;</span></div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-zinc-500">
             <span>
-              AI agents →{" "}
+              <a href="/AGENTS.md" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">Architecture</a>
+            </span>
+            <span>
               <a href="/llms.txt" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">/llms.txt</a>
             </span>
             <span>
-              Skill guide →{" "}
-              <a href="/SKILL.md" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">/SKILL.md</a>
+              <a href="/SKILL.md" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">Agent skill</a>
             </span>
           </div>
+
+          <p className="mt-8 text-xs text-zinc-400 leading-relaxed">
+            PostHTML stores HTML content directly in the database. Plans are
+            publicly viewable at <code className="text-zinc-500">/p/{"{id}"}</code>.
+            Authentication via Google OAuth + API keys.
+          </p>
         </div>
       </div>
 
-      {/* Sign in */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <button
@@ -73,6 +94,9 @@ export default function Home() {
             </svg>
             Continue with Google
           </button>
+          <p className="mt-3 text-xs text-zinc-500 text-center">
+            Sign in to generate API keys for the CLI.
+          </p>
         </div>
       </div>
     </div>

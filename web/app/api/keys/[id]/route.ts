@@ -24,9 +24,19 @@ export async function PATCH(req: NextRequest, { params }: {params: Promise<{id: 
 
   const body = await req.json()
   const { id } = await params
-  const key = await auth.api.updateApiKey({
-    body: { keyId: id, ...body }
-  })
+
+  const payload: Record<string, unknown> = {
+    keyId: id,
+    ...(body.name !== undefined && { name: body.name }),
+    ...(body.enabled !== undefined && { enabled: body.enabled }),
+    ...(body.remaining !== undefined ? { remaining: body.remaining } : body.unlimited === true ? { remaining: null } : {}),
+    ...(body.expiresIn !== undefined && { expiresIn: body.expiresIn }),
+    ...(body.rateLimitEnabled !== undefined && { rateLimitEnabled: body.rateLimitEnabled }),
+    ...(body.rateLimitMax !== undefined && { rateLimitMax: body.rateLimitMax }),
+    ...(body.rateLimitTimeWindow !== undefined && { rateLimitTimeWindow: body.rateLimitTimeWindow }),
+  }
+
+  const key = await auth.api.updateApiKey({ body: payload as never })
 
   return NextResponse.json({ key })
 }

@@ -9,6 +9,11 @@ interface ApiKey {
   id: string;
   name: string | null;
   start: string;
+  remaining: number | null;
+  rateLimitEnabled: boolean | null;
+  rateLimitMax: number | null;
+  rateLimitTimeWindow: number | null;
+  expiresAt: string | null;
   lastRequest: string | null;
   createdAt: string;
   enabled: boolean;
@@ -16,6 +21,11 @@ interface ApiKey {
 
 interface NewKeyForm {
   name: string;
+  unlimited: boolean;
+  remaining: number;
+  rateLimitEnabled: boolean;
+  rateLimitMax: number;
+  rateLimitTimeWindow: number;
 }
 
 function formatDate(iso: string): string {
@@ -24,6 +34,13 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatTimeWindow(ms: number | null): string {
+  if (!ms) return "";
+  const hours = ms / 3600000;
+  if (hours >= 24) return `${hours / 24}d`;
+  return `${hours}h`;
 }
 
 export default function Dashboard() {
@@ -35,7 +52,19 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<NewKeyForm>();
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
+    defaultValues: {
+      name: "",
+      unlimited: true,
+      remaining: 100,
+      rateLimitEnabled: false,
+      rateLimitMax: 100,
+      rateLimitTimeWindow: 86400000,
+    }
+  });
+
+  const unlimited = watch("unlimited");
+  const rateLimitEnabled = watch("rateLimitEnabled");
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
@@ -62,10 +91,27 @@ export default function Dashboard() {
     setError(null);
     setNewKey(null);
     try {
+      const body: Record<string, unknown> = { name: data.name || undefined };
+
+      if (data.unlimited) {
+        body.unlimited = true;
+      } else {
+        body.unlimited = false;
+        body.remaining = data.remaining;
+      }
+
+      if (data.rateLimitEnabled) {
+        body.rateLimitEnabled = true;
+        body.rateLimitMax = data.rateLimitMax;
+        body.rateLimitTimeWindow = data.rateLimitTimeWindow;
+      } else {
+        body.rateLimitEnabled = false;
+      }
+
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name || undefined }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const body = await res.json();
@@ -109,7 +155,6 @@ export default function Dashboard() {
         backgroundSize: "24px 24px",
       }}
     >
-      {/* Header */}
       <header className="border-b border-zinc-800/60 bg-zinc-900/40 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -129,7 +174,6 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
-        {/* Page title */}
         <div>
           <h1 className="text-lg font-semibold">API Keys</h1>
           <p className="mt-1 text-sm text-zinc-500">
@@ -137,7 +181,6 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* New key banner */}
         {newKey && (
           <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/30 p-4">
             <p className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
@@ -157,30 +200,88 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Generate form */}
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
           <h2 className="text-sm font-medium">Generate New Key</h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex items-end gap-3">
-            <div className="flex-1">
-              <input
-                type="text"
-                {...register("name")}
-                placeholder="Key name (optional)"
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-              />
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  {...register("name")}
+                  placeholder="Key name (optional)"
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg bg-zinc-100 px-5 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 transition-colors shrink-0"
+              >
+                {submitting ? "Generating\u2026" : "Generate Key"}
+              </button>
             </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-zinc-100 px-5 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 transition-colors shrink-0"
-            >
-              {submitting ? "Generating…" : "Generate Key"}
-            </button>
+
+            <details className="group">
+              <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition-colors select-none">
+                Advanced settings
+              </summary>
+              <div className="mt-4 space-y-4 pl-1">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    {...register("unlimited")}
+                    className="rounded border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-zinc-600"
+                  />
+                  <span className="text-sm text-zinc-300">Unlimited usage (no cap)</span>
+                </label>
+
+                {!unlimited && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-zinc-500 w-28 shrink-0">Max uses</label>
+                    <input
+                      type="number"
+                      {...register("remaining", { valueAsNumber: true })}
+                      min={1}
+                      className="w-28 rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                    />
+                  </div>
+                )}
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    {...register("rateLimitEnabled")}
+                    className="rounded border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-zinc-600"
+                  />
+                  <span className="text-sm text-zinc-300">Rate limiting</span>
+                </label>
+
+                {rateLimitEnabled && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-zinc-500 w-28 shrink-0">Max per window</label>
+                    <input
+                      type="number"
+                      {...register("rateLimitMax", { valueAsNumber: true })}
+                      min={1}
+                      className="w-28 rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                    />
+                    <label className="text-xs text-zinc-500">requests per</label>
+                    <select
+                      {...register("rateLimitTimeWindow", { valueAsNumber: true })}
+                      className="rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                    >
+                      <option value={3600000}>hour</option>
+                      <option value={86400000}>day</option>
+                      <option value={604800000}>week</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </details>
           </form>
           {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
 
-        {/* Keys list */}
         {keys.length === 0 ? (
           <div className="rounded-lg border border-zinc-800 p-8 text-center">
             <p className="text-sm text-zinc-500">No API keys yet. Generate one above.</p>
@@ -203,8 +304,21 @@ export default function Dashboard() {
                   </div>
                   <p className="mt-1 text-xs text-zinc-600">
                     Created {formatDate(k.createdAt)}
-                    {k.lastRequest && ` · Last used ${formatDate(k.lastRequest)}`}
+                    {k.lastRequest && ` \u00b7 Last used ${formatDate(k.lastRequest)}`}
                   </p>
+                  {k.remaining !== null && (
+                    <p className="mt-0.5 text-xs text-zinc-600">
+                      {k.remaining} uses remaining
+                    </p>
+                  )}
+                  {k.rateLimitEnabled && (
+                    <p className="mt-0.5 text-xs text-zinc-600">
+                      Rate limit: {k.rateLimitMax}/{formatTimeWindow(k.rateLimitTimeWindow)}
+                    </p>
+                  )}
+                  {!k.enabled && (
+                    <p className="mt-0.5 text-xs text-amber-400">Disabled</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button

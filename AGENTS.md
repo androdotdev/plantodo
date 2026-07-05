@@ -1,4 +1,4 @@
-# planToDO — AGENTS.md
+# PostHTML — AGENTS.md
 
 ## Overview
 
@@ -6,28 +6,27 @@ Upload HTML plans and get a shareable URL. Manage drafts via CLI or API.
 
 ## Architecture
 
-Monorepo (pnpm workspace, `@ptd` scope):
+Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 
-- **web/** — `@ptd/web` — Next.js 16 (App Router). API routes + dashboard + public plan viewer.
-- **cli/** — `@ptd/cli` — npm package (`plantodo` / `ptd`). `upload`/`list`/`delete`/`replace`/`setup`.
+- **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public plan viewer.
+- **cli/** — `@posthtml/cli` — npm package (`ptd`). `upload`/`list`/`delete`/`replace`/`setup`.
 
 ## Tech Stack
 
 - **Runtime:** Node 20+
 - **Framework:** Next.js 16 (App Router)
 - **Database:** Neon (serverless Postgres)
-- **ORM:** Drizzle ORM v0.45 + drizzle-kit v0.31
+- **ORM:** Drizzle ORM v1.0.0-rc.4 + drizzle-kit v1.0.0-rc.4
 - **Auth:** Better Auth — Google OAuth only (no email/password)
 - **API Keys:** Better Auth `@better-auth/api-key` plugin (rate limiting, expiry, refill)
-- **Object storage:** Backblaze B2 (S3-compatible)
-- **CLI:** Commander.js, Node.js fetch, published as `ptd` / `plantodo`
-- **Package mgr:** pnpm v11
+- **CLI:** Commander.js, Node.js fetch, published as `ptd`
+- **Package mgr:** Bun
 - **Build:** tsup (cli), Next.js (web)
 - **Language:** TypeScript 6.0.3
 
 ## Database
 
-5 tables from Better Auth + 1 custom:
+6 tables — 5 Better Auth managed + 1 custom:
 
 ### Better Auth tables (managed by Drizzle adapter)
 
@@ -44,7 +43,7 @@ Monorepo (pnpm workspace, `@ptd` scope):
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | TEXT PK | nanoid(16) |
-| `b2_key` | TEXT | B2 object key (e.g. `plans/{id}.html`) |
+| `html` | TEXT | Full HTML content stored directly in DB |
 | `key_id` | TEXT FK → apikey.id | Owner API key (cascade delete) |
 | `title` | TEXT | Optional display name, default `""` |
 | `created_at` | TIMESTAMP | auto-set |
@@ -65,7 +64,7 @@ Monorepo (pnpm workspace, `@ptd` scope):
 | POST | `/api/keys` | Session cookie | Create a new API key |
 | GET | `/api/keys` | Session cookie | List user's API keys |
 | GET | `/api/keys/:id` | Session cookie | Get one API key |
-| PATCH | `/api/keys/:id` | Session cookie | Update an API key (name, etc.) |
+| PATCH | `/api/keys/:id` | Session cookie | Update an API key (name, rate limit, etc.) |
 | DELETE | `/api/keys/:id` | Session cookie | Revoke an API key |
 
 ### Plans (CLI/API — key auth via `x-api-key` header)
@@ -77,12 +76,12 @@ Monorepo (pnpm workspace, `@ptd` scope):
 | DELETE | `/api/plans/:id` | x-api-key | Delete one plan (owner only) |
 | PATCH | `/api/plans/:id` | x-api-key | Replace plan HTML (preserves ID/URL) |
 | DELETE | `/api/plans` | x-api-key | Delete ALL plans for this key |
-| GET | `/p/:id` | public | Serve plan HTML from B2 |
+| GET | `/p/:id` | public | Serve plan HTML directly from DB |
 
 ## CLI Usage
 
 ```bash
-npm i -g plantodo
+npm i -g @androff/posthtml-cli
 
 ptd setup                  # save API key from dashboard
 ptd setup --key ptd_xxx    # or pass directly
@@ -100,8 +99,8 @@ Configuration saved to `~/.ptd/config.json`. Key override via `PTD_API_KEY` or `
 
 | Path | Auth | Content |
 |------|------|---------|
-| `/` | public | Hero + Google sign-in button |
-| `/dashboard` | session | API key management (generate, list, copy, revoke) |
+| `/` | public | Hero + Google sign-in + agent docs links |
+| `/dashboard` | session | API key management (generate, list, copy, revoke, configure) |
 | `/p/:id` | public | Serves uploaded plan HTML |
 
 ## Auth Flow
@@ -115,10 +114,6 @@ Configuration saved to `~/.ptd/config.json`. Key override via `PTD_API_KEY` or `
 
 ```
 DATABASE_URL             — Neon Postgres connection string
-B2_REGION                — Backblaze B2 region
-B2_BUCKET                — B2 bucket name
-AWS_ACCESS_KEY_ID        — B2 application key ID
-AWS_SECRET_ACCESS_KEY    — B2 application key secret
 BETTER_AUTH_SECRET       — Better Auth secret
 BETTER_AUTH_URL          — e.g. http://localhost:3000
 NEXT_PUBLIC_BETTER_AUTH_URL
@@ -135,20 +130,20 @@ PTD_URL                  — Server URL (default http://localhost:3000)
 
 ## Migrations
 
-4 migrations generated (`drizzle/0000`–`0003`). Apply with:
+2 migrations (`20260702144151`, `20260704093852`). Apply with:
 
 ```bash
-pnpm -C web db:migrate
+bun -C web db:migrate
 ```
 
 ## Dev Workflow
 
 ```bash
-pnpm install
-pnpm -C web db:migrate        # apply migrations to Neon
-pnpm -C web dev               # Next.js dev server on :3000
-pnpm -C cli build             # build CLI dist/
-pnpm -r test                  # run all tests
+bun install
+bun -C web db:migrate        # apply migrations to Neon
+bun -C web dev               # Next.js dev server on :3000
+bun -C cli build             # build CLI dist/
+bun run test                  # run all tests
 ```
 
 ## Deployment

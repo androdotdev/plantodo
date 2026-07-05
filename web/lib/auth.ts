@@ -17,6 +17,13 @@ export const auth = betterAuth({
     }
   },
   plugins: [
-    apiKey()
+    apiKey({
+      rateLimit: {
+        enabled: false,
+      },
+      keyExpiration: {
+        defaultExpiresIn: null,
+      },
+    })
   ]
 });
