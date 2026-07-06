@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
+import AgentSetupPrompt from "./components/AgentSetupPrompt";
 
 interface ApiKey {
   id: string;
@@ -338,6 +339,17 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        {/* Agent setup prompt */}
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+          <h2 className="text-sm font-medium text-zinc-300">Agent setup prompt</h2>
+          <p className="mt-1 text-xs text-zinc-500">
+            Copy this prompt into your agent&apos;s system configuration.
+          </p>
+          <div className="mt-4">
+            <AgentSetupPrompt apiKey={newKey ?? undefined} />
+          </div>
+        </div>
       </main>
     </div>
   );
