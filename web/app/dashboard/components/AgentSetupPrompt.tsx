@@ -13,14 +13,18 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
   const prompt = `You have access to PostHTML — a service that uploads HTML plans and returns shareable URLs.
 
 ## Setup
-The human has provided you with an API key. Set it as your environment:
+The human has provided you with an API key.
+
+### Option A: Environment variables (recommended)
 PTD_API_KEY=${keyText}
 
-You can also configure the CLI tool:
+### Option B: CLI config file
 npm i -g @androff/posthtml-cli
 ptd setup --key ${keyText}
 
-## CLI commands available to you
+The config file (~/.ptd/config.json) stores the key as "api_key".
+
+## CLI commands
 - ptd upload <file>      — upload HTML, get back { id, url }
 - ptd list or ptd ls     — list plans
 - ptd delete <id>        — delete a plan
@@ -51,7 +55,7 @@ Uploaded plans are publicly viewable at /p/{id} on the server.
         </pre>
         <button
           onClick={handleCopy}
-          className="absolute top-3 right-3 rounded border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+          className="absolute top-3 right-3 rounded border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 transition-colors"
         >
           {copied ? "Copied!" : "Copy prompt"}
         </button>

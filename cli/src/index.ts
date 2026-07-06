@@ -6,7 +6,7 @@ import { loadConfig, saveConfig } from "./config.js";
 
 const config = loadConfig();
 const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
-const BASE_URL = (process.env.PTD_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+const BASE_URL = (process.env.PTD_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(`${BASE_URL}${path}`, {
