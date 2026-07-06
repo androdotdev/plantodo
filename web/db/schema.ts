@@ -10,11 +10,11 @@ import {
 export const plans = pgTable("plans", {
   id: text("id").primaryKey(),
   html: text("html").notNull(),
-  keyId: text("key_id").notNull().references(() => apikey.id, { onDelete: "cascade"}),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => [index("plans_userId_idx").on(table.userId)]);
 
 
 export const user = pgTable("user", {
