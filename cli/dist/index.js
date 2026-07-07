@@ -28,7 +28,8 @@ function saveConfig(config2) {
 
 // src/index.ts
 function extractTitle(html, filePath) {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
+  const doc = new DOMParser().parseFromString(cleaned, "text/html");
   const title = doc.querySelector("title")?.textContent?.trim();
   return (title || basename(filePath)).replace(/\s+/g, "-");
 }

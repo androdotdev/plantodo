@@ -5,8 +5,9 @@ import { Command } from "commander";
 import { loadConfig, saveConfig } from "./config.js";
 
 function extractTitle(html: string, filePath: string): string {
-  // Use Bun's native DOMParser — no regex, no deps, handles malformed HTML
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  // Strip script/style blocks to prevent their content from overriding <title>
+  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
+  const doc = new DOMParser().parseFromString(cleaned, "text/html");
   const title = doc.querySelector("title")?.textContent?.trim();
   return (title || basename(filePath)).replace(/\s+/g, "-");
 }
