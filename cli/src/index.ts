@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { Command } from "commander";
 
 import { loadConfig, saveConfig } from "./config.js";
+
+function extractTitle(html: string, filePath: string): string {
+  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return match?.[1]?.trim() || basename(filePath);
+}
 
 const config = loadConfig();
 const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
@@ -40,7 +45,7 @@ program
     const html = readFileSync(resolve(file), "utf-8");
     const result = await api("/api/plans", {
       method: "POST",
-      body: JSON.stringify({ html, title: file }),
+      body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
     console.log(result.url);
   });
@@ -77,7 +82,7 @@ program
     const html = readFileSync(resolve(file), "utf-8");
     const result = await api(`/api/plans/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ html }),
+      body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
     console.log(result.url);
   });
