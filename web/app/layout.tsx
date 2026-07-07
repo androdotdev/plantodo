@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PostHTML",
     description: "Upload HTML plans and get a shareable URL.",
-    // TODO: add proper OG image
+    images: [{ url: "/og.svg", width: 1200, height: 630 }],
   },
 };
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
+import { UploadPlan } from "./components/UploadPlan";
 
 interface ApiKey {
   id: string;
@@ -61,6 +62,8 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [editingPlan, setEditingPlan] = useState<{ id: string; title: string; html: string } | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
     defaultValues: {
@@ -112,6 +115,22 @@ export default function Dashboard() {
     if (res.ok) {
       setPlans((prev) => prev.filter((p) => p.id !== id));
     }
+  }
+
+  async function startReplace(plan: Plan) {
+    setShowUpload(false)
+    setEditingPlan({ id: plan.id, title: plan.title, html: "" })
+    const res = await fetch(`/api/plans/${plan.id}`)
+    if (res.ok) {
+      const data = await res.json()
+      setEditingPlan({ id: plan.id, title: data.title, html: data.html })
+    }
+  }
+
+  function afterPlanSaved() {
+    setEditingPlan(null)
+    setShowUpload(false)
+    fetchPlans()
   }
 
   const onSubmit = useCallback(async (data: NewKeyForm) => {
@@ -368,12 +387,28 @@ export default function Dashboard() {
         )}
 
         {/* Plans */}
-        <div>
-          <h2 className="text-lg font-semibold">Plans</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Your uploaded HTML plans. Deleting a plan breaks its URL.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Plans</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Your uploaded HTML plans. Deleting a plan breaks its URL.
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowUpload(true); setEditingPlan(null) }}
+            className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors"
+          >
+            New Plan
+          </button>
         </div>
+
+        {(showUpload || editingPlan) && (
+          <UploadPlan
+            key={editingPlan?.id ?? "new"}
+            editingPlan={editingPlan}
+            onDone={afterPlanSaved}
+          />
+        )}
 
         {plansLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -381,7 +416,7 @@ export default function Dashboard() {
           </div>
         ) : plans.length === 0 ? (
           <div className="rounded-lg border border-zinc-800 p-8 text-center">
-            <p className="text-sm text-zinc-500">No plans yet. Upload one via the CLI.</p>
+            <p className="text-sm text-zinc-500">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -406,6 +441,12 @@ export default function Dashboard() {
                     className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
                   >
                     View
+                  </button>
+                  <button
+                    onClick={() => startReplace(p)}
+                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                  >
+                    Replace
                   </button>
                   <button
                     onClick={() => deletePlan(p.id)}

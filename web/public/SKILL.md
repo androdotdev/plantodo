@@ -53,7 +53,15 @@ DELETE /api/plans/:id
 x-api-key: <key>
 ```
 
-### Delete all plans for this key
+### Get a single plan
+```
+GET /api/plans/:id
+x-api-key: <key>
+```
+
+Returns `{ id, html, title, createdAt, updatedAt }`.
+
+### Delete all plans for your account
 ```
 DELETE /api/plans
 x-api-key: <key>
