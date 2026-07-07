@@ -6,7 +6,7 @@ import { loadConfig, saveConfig } from "./config.js";
 
 function extractTitle(html: string, filePath: string): string {
   const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-  return match?.[1]?.trim() || basename(filePath);
+  return (match?.[1]?.trim() || basename(filePath)).replace(/\s+/g, "-");
 }
 
 const config = loadConfig();
@@ -98,7 +98,7 @@ program
       const buf = await new Promise<string>((resolve) => {
         process.stdout.write("Enter your API key: ");
         process.stdin.setEncoding("utf-8");
-        process.stdin.once("data", (d) => resolve(d.trim()));
+        process.stdin.once("data", (d: string) => resolve(d.trim()));
       });
       key = buf;
     }
