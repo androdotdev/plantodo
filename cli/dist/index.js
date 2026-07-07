@@ -28,7 +28,8 @@ function saveConfig(config2) {
 
 // src/index.ts
 function extractTitle(html, filePath) {
-  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
+  const match = cleaned.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   return (match?.[1]?.trim() || basename(filePath)).replace(/\s+/g, "-");
 }
 var config = loadConfig();
