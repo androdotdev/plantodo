@@ -2,7 +2,7 @@
 
 // src/index.ts
 import { readFileSync as readFileSync2 } from "fs";
-import { resolve as resolve2 } from "path";
+import { basename, resolve as resolve2 } from "path";
 import { Command } from "commander";
 
 // src/config.ts
@@ -27,6 +27,10 @@ function saveConfig(config2) {
 }
 
 // src/index.ts
+function extractTitle(html, filePath) {
+  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return (match?.[1]?.trim() || basename(filePath)).replace(/\s+/g, "-");
+}
 var config = loadConfig();
 var API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
 var BASE_URL = (process.env.PTD_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
@@ -54,7 +58,7 @@ program.command("upload <file>").description("Upload an HTML plan file").action(
   const html = readFileSync2(resolve2(file), "utf-8");
   const result = await api("/api/plans", {
     method: "POST",
-    body: JSON.stringify({ html, title: file })
+    body: JSON.stringify({ html, title: extractTitle(html, file) })
   });
   console.log(result.url);
 });
@@ -78,7 +82,7 @@ program.command("replace <id> <file>").description("Replace a plan with a new HT
   const html = readFileSync2(resolve2(file), "utf-8");
   const result = await api(`/api/plans/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ html })
+    body: JSON.stringify({ html, title: extractTitle(html, file) })
   });
   console.log(result.url);
 });
