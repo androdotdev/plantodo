@@ -46,16 +46,16 @@ Uploaded plans are publicly viewable at /p/{id} on the server.
 
   return (
     <details className="group">
-      <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition-colors select-none">
+      <summary className="cursor-pointer text-xs text-text-secondary hover:text-text-primary transition-colors select-none">
         Show setup prompt
       </summary>
       <div className="mt-4 relative">
-        <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap">
+        <pre className="overflow-x-auto rounded-sm border border-border-default bg-bg-elevated p-4 text-sm text-text-primary leading-relaxed whitespace-pre-wrap">
           <code>{prompt}</code>
         </pre>
         <button
           onClick={handleCopy}
-          className="absolute top-3 right-3 rounded border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 transition-colors"
+          className="absolute top-3 right-3 rounded-sm border border-border-default bg-bg-card px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
         >
           {copied ? "Copied!" : "Copy prompt"}
         </button>

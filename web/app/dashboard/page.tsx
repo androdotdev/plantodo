@@ -170,30 +170,30 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090b]">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-300" />
+      <div className="flex min-h-screen items-center justify-center bg-bg-base">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans"
+    <div className="min-h-screen bg-bg-base text-text-primary"
       style={{
         backgroundImage: `radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)`,
         backgroundSize: "24px 24px",
       }}
     >
-      <header className="border-b border-zinc-800/60 bg-zinc-900/40 backdrop-blur-sm">
-        <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
+      <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
           </a>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-zinc-500">{session?.user?.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
             <button
               onClick={() => authClient.signOut()}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
             >
               Sign out
             </button>
@@ -201,26 +201,29 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
-        <div>
-          <h1 className="text-lg font-semibold">API Keys</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Manage your API keys for the CLI and programmatic access.
-          </p>
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-10 space-y-8">
+        {/* API Keys Section */}
+        <div className="border-b border-border-default pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">API Keys</h1>
+            <p className="mt-1 text-xs text-text-secondary">
+              Manage your API keys for the CLI and programmatic access.
+            </p>
+          </div>
         </div>
 
         {newKey && (
-          <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/30 p-4">
-            <p className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
+          <div className="rounded-md border border-border-accent bg-bg-accent p-4">
+            <p className="text-xs font-medium text-text-accent uppercase tracking-wider">
               Key generated — copy it now. You won&apos;t see it again.
             </p>
-            <div className="mt-3 flex items-center gap-2">
-              <code className="flex-1 rounded border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm font-mono text-zinc-200 select-all">
+            <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary select-all">
                 {newKey}
               </code>
               <button
                 onClick={() => copy(newKey)}
-                className="shrink-0 rounded border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+                className="rounded-sm border border-border-accent px-3 py-2 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
               >
                 Copy
               </button>
@@ -228,29 +231,29 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
+        <div className="rounded-md border border-border-default bg-bg-card p-5">
           <h2 className="text-sm font-medium">Generate New Key</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-            <div className="flex items-end gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
               <div className="flex-1">
                 <input
                   type="text"
                   {...register("name")}
                   placeholder="Key name (optional)"
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                  className="w-full rounded-sm border border-border-default bg-bg-elevated px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-border-hover"
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-zinc-100 px-5 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 transition-colors shrink-0"
+                className="rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors shrink-0"
               >
                 {submitting ? "Generating\u2026" : "Generate Key"}
               </button>
             </div>
 
             <details className="group">
-              <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition-colors select-none">
+              <summary className="cursor-pointer text-xs text-text-secondary hover:text-text-primary transition-colors select-none">
                 Advanced settings
               </summary>
               <div className="mt-4 space-y-4 pl-1">
@@ -258,19 +261,19 @@ export default function Dashboard() {
                   <input
                     type="checkbox"
                     {...register("unlimited")}
-                    className="rounded border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-zinc-600"
+                    className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
                   />
-                  <span className="text-sm text-zinc-300">Unlimited usage (no cap)</span>
+                  <span className="text-sm text-text-primary">Unlimited usage (no cap)</span>
                 </label>
 
                 {!unlimited && (
                   <div className="flex items-center gap-3">
-                    <label className="text-xs text-zinc-500 w-28 shrink-0">Max uses</label>
+                    <label className="text-xs text-text-muted w-28 shrink-0">Max uses</label>
                     <input
                       type="number"
                       {...register("remaining", { valueAsNumber: true })}
                       min={1}
-                      className="w-28 rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                      className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
                     />
                   </div>
                 )}
@@ -279,24 +282,24 @@ export default function Dashboard() {
                   <input
                     type="checkbox"
                     {...register("rateLimitEnabled")}
-                    className="rounded border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-zinc-600"
+                    className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
                   />
-                  <span className="text-sm text-zinc-300">Rate limiting</span>
+                  <span className="text-sm text-text-primary">Rate limiting</span>
                 </label>
 
                 {rateLimitEnabled && (
                   <div className="flex items-center gap-3">
-                    <label className="text-xs text-zinc-500 w-28 shrink-0">Max per window</label>
+                    <label className="text-xs text-text-muted w-28 shrink-0">Max per window</label>
                     <input
                       type="number"
                       {...register("rateLimitMax", { valueAsNumber: true })}
                       min={1}
-                      className="w-28 rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                      className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
                     />
-                    <label className="text-xs text-zinc-500">requests per</label>
+                    <label className="text-xs text-text-muted">requests per</label>
                     <select
                       {...register("rateLimitTimeWindow", { valueAsNumber: true })}
-                      className="rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                      className="rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
                     >
                       <option value={3600000}>hour</option>
                       <option value={86400000}>day</option>
@@ -307,57 +310,69 @@ export default function Dashboard() {
               </div>
             </details>
           </form>
-          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+          {error && <p className="mt-2 text-xs text-text-danger">{error}</p>}
         </div>
 
         {keys.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 p-8 text-center">
-            <p className="text-sm text-zinc-500">No API keys yet. Generate one above.</p>
+          <div className="rounded-md border border-border-default p-8 text-center">
+            <p className="text-sm text-text-secondary">No API keys yet. Generate one above.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {keys.map((k) => (
               <div
                 key={k.id}
-                className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 flex items-center justify-between gap-4"
+                className="rounded-md border border-border-default bg-bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                     <span className="text-sm font-medium truncate">
-                      {k.name || <span className="text-zinc-500 italic">unnamed</span>}
+                      {k.name || <span className="text-text-muted italic">unnamed</span>}
                     </span>
-                    <code className="text-xs font-mono text-zinc-500 select-all">
+                    <code className="text-xs text-text-muted select-all">
                       {k.start}
                     </code>
+                    {k.enabled && (
+                      <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent">
+                        active
+                      </span>
+                    )}
+                    {!k.enabled && (
+                      <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-danger text-text-danger">
+                        revoked
+                      </span>
+                    )}
                   </div>
-                  <p className="mt-1 text-xs text-zinc-600">
+                  <p className="mt-1 text-xs text-text-muted">
                     Created {formatDate(k.createdAt)}
-                    {k.lastRequest && ` \u00b7 Last used ${formatDate(k.lastRequest)}`}
+                    {k.lastRequest && ` · Last used ${formatDate(k.lastRequest)}`}
                   </p>
                   {k.remaining !== null && (
-                    <p className="mt-0.5 text-xs text-zinc-600">
+                    <p className="mt-0.5 text-xs text-text-muted">
                       {k.remaining} uses remaining
                     </p>
                   )}
                   {k.rateLimitEnabled && (
-                    <p className="mt-0.5 text-xs text-zinc-600">
+                    <p className="mt-0.5 text-xs text-text-muted">
                       Rate limit: {k.rateLimitMax}/{formatTimeWindow(k.rateLimitTimeWindow)}
                     </p>
                   )}
-                  {!k.enabled && (
-                    <p className="mt-0.5 text-xs text-amber-400">Disabled</p>
+                  {k.lastRequest && (
+                    <p className="mt-0.5 text-xs text-text-accent">
+                      Last action: ptd upload via <span className="font-semibold">{k.name || "unnamed"}</span>
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => copy(k.start)}
-                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                    className="rounded-sm border border-border-accent px-3 py-1.5 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
                   >
                     Copy
                   </button>
                   <button
                     onClick={() => deleteKey(k.id)}
-                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:border-red-900/50 transition-colors"
+                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors"
                   >
                     Revoke
                   </button>
@@ -367,11 +382,11 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Plans */}
-        <div className="flex items-center justify-between">
+        {/* Plans Section */}
+        <div className="border-b border-border-default pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Plans</h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Plans</h2>
+            <p className="mt-1 text-xs text-text-secondary">
               Your uploaded HTML plans. Deleting a plan breaks its URL.
             </p>
           </div>
@@ -387,7 +402,7 @@ export default function Dashboard() {
                 router.push(`/plan/edit/${id}`)
               }
             }}
-            className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors"
+            className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors"
           >
             New Plan
           </button>
@@ -395,45 +410,45 @@ export default function Dashboard() {
 
         {plansLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-300" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
           </div>
         ) : plans.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 p-8 text-center">
-            <p className="text-sm text-zinc-500">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
+          <div className="rounded-md border border-border-default p-8 text-center">
+            <p className="text-sm text-text-secondary">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {plans.map((p) => (
               <div
                 key={p.id}
-                className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 flex items-center justify-between gap-4"
+                className="rounded-md border border-border-default bg-bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium truncate">
-                      {p.title || <span className="text-zinc-500 italic">untitled</span>}
+                      {p.title || <span className="text-text-muted italic">untitled</span>}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-600">
-                    {p.id} &middot; Created {formatDate(p.createdAt)}
+                  <p className="mt-1 text-xs text-text-muted">
+                    {p.id} · Created {formatDate(p.createdAt)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => window.open(`/p/${p.id}`, "_blank")}
-                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                    className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
                   >
                     View
                   </button>
                   <button
                     onClick={() => router.push(`/plan/edit/${p.id}`)}
-                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                    className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deletePlan(p.id)}
-                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:border-red-900/50 transition-colors"
+                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors"
                   >
                     Delete
                   </button>
@@ -444,9 +459,12 @@ export default function Dashboard() {
         )}
 
         {/* Agent setup prompt */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
-          <h2 className="text-sm font-medium text-zinc-300">Agent setup prompt</h2>
-          <p className="mt-1 text-xs text-zinc-500">
+        <div className="rounded-md border border-border-default bg-bg-card p-5">
+          <div className="flex items-center gap-2">
+            <span className="text-text-muted text-xs">&#9881;</span>
+            <h2 className="text-sm font-medium text-text-primary">Agent setup prompt</h2>
+          </div>
+          <p className="mt-1 text-xs text-text-secondary">
             Copy this prompt into your agent&apos;s system configuration.
           </p>
           <div className="mt-4">

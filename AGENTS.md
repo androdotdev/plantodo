@@ -129,6 +129,57 @@ PTD_API_KEY              — API key (overrides config file)
 PTD_URL                  — Server URL (default http://localhost:3000)
 ```
 
+## Design System
+
+Design tokens are defined as CSS custom properties in `web/app/globals.css` using Tailwind v4's `@theme inline` directive. Never hardcode hex values in components — always use token names.
+
+### Token Reference
+
+| Category | Token | Value | Usage |
+|----------|-------|-------|-------|
+| Bg | `bg-bg-base` | `#0a0a0a` | Page background |
+| Bg | `bg-bg-card` | `#111111` | Card/panel backgrounds |
+| Bg | `bg-bg-card-hover` | `#1a1a1a` | Card hover state |
+| Bg | `bg-bg-elevated` | `#1a1a1a` | Elevated surfaces (code blocks, inputs) |
+| Bg | `bg-bg-accent` | `#1a3a2a` | Muted green badge bg |
+| Bg | `bg-bg-danger` | `#3a1a1a` | Muted danger bg |
+| Text | `text-text-primary` | `#e8e8e8` | Primary content |
+| Text | `text-text-secondary` | `#888888` | Secondary/subtle |
+| Text | `text-text-muted` | `#666666` | Muted/disabled |
+| Text | `text-text-accent` | `#00d96a` | Green accent |
+| Text | `text-text-danger` | `#ff4444` | Danger/delete |
+| Border | `border-border-default` | `#333333` | Card borders |
+| Border | `border-border-hover` | `#444444` | Hover border |
+| Border | `border-border-accent` | `#00d96a` | Green border |
+| Border | `border-border-danger` | `#ff4444` | Danger border |
+| Action | `bg-accent` | `#00d96a` | Primary button bg |
+| Action | `bg-accent-hover` | `#00ff7f` | Primary button hover |
+| Action | `text-accent` | `#00d96a` | Green link/icon |
+| Action | `bg-danger` | `#ff4444` | Danger button |
+
+### Radius
+
+- `rounded-sm` — 2px
+- `rounded-md` — 4px (default card radius)
+
+### Font
+
+The app uses `'Courier New', monospace` for both sans and mono, giving a terminal aesthetic. Applied globally via the `@theme` block.
+
+### Adding tokens
+
+Add new tokens to the `@theme inline` block in `globals.css`. Use the naming convention:
+- `bg-*` for backgrounds
+- `text-*` for text colors
+- `border-*` for border colors
+
+```css
+@theme inline {
+  --color-bg-example: #hex;
+  --color-text-example: #hex;
+}
+```
+
 ## Migrations
 
 2 migrations (`20260702144151`, `20260704093852`). Apply with:
