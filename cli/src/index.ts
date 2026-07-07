@@ -1,11 +1,17 @@
 import { readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { Command } from "commander";
+import chalk from "chalk";
 
 import { loadConfig, saveConfig } from "./config.js";
 
+const dim = chalk.dim;
+const green = chalk.green;
+const red = chalk.red;
+const cyan = chalk.cyan;
+const yellow = chalk.yellow;
+
 function extractTitle(html: string, filePath: string): string {
-  // Strip script/style blocks to prevent their content from overriding <title>
   const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
   const doc = new DOMParser().parseFromString(cleaned, "text/html");
   const title = doc.querySelector("title")?.textContent?.trim();
@@ -27,13 +33,15 @@ async function api(path: string, init?: RequestInit) {
   });
   const body = await res.json();
   if (!res.ok) {
-    console.error(
-      `Error ${res.status}:`,
-      body.error ?? body.message ?? JSON.stringify(body),
-    );
+    console.error(red.bold(`✗ Error ${res.status}:`), body.error ?? body.message ?? JSON.stringify(body));
     process.exit(1);
   }
   return body;
+}
+
+function printUploadOutput(url: string) {
+  console.log(`\n${dim("Plan URL:")} ${cyan(url)}`);
+  console.log(`${dim("Shareable:")} ${green("[public]")}`);
 }
 
 const program = new Command()
@@ -46,11 +54,18 @@ program
   .description("Upload an HTML plan file")
   .action(async (file: string) => {
     const html = readFileSync(resolve(file), "utf-8");
+
+    process.stdout.write(`${dim("→ Validating HTML structure...")}\n`);
+    const isValid = /<!DOCTYPE html>/i.test(html);
+    process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
+
+    process.stdout.write(`${dim("→ Uploading to PostHTML...")}\n`);
     const result = await api("/api/plans", {
       method: "POST",
       body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
-    console.log(result.url);
+    process.stdout.write(`${green("✓ Upload complete")}\n`);
+    printUploadOutput(result.url);
   });
 
 program
@@ -60,22 +75,27 @@ program
   .action(async () => {
     const plans = await api("/api/plans");
     if (plans.length === 0) {
-      console.log("No plans found.");
+      console.log(dim("No plans found."));
       return;
     }
+    const header = `${dim("Plan ID")}          ${dim("Title")}                  ${dim("Created")}`;
+    const sep = dim("─".repeat(60));
+    console.log(`\n${header}\n${sep}`);
     for (const p of plans) {
-      const title = p.title || "(untitled)";
-      const created = new Date(p.createdAt).toLocaleDateString();
-      console.log(`${p.id}  ${title}  ${created}`);
+      const title = p.title || dim("(untitled)");
+      const created = dim(new Date(p.createdAt).toLocaleDateString());
+      console.log(`${cyan(p.id)}  ${title}  ${created}`);
     }
+    console.log();
   });
 
 program
   .command("delete <id>")
   .description("Delete a plan")
   .action(async (id: string) => {
+    process.stdout.write(`${dim("→ Deleting plan...")}\n`);
     await api(`/api/plans/${id}`, { method: "DELETE" });
-    console.log(`Deleted ${id}`);
+    process.stdout.write(`${green(`✓ Plan ${id} deleted`)}\n`);
   });
 
 program
@@ -83,11 +103,18 @@ program
   .description("Replace a plan with a new HTML file (preserves ID)")
   .action(async (id: string, file: string) => {
     const html = readFileSync(resolve(file), "utf-8");
+
+    process.stdout.write(`${dim("→ Validating HTML structure...")}\n`);
+    const isValid = /<!DOCTYPE html>/i.test(html);
+    process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
+
+    process.stdout.write(`${dim(`→ Replacing plan ${id}...`)}\n`);
     const result = await api(`/api/plans/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
-    console.log(result.url);
+    process.stdout.write(`${green("✓ Replacement complete")}\n`);
+    printUploadOutput(result.url);
   });
 
 program
@@ -97,7 +124,7 @@ program
   .action(async () => {
     let key = program.opts().key as string | undefined;
     if (!key) {
-      console.log(`Get your API key from: ${BASE_URL}/dashboard`);
+      console.log(dim(`Get your API key from: ${BASE_URL}/dashboard`));
       const buf = await new Promise<string>((resolve) => {
         process.stdout.write("Enter your API key: ");
         process.stdin.setEncoding("utf-8");
@@ -106,24 +133,23 @@ program
       key = buf;
     }
     if (!key) {
-      console.error("No API key provided");
+      console.error(red("No API key provided"));
       process.exit(1);
     }
     saveConfig({ api_key: key });
-    console.log("✓ saved to ~/.ptd/config.json");
+    console.log(`${green("✓")} ${dim("saved to ~/.ptd/config.json")}`);
   });
 
 async function main() {
   if (!API_KEY) {
-    console.error(
-      "Set PTD_API_KEY or run 'ptd setup' to configure your API key.",
-    );
+    console.error(red.bold("✗ No API key configured."));
+    console.error(dim("Set PTD_API_KEY or run 'ptd setup' to configure your API key."));
     process.exit(1);
   }
   await program.parseAsync(process.argv);
 }
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
+  console.error(red(err instanceof Error ? err.message : String(err)));
   process.exit(1);
 });

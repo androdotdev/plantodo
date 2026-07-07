@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 106.25%;
+}
+
 @theme inline {
   --font-sans: "Courier New", Courier, monospace;
   --font-mono: "Courier New", Courier, monospace;
