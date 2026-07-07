@@ -44,7 +44,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 |--------|------|-------|
 | `id` | TEXT PK | nanoid(16) |
 | `html` | TEXT | Full HTML content stored directly in DB |
-| `key_id` | TEXT FK → apikey.id | Owner API key (cascade delete) |
+| `user_id` | TEXT FK → user.id | Owner user (cascade delete on user deletion) |
 | `title` | TEXT | Optional display name, default `""` |
 | `created_at` | TIMESTAMP | auto-set |
 | `updated_at` | TIMESTAMP | auto-updated |
@@ -67,15 +67,16 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | PATCH | `/api/keys/:id` | Session cookie | Update an API key (name, rate limit, etc.) |
 | DELETE | `/api/keys/:id` | Session cookie | Revoke an API key |
 
-### Plans (CLI/API — key auth via `x-api-key` header)
+### Plans (CLI/API — key auth via `x-api-key`, browser via session)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/plans` | x-api-key | Upload plan HTML, returns `{ id, url }` |
-| GET | `/api/plans` | x-api-key | List plans for this API key |
-| DELETE | `/api/plans/:id` | x-api-key | Delete one plan (owner only) |
-| PATCH | `/api/plans/:id` | x-api-key | Replace plan HTML (preserves ID/URL) |
-| DELETE | `/api/plans` | x-api-key | Delete ALL plans for this key |
+| POST | `/api/plans` | x-api-key / session | Upload plan HTML, returns `{ id, url }` |
+| GET | `/api/plans` | x-api-key / session | List plans for this user |
+| GET | `/api/plans/:id` | x-api-key / session | Get plan with HTML content |
+| DELETE | `/api/plans/:id` | x-api-key / session | Delete one plan (owner only) |
+| PATCH | `/api/plans/:id` | x-api-key / session | Replace plan HTML (preserves ID/URL) |
+| DELETE | `/api/plans` | x-api-key / session | Delete ALL plans for this user |
 | GET | `/p/:id` | public | Serve plan HTML directly from DB |
 
 ## CLI Usage
