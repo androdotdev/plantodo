@@ -28,9 +28,9 @@ function saveConfig(config2) {
 
 // src/index.ts
 function extractTitle(html, filePath) {
-  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
-  const match = cleaned.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  return (match?.[1]?.trim() || basename(filePath)).replace(/\s+/g, "-");
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const title = doc.querySelector("title")?.textContent?.trim();
+  return (title || basename(filePath)).replace(/\s+/g, "-");
 }
 var config = loadConfig();
 var API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";

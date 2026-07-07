@@ -5,10 +5,10 @@ import { Command } from "commander";
 import { loadConfig, saveConfig } from "./config.js";
 
 function extractTitle(html: string, filePath: string): string {
-  // Strip script/style blocks to avoid false matches before extracting <title>
-  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
-  const match = cleaned.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  return (match?.[1]?.trim() || basename(filePath)).replace(/\s+/g, "-");
+  // Use Bun's native DOMParser — no regex, no deps, handles malformed HTML
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const title = doc.querySelector("title")?.textContent?.trim();
+  return (title || basename(filePath)).replace(/\s+/g, "-");
 }
 
 const config = loadConfig();
