@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { plans } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { withError } from "@/lib/with-error"
 
-export async function DELETE(
+export const DELETE = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const userId = request.headers.get("x-user-id")
   // TODO: add getSession fallback for browser dashboard
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -18,12 +19,12 @@ export async function DELETE(
 
   await db.delete(plans).where(eq(plans.id, id))
   return NextResponse.json({ success: true })
-}
+})
 
-export async function PATCH(
+export const PATCH = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const userId = request.headers.get("x-user-id")
   // TODO: add getSession fallback for browser dashboard
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -41,4 +42,4 @@ export async function PATCH(
   await db.update(plans).set({ html }).where(eq(plans.id, id))
   const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
   return NextResponse.json({ id, url: `${BASE_URL}/p/${id}` })
-}
+})
