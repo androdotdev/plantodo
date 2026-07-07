@@ -7,9 +7,12 @@ import { withError } from "@/lib/with-error"
 
 const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
 
+function getUserId(request: NextRequest): string | null {
+  return request.headers.get("x-user-id")
+}
+
 export const POST = withError(async (request: NextRequest) => {
-  const userId = request.headers.get("x-user-id")
-  // TODO: add getSession fallback for browser dashboard
+  const userId = getUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { html, title } = await request.json()
@@ -22,8 +25,7 @@ export const POST = withError(async (request: NextRequest) => {
 })
 
 export const GET = withError(async (request: NextRequest) => {
-  const userId = request.headers.get("x-user-id")
-  // TODO: add getSession fallback for browser dashboard
+  const userId = getUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const list = await db
@@ -35,8 +37,7 @@ export const GET = withError(async (request: NextRequest) => {
 })
 
 export const DELETE = withError(async (request: NextRequest) => {
-  const userId = request.headers.get("x-user-id")
-  // TODO: add getSession fallback for browser dashboard
+  const userId = getUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   await db.delete(plans).where(eq(plans.userId, userId))

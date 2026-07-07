@@ -20,6 +20,13 @@ interface ApiKey {
   enabled: boolean;
 }
 
+interface Plan {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface NewKeyForm {
   name: string;
   unlimited: boolean;
@@ -52,6 +59,8 @@ export default function Dashboard() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
     defaultValues: {
@@ -74,6 +83,7 @@ export default function Dashboard() {
       } else {
         setSession(data);
         fetchKeys();
+        fetchPlans();
       }
     });
   }, [router]);
@@ -85,6 +95,23 @@ export default function Dashboard() {
       setKeys(data.keys ?? []);
     }
     setLoading(false);
+  }
+
+  async function fetchPlans() {
+    const res = await fetch("/api/plans");
+    if (res.ok) {
+      const data = await res.json();
+      setPlans(data ?? []);
+    }
+    setPlansLoading(false);
+  }
+
+  async function deletePlan(id: string) {
+    if (!confirm("Delete this plan? The URL will stop working.")) return;
+    const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setPlans((prev) => prev.filter((p) => p.id !== id));
+    }
   }
 
   const onSubmit = useCallback(async (data: NewKeyForm) => {
@@ -333,6 +360,58 @@ export default function Dashboard() {
                     className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:border-red-900/50 transition-colors"
                   >
                     Revoke
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Plans */}
+        <div>
+          <h2 className="text-lg font-semibold">Plans</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Your uploaded HTML plans. Deleting a plan breaks its URL.
+          </p>
+        </div>
+
+        {plansLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-300" />
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="rounded-lg border border-zinc-800 p-8 text-center">
+            <p className="text-sm text-zinc-500">No plans yet. Upload one via the CLI.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {plans.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 flex items-center justify-between gap-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium truncate">
+                      {p.title || <span className="text-zinc-500 italic">untitled</span>}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-600">
+                    {p.id} &middot; Created {formatDate(p.createdAt)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => window.open(`/p/${p.id}`, "_blank")}
+                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => deletePlan(p.id)}
+                    className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:border-red-900/50 transition-colors"
+                  >
+                    Delete
                   </button>
                 </div>
               </div>
