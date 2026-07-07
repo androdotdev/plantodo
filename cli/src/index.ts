@@ -1,8 +1,16 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { Command } from "commander";
 
 import { loadConfig, saveConfig } from "./config.js";
+
+function extractTitle(html: string, filePath: string): string {
+  // Strip script/style blocks to prevent their content from overriding <title>
+  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
+  const doc = new DOMParser().parseFromString(cleaned, "text/html");
+  const title = doc.querySelector("title")?.textContent?.trim();
+  return (title || basename(filePath)).replace(/\s+/g, "-");
+}
 
 const config = loadConfig();
 const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
@@ -40,7 +48,7 @@ program
     const html = readFileSync(resolve(file), "utf-8");
     const result = await api("/api/plans", {
       method: "POST",
-      body: JSON.stringify({ html, title: file }),
+      body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
     console.log(result.url);
   });
@@ -77,7 +85,7 @@ program
     const html = readFileSync(resolve(file), "utf-8");
     const result = await api(`/api/plans/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ html }),
+      body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
     console.log(result.url);
   });
@@ -93,7 +101,7 @@ program
       const buf = await new Promise<string>((resolve) => {
         process.stdout.write("Enter your API key: ");
         process.stdin.setEncoding("utf-8");
-        process.stdin.once("data", (d) => resolve(d.trim()));
+        process.stdin.once("data", (d: string) => resolve(d.trim()));
       });
       key = buf;
     }
