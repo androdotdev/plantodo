@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
-import { UploadPlan } from "./components/UploadPlan";
 
 interface ApiKey {
   id: string;
@@ -62,8 +61,6 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
-  const [editingPlan, setEditingPlan] = useState<{ id: string; title: string; html: string } | null>(null);
-  const [showUpload, setShowUpload] = useState(false);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
     defaultValues: {
@@ -115,22 +112,6 @@ export default function Dashboard() {
     if (res.ok) {
       setPlans((prev) => prev.filter((p) => p.id !== id));
     }
-  }
-
-  async function startReplace(plan: Plan) {
-    setShowUpload(false)
-    setEditingPlan({ id: plan.id, title: plan.title, html: "" })
-    const res = await fetch(`/api/plans/${plan.id}`)
-    if (res.ok) {
-      const data = await res.json()
-      setEditingPlan({ id: plan.id, title: data.title, html: data.html })
-    }
-  }
-
-  function afterPlanSaved() {
-    setEditingPlan(null)
-    setShowUpload(false)
-    fetchPlans()
   }
 
   const onSubmit = useCallback(async (data: NewKeyForm) => {
@@ -204,10 +185,10 @@ export default function Dashboard() {
     >
       <header className="border-b border-zinc-800/60 bg-zinc-900/40 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
-          </div>
+          </a>
           <div className="flex items-center gap-4">
             <span className="text-xs text-zinc-500">{session?.user?.email}</span>
             <button
@@ -395,20 +376,22 @@ export default function Dashboard() {
             </p>
           </div>
           <button
-            onClick={() => { setShowUpload(true); setEditingPlan(null) }}
+            onClick={async () => {
+              const res = await fetch("/api/plans", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
+              })
+              if (res.ok) {
+                const { id } = await res.json()
+                router.push(`/plan/edit/${id}`)
+              }
+            }}
             className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors"
           >
             New Plan
           </button>
         </div>
-
-        {(showUpload || editingPlan) && (
-          <UploadPlan
-            key={editingPlan?.id ?? "new"}
-            editingPlan={editingPlan}
-            onDone={afterPlanSaved}
-          />
-        )}
 
         {plansLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -443,10 +426,10 @@ export default function Dashboard() {
                     View
                   </button>
                   <button
-                    onClick={() => startReplace(p)}
+                    onClick={() => router.push(`/plan/edit/${p.id}`)}
                     className="rounded border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
                   >
-                    Replace
+                    Edit
                   </button>
                   <button
                     onClick={() => deletePlan(p.id)}

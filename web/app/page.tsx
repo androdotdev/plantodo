@@ -109,9 +109,6 @@ export default function Home() {
 
         {/* Docs */}
         <div className="mt-16 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-zinc-500">
-          <a href="/AGENTS.md" className="underline hover:text-zinc-300 transition-colors">
-            Architecture
-          </a>
           <a href="/SKILL.md" className="underline hover:text-zinc-300 transition-colors">
             Agent skill
           </a>
