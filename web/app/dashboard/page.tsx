@@ -184,12 +184,12 @@ export default function Dashboard() {
       }}
     >
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
           </a>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
             <button
               onClick={() => authClient.signOut()}
@@ -201,9 +201,9 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-10 space-y-8">
+      <main className="mx-auto max-w-5xl px-5 sm:px-8 py-10 space-y-8">
         {/* API Keys Section */}
-        <div className="border-b border-border-default pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">API Keys</h1>
             <p className="mt-1 text-xs text-text-secondary">
@@ -213,11 +213,11 @@ export default function Dashboard() {
         </div>
 
         {newKey && (
-          <div className="rounded-md border border-border-accent bg-bg-accent p-4">
+          <div className="rounded-md border border-border-accent bg-bg-accent p-5">
             <p className="text-xs font-medium text-text-accent uppercase tracking-wider">
               Key generated — copy it now. You won&apos;t see it again.
             </p>
-            <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary select-all">
                 {newKey}
               </code>
@@ -231,7 +231,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="rounded-md border border-border-default bg-bg-card p-5">
+        <div className="rounded-md border border-border-default bg-bg-card p-6">
           <h2 className="text-sm font-medium">Generate New Key</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
@@ -314,18 +314,18 @@ export default function Dashboard() {
         </div>
 
         {keys.length === 0 ? (
-          <div className="rounded-md border border-border-default p-8 text-center">
+          <div className="rounded-md border border-border-default p-10 text-center">
             <p className="text-sm text-text-secondary">No API keys yet. Generate one above.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {keys.map((k) => (
               <div
                 key={k.id}
-                className="rounded-md border border-border-default bg-bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                     <span className="text-sm font-medium truncate">
                       {k.name || <span className="text-text-muted italic">unnamed</span>}
                     </span>
@@ -383,7 +383,7 @@ export default function Dashboard() {
         )}
 
         {/* Plans Section */}
-        <div className="border-b border-border-default pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Plans</h2>
             <p className="mt-1 text-xs text-text-secondary">
@@ -413,15 +413,15 @@ export default function Dashboard() {
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
           </div>
         ) : plans.length === 0 ? (
-          <div className="rounded-md border border-border-default p-8 text-center">
+          <div className="rounded-md border border-border-default p-10 text-center">
             <p className="text-sm text-text-secondary">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {plans.map((p) => (
               <div
                 key={p.id}
-                className="rounded-md border border-border-default bg-bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
@@ -459,7 +459,7 @@ export default function Dashboard() {
         )}
 
         {/* Agent setup prompt */}
-        <div className="rounded-md border border-border-default bg-bg-card p-5">
+        <div className="rounded-md border border-border-default bg-bg-card p-6">
           <div className="flex items-center gap-2">
             <span className="text-text-muted text-xs">&#9881;</span>
             <h2 className="text-sm font-medium text-text-primary">Agent setup prompt</h2>

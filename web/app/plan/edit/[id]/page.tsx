@@ -111,7 +111,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     >
       {/* Header */}
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a href="/" className="flex items-center gap-3">
               <img src="/icon.svg" alt="" className="h-6 w-6" />
@@ -138,9 +138,9 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-6">
+      <main className="mx-auto max-w-6xl px-5 sm:px-8 py-8 space-y-6">
         {/* Title section */}
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
               <Edit3 size={18} className="text-text-muted shrink-0" />

@@ -34,7 +34,7 @@ export default function Home() {
         backgroundSize: "24px 24px",
       }}
     >
-      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
         {/* Hero */}
         <div className="text-center border-b border-border-default pb-8 mb-12">
           <div className="flex items-center justify-center gap-3">
@@ -53,7 +53,7 @@ export default function Home() {
         </div>
 
         {/* Terminal install block */}
-        <div className="rounded-md border border-border-default bg-bg-card p-5 mb-12">
+        <div className="rounded-md border border-border-default bg-bg-card p-6 mb-12">
           <div className="flex items-center gap-2 mb-4">
             <Terminal size={14} className="text-text-secondary" />
             <span className="text-xs text-text-secondary uppercase tracking-wider">Install</span>
@@ -65,7 +65,7 @@ export default function Home() {
         </div>
 
         {/* Numbered steps */}
-        <div className="mb-12 space-y-8">
+        <div className="mb-12 space-y-10">
           {[
             {
               num: "01",
@@ -86,7 +86,7 @@ export default function Home() {
               code: "ptd upload plan.html",
             },
           ].map((step, i) => (
-            <div key={i} className="flex gap-4">
+            <div key={i} className="flex gap-5">
               <span className="text-text-muted text-sm font-semibold w-8 shrink-0">
                 {step.num}
               </span>
@@ -102,7 +102,7 @@ export default function Home() {
         </div>
 
         {/* Execution output */}
-        <div className="rounded-md border border-border-default bg-bg-card p-5 mb-12">
+        <div className="rounded-md border border-border-default bg-bg-card p-6 mb-12">
           <div className="font-mono text-xs leading-relaxed space-y-1.5">
             <p><span className="text-text-muted">$</span> <span className="text-text-primary">ptd upload <span className="text-text-accent">workflow.html</span></span></p>
             <p className="text-text-muted">→ Validating HTML structure...</p>
