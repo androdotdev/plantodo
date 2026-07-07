@@ -1,6 +1,6 @@
 ---
 name: posthtml-agent
-description: Upload HTML plans and get shareable URLs via the PostHTML CLI. Use when the user needs to share HTML content, create plan snapshots, or provide HTML as a viewable page.
+description: Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI or HTTP API. Use when a user needs to create, retrieve, or manage deployable HTML content.
 version: 1.0.0
 author: PostHTML
 tags: [html, sharing, plans, cli, agent]
