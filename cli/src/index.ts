@@ -4,6 +4,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 
 import { loadConfig, saveConfig } from "./config.js";
+import { version } from "../package.json";
 
 const dim = chalk.dim;
 const green = chalk.green;
@@ -47,7 +48,7 @@ function printUploadOutput(url: string) {
 const program = new Command()
   .name("ptd")
   .description("PostHTML CLI — upload, list, delete, and replace plans")
-  .version("0.1.0");
+  .version(version);
 
 program
   .command("upload <file>")
@@ -73,11 +74,13 @@ program
   .alias("ls")
   .description("List your plans")
   .action(async () => {
+    process.stdout.write(`${dim("→ Fetching your plans...")}\n`);
     const plans = await api("/api/plans");
     if (plans.length === 0) {
-      console.log(dim("No plans found."));
+      process.stdout.write(`${dim("No plans found.")}\n`);
       return;
     }
+    process.stdout.write(`${green(`✓ ${plans.length} plan${plans.length === 1 ? "" : "s"} loaded`)}\n\n`);
     const header = `${dim("Plan ID")}          ${dim("Title")}                  ${dim("Created")}`;
     const sep = dim("─".repeat(60));
     console.log(`\n${header}\n${sep}`);
