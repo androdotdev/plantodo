@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { Command } from "commander";
 import chalk from "chalk";
+import { parseHTML } from "linkedom";
 
 import { loadConfig, saveConfig } from "./config.js";
 import { version } from "../package.json";
@@ -13,9 +14,10 @@ const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
 function extractTitle(html: string, filePath: string): string {
+  // Strip script/style blocks to prevent their content from overriding <title>
   const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
-  const doc = new DOMParser().parseFromString(cleaned, "text/html");
-  const title = doc.querySelector("title")?.textContent?.trim();
+  const { document } = parseHTML(cleaned);
+  const title = document.querySelector("title")?.textContent?.trim();
   return (title || basename(filePath)).replace(/\s+/g, "-");
 }
 
