@@ -45,7 +45,8 @@
   },
   "dependencies": {
     "chalk": "5",
-    "commander": "^15.0.0"
+    "commander": "^15.0.0",
+    "linkedom": "^0.18.13"
   },
   "publishConfig": {
     "access": "public"
