@@ -1,4 +1,5 @@
-import { readFileSync, resolve } from "node:fs";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Command } from "commander";
 import chalk from "chalk";
 
