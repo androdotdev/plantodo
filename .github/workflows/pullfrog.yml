@@ -34,8 +34,8 @@ jobs:
       - name: Run agent
         uses: pullfrog/pullfrog@v0
         with:
-          prompt: "Review this PR. REQUEST CHANGES for any real issue: bugs, security holes, missing error handling, improper patterns, lockfile staleness. Do NOT approve until ALL issues are fixed. Be harsh — this is production code."
-          model: openrouter/anthropic/claude-sonnet-5
+          prompt: "${{ inputs.prompt || 'You are a strict code reviewer. Review the PR diff thoroughly. REQUEST CHANGES if you find: version/lockfile staleness, security issues, bugs, missing error handling, or improper patterns. Do NOT approve until all real issues are addressed. Be strict but fair — minor style nits are not blockers.' }}"
+          model: openrouter/cohere/north-mini-code:free
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
