@@ -35,13 +35,15 @@
     "build": "tsup",
     "prepublishOnly": "bun run build",
     "clean": "rm -rf dist",
-    "test": "echo \"No tests yet\" && exit 0",
+    "test": "vitest run",
     "lint": "echo \"No linter configured\" && exit 0"
   },
   "devDependencies": {
     "@types/node": "26.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "tsup": "^8.5.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "chalk": "5",

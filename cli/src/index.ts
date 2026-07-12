@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { readFileSync, resolve } from "node:fs";
 import { Command } from "commander";
 import chalk from "chalk";
-import { parseHTML } from "linkedom";
 
 import { loadConfig, saveConfig } from "./config.js";
+import { extractTitle } from "./title.js";
 import { version } from "../package.json";
 
 const dim = chalk.dim;
@@ -12,14 +11,6 @@ const green = chalk.green;
 const red = chalk.red;
 const cyan = chalk.cyan;
 const yellow = chalk.yellow;
-
-function extractTitle(html: string, filePath: string): string {
-  // Strip script/style blocks to prevent their content from overriding <title>
-  const cleaned = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, "");
-  const { document } = parseHTML(cleaned);
-  const title = document.querySelector("title")?.textContent?.trim();
-  return (title || basename(filePath)).replace(/\s+/g, "-");
-}
 
 const config = loadConfig();
 const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
