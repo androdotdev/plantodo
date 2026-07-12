@@ -24,6 +24,7 @@
     "start": "next start",
     "lint": "eslint",
     "clean": "rm -rf .next",
+    "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:up": "drizzle-kit up",
@@ -36,12 +37,14 @@
     "@types/node": "26.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^17.4.2",
     "drizzle-kit": "1.0.0-rc.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.10"
   }
 }

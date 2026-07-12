@@ -14,7 +14,7 @@
     "build:web": "bun run --cwd web build",
     "build:cli": "bun run --cwd cli build",
     "lint": "bun run --cwd web lint",
-    "test": "echo no tests",
+    "test": "bun run --cwd cli test && bun run --cwd web test",
     "clean": "rm -rf cli/dist web/.next"
   },
   "keywords": [],
