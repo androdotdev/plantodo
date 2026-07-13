@@ -5,7 +5,7 @@ import { plans } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 
-const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
+const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 
 function getUserId(request: NextRequest): string | null {
   return request.headers.get("x-user-id")
