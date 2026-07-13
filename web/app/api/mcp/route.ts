@@ -6,7 +6,7 @@ import {
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { db } from "@/db"
 import { plans } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
 
@@ -99,10 +99,10 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       const plan = (await db
         .select()
         .from(plans)
-        .where(eq(plans.id, args.id))
+        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
         .limit(1))[0]
 
-      if (!plan || plan.userId !== userId) {
+      if (!plan) {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
       }
 
@@ -142,10 +142,10 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       const existing = (await db
         .select()
         .from(plans)
-        .where(eq(plans.id, args.id))
+        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
         .limit(1))[0]
 
-      if (!existing || existing.userId !== userId) {
+      if (!existing) {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
       }
 
@@ -172,10 +172,10 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       const existing = (await db
         .select()
         .from(plans)
-        .where(eq(plans.id, args.id))
+        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
         .limit(1))[0]
 
-      if (!existing || existing.userId !== userId) {
+      if (!existing) {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
       }
 
