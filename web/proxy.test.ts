@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock NextRequest/NextResponse before importing the module under test
 vi.mock("next/server", () => ({
   NextResponse: {
-    next: vi.fn((init?: any) => ({ status: 200, _mock: "NextResponse.next", init })),
-    json: vi.fn((data: any, init?: any) => ({ status: init?.status ?? 200, _json: data })),
+    next: vi.fn((init?: unknown) => ({ status: 200, _mock: "NextResponse.next", init })),
+    json: vi.fn((data: unknown, init?: { status?: number }) => ({ status: init?.status ?? 200, _json: data })),
   },
   NextRequest: vi.fn().mockImplementation(() => ({
     headers: new Map(),
@@ -31,10 +31,10 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers: Record<string, string>): any {
+  function makeRequest(headers: Record<string, string>) {
     return {
       headers: new Map(Object.entries(headers)),
-    } as any;
+    };
   }
 
   it("sets x-user-id from a valid API key", async () => {
@@ -50,7 +50,7 @@ describe("proxy middleware", () => {
       body: { key: "ptd_valid_key" },
     });
     expect(NextResponse.next).toHaveBeenCalled();
-    const call = (NextResponse.next as any).mock.calls[0];
+    const call = vi.mocked(NextResponse.next).mock.calls[0];
     const headers = call?.[0]?.request?.headers;
     expect(headers?.get("x-user-id")).toBe("user-123");
   });
@@ -65,7 +65,7 @@ describe("proxy middleware", () => {
     await proxy(req);
 
     expect(mockAuth.verifyKey).toHaveBeenCalled();
-    const call = (NextResponse.next as any).mock.calls[0];
+    const call = vi.mocked(NextResponse.next).mock.calls[0];
     const headers = call?.[0]?.request?.headers;
     expect(headers?.get("x-user-id")).toBeUndefined();
   });
@@ -80,7 +80,7 @@ describe("proxy middleware", () => {
     await proxy(req);
 
     expect(mockAuth.getSession).toHaveBeenCalled();
-    const call = (NextResponse.next as any).mock.calls[0];
+    const call = vi.mocked(NextResponse.next).mock.calls[0];
     const headers = call?.[0]?.request?.headers;
     expect(headers?.get("x-user-id")).toBe("user-session-456");
   });
@@ -91,7 +91,7 @@ describe("proxy middleware", () => {
     const req = makeRequest({});
     await proxy(req);
 
-    const call = (NextResponse.next as any).mock.calls[0];
+    const call = vi.mocked(NextResponse.next).mock.calls[0];
     const headers = call?.[0]?.request?.headers;
     expect(headers?.get("x-user-id")).toBeUndefined();
   });

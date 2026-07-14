@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
+// Route handler's second arg is the route context (params, etc.) — shape
+// depends on the route segment, so we allow `any` here.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RouteHandler = (req: NextRequest, ctx: any) => Promise<NextResponse>
 
 export function withError(handler: RouteHandler): RouteHandler {

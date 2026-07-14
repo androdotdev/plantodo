@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Terminal, LayoutDashboard, LogIn } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import AgentSetupPrompt from "@/app/dashboard/components/AgentSetupPrompt";
+import { authClient, SessionData } from "@/lib/auth-client";
 
 export default function Home() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
