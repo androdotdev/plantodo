@@ -1,6 +1,6 @@
 # PostHTML
 
-Upload HTML plans and get a shareable URL.
+Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI.
 
 ## Stack
 - Next.js 16 App Router, Drizzle ORM, Neon Postgres

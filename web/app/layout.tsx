@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "PostHTML",
-    description: "Upload HTML plans and get a shareable URL.",
+    description: "Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI.",
     images: [{ url: "/og.svg", width: 1200, height: 630 }],
   },
 };

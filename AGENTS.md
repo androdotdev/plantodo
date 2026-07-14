@@ -2,7 +2,7 @@
 
 ## Overview
 
-Upload HTML plans and get a shareable URL. Manage drafts via CLI or API.
+Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI. Manage drafts via CLI or API.
 
 ## Architecture
 
