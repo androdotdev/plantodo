@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { authClient, SessionData } from "@/lib/auth-client"
 import { PlanEditor } from "@/app/dashboard/components/PlanEditor"
 import { ArrowLeft, Save, Edit3 } from "lucide-react"
+import Link from "next/link"
 
 export default function PlanEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [id, setId] = useState<string | null>(null)
-  const [session, setSession] = useState<any>(null)
-  const [plan, setPlan] = useState<any>(null)
+  const [session, setSession] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState("")
   const [html, setHtml] = useState("")
@@ -39,7 +39,6 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
           return
         }
         res.json().then((data) => {
-          setPlan(data)
           setTitle(data.title ?? "")
           setHtml(data.html ?? "")
           setLoading(false)
@@ -113,10 +112,10 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <img src="/icon.svg" alt="" className="h-6 w-6" />
               <span className="font-semibold text-sm">PostHTML</span>
-            </a>
+            </Link>
             <span className="text-text-muted mx-2">/</span>
             <button
               onClick={() => router.push("/dashboard")}

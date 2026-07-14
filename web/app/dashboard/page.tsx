@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
+import Link from "next/link";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 
 interface ApiKey {
@@ -53,7 +54,7 @@ function formatTimeWindow(ms: number | null): string {
 
 export default function Dashboard() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [newKey, setNewKey] = useState<string | null>(null);
@@ -185,10 +186,10 @@ export default function Dashboard() {
     >
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-5 sm:px-8 h-14 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
             <button
