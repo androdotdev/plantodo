@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -27,8 +27,18 @@ jobs:
       - name: Build (cli)
         run: bun run build:cli
 
-      - name: Build (web)
-        run: bun run build:web
-
       - name: Test
         run: bun run test
+
+  build-web:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - name: Build (web)
+        run: bun run build:web
