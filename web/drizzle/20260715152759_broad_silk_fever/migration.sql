@@ -1,0 +1,1 @@
+ALTER TABLE "plans" ADD COLUMN "data" jsonb DEFAULT '"{}"' NOT NULL;
