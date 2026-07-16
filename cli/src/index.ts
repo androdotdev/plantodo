@@ -137,6 +137,65 @@ program
     console.log(`${green("✓")} ${dim("saved to ~/.ptd/config.json")}`);
   });
 
+// ── data ────────────────────────────────────────────────────────────────────
+const dataCmd = program
+  .command("data")
+  .description("Manage plan JSON data");
+
+dataCmd
+  .command("get <id>")
+  .description("Get plan data")
+  .action(async (id: string) => {
+    process.stdout.write(`${dim("→ Fetching plan data...")}\n`);
+    const data = await api(`/api/plans/${id}/data`);
+    console.log(JSON.stringify(data, null, 2));
+  });
+
+dataCmd
+  .command("set <id>")
+  .description("Merge data into a plan")
+  .option("-k, --key <key>", "JSON key to set")
+  .option("-v, --value <value>", 'JSON value (required with --key, e.g. \'[{"repo":"cardfoi"}]\')')
+  .option("-f, --file <path>", "JSON file to merge (whole object)")
+  .action(async (id: string, options: { key?: string; value?: string; file?: string }) => {
+    let body: Record<string, unknown>;
+
+    if (options.file) {
+      const content = readFileSync(resolve(options.file), "utf-8");
+      try {
+        body = JSON.parse(content);
+      } catch {
+        console.error(red(`✗ File "${options.file}" is not valid JSON`));
+        process.exit(1);
+      }
+      if (typeof body !== "object" || Array.isArray(body)) {
+        console.error(red('✗ File must contain a JSON object, not an array or primitive'));
+        process.exit(1);
+      }
+    } else if (options.key) {
+      if (options.value === undefined) {
+        console.error(red("✗ --value is required with --key"));
+        process.exit(1);
+      }
+      try {
+        body = { [options.key]: JSON.parse(options.value) };
+      } catch {
+        console.error(red("✗ --value must be valid JSON"));
+        process.exit(1);
+      }
+    } else {
+      console.error(red("✗ Provide either --key/--value or --file"));
+      process.exit(1);
+    }
+
+    process.stdout.write(`${dim("→ Merging data into plan...")}\n`);
+    const result = await api(`/api/plans/${id}/data`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    console.log(JSON.stringify(result, null, 2));
+  });
+
 async function main() {
   if (!API_KEY) {
     console.error(red.bold("✗ No API key configured."));

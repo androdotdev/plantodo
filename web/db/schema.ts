@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   integer,
+  jsonb,
   index,
 } from "drizzle-orm/pg-core";
 
@@ -12,6 +13,7 @@ export const plans = pgTable("plans", {
   html: text("html").notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull().default(""),
+  data: jsonb("data").notNull().default("{}"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [index("plans_userId_idx").on(table.userId)]);

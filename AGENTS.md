@@ -46,6 +46,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | `html` | TEXT | Full HTML content stored directly in DB |
 | `user_id` | TEXT FK → user.id | Owner user (cascade delete on user deletion) |
 | `title` | TEXT | Optional display name, default `""` |
+| `data` | JSONB | Arbitrary JSON data for partial updates, default `{}` |
 | `created_at` | TIMESTAMP | auto-set |
 | `updated_at` | TIMESTAMP | auto-updated |
 
@@ -78,6 +79,8 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | PATCH | `/api/plans/:id` | x-api-key / session | Replace plan HTML (preserves ID/URL) |
 | DELETE | `/api/plans` | x-api-key / session | Delete ALL plans for this user |
 | GET | `/p/:id` | public | Serve plan HTML directly from DB |
+| GET | `/api/plans/:id/data` | public | Get plan JSON data |
+| PATCH | `/api/plans/:id/data` | x-api-key | Merge JSON data into plan (keys override, atomic merge) |
 
 ## CLI Usage
 
@@ -86,6 +89,10 @@ npm i -g @androff/posthtml-cli
 
 ptd setup                  # save API key from dashboard
 ptd setup --key ptd_xxx    # or pass directly
+
+ptd data get <id>           # get plan json data
+ptd data set <id> --key <k> --value '<json>'  # set one key in data
+ptd data set <id> --file data.json  # merge whole object into data
 
 ptd upload index.html
 ptd ls                     # list plans
