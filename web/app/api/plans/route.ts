@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
+const MAX_HTML_SIZE = 524_288 // 512KB
 
 function getUserId(request: NextRequest): string | null {
   return request.headers.get("x-user-id")
@@ -18,6 +19,9 @@ export const POST = withError(async (request: NextRequest) => {
   const { html, title } = await request.json()
   if (!html || typeof html !== "string") {
     return NextResponse.json({ error: "html is required" }, { status: 400 })
+  }
+  if (html.length > MAX_HTML_SIZE) {
+    return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
   const id = nanoid(16)
   await db.insert(plans).values({ id, html, userId, title: title ?? "" })

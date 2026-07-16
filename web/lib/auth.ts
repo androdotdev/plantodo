@@ -19,7 +19,9 @@ export const auth = betterAuth({
   plugins: [
     apiKey({
       rateLimit: {
-        enabled: false,
+        enabled: true,
+        timeWindow: 86_400_000,  // 24h in ms
+        maxRequests: 1000,
       },
       keyExpiration: {
         defaultExpiresIn: null,

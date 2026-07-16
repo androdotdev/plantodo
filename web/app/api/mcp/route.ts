@@ -14,6 +14,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
+const MAX_HTML_SIZE = 524_288 // 512KB
 
 // ── MCP Tools ──────────────────────────────────────────────────────────────
 
@@ -122,6 +123,9 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       if (!args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "html is required" }) }], isError: true }
       }
+      if (args.html.length > MAX_HTML_SIZE) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "HTML content exceeds 512KB limit" }) }], isError: true }
+      }
 
       const id = nanoid(16)
       const title = typeof args.title === "string" ? args.title : ""
@@ -137,6 +141,9 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
     case "replace_plan": {
       if (!args?.id || typeof args.id !== "string" || !args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id and html are required" }) }], isError: true }
+      }
+      if (args.html.length > MAX_HTML_SIZE) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "HTML content exceeds 512KB limit" }) }], isError: true }
       }
 
       const existing = (await db
