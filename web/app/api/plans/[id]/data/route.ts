@@ -5,20 +5,26 @@ import { eq, sql } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
-// GET /api/plans/:id/data — public, no auth
+// GET /api/plans/:id/data — public unless plan.isPrivate, then owner-only
 export const GET = withError(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
   const row = await db
-    .select({ data: plans.data })
+    .select({ data: plans.data, isPrivate: plans.isPrivate, userId: plans.userId })
     .from(plans)
     .where(eq(plans.id, id))
     .then(r => r[0])
 
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
+  if (row.isPrivate) {
+    const userId = await getAuthenticatedUserId(request)
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (row.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   return NextResponse.json(row.data ?? {})

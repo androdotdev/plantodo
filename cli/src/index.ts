@@ -84,18 +84,26 @@ program
   .description("Upload an HTML plan file")
   .option("-d, --data <json>", "JSON data to attach (merged into plan.data)")
   .option("--data-file <path>", "JSON file to merge into plan.data")
-  .action(async (file: string, options: { data?: string; dataFile?: string }) => {
+  .option("--private", "Make the plan private (owner-only access)")
+  .option("--public", "Make the plan public (default, shareable)")
+  .action(async (file: string, options: { data?: string; dataFile?: string; private?: boolean; public?: boolean }) => {
     const html = readFileSync(resolve(file), "utf-8");
     const data = parseDataOption(options);
+
+    let isPrivate: boolean | undefined;
+    if (options.private) isPrivate = true;
+    else if (options.public) isPrivate = false;
 
     process.stdout.write(`${dim("→ Validating HTML structure...")}\n`);
     const isValid = /<!DOCTYPE html>/i.test(html);
     process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
 
     process.stdout.write(`${dim("→ Uploading to PostHTML...")}\n`);
+    const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api("/api/plans", {
       method: "POST",
-      body: JSON.stringify({ html, title: extractTitle(html, file) }),
+      body: JSON.stringify(body),
     });
 
     if (data) {
@@ -146,17 +154,25 @@ program
 program
   .command("replace <id> <file>")
   .description("Replace a plan with a new HTML file (preserves ID)")
-  .action(async (id: string, file: string) => {
+  .option("--private", "Make the plan private (owner-only access)")
+  .option("--public", "Make the plan public (default, shareable)")
+  .action(async (id: string, file: string, options: { private?: boolean; public?: boolean }) => {
     const html = readFileSync(resolve(file), "utf-8");
+
+    let isPrivate: boolean | undefined;
+    if (options.private) isPrivate = true;
+    else if (options.public) isPrivate = false;
 
     process.stdout.write(`${dim("→ Validating HTML structure...")}\n`);
     const isValid = /<!DOCTYPE html>/i.test(html);
     process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
 
     process.stdout.write(`${dim(`→ Replacing plan ${id}...`)}\n`);
+    const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api(`/api/plans/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ html, title: extractTitle(html, file) }),
+      body: JSON.stringify(body),
     });
     process.stdout.write(`${green("✓ Replacement complete")}\n`);
     printUploadOutput(result.url);

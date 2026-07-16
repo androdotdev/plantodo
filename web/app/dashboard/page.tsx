@@ -26,6 +26,7 @@ interface Plan {
   title: string;
   createdAt: string;
   updatedAt: string;
+  isPrivate: boolean;
 }
 
 interface NewKeyForm {
@@ -112,6 +113,19 @@ export default function Dashboard() {
     const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
     if (res.ok) {
       setPlans((prev) => prev.filter((p) => p.id !== id));
+    }
+  }
+
+  async function togglePrivate(p: Plan) {
+    const res = await fetch(`/api/plans/${p.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPrivate: !p.isPrivate }),
+    });
+    if (res.ok) {
+      setPlans((prev) =>
+        prev.map((plan) => (plan.id === p.id ? { ...plan, isPrivate: !p.isPrivate } : plan)),
+      );
     }
   }
 
@@ -435,6 +449,16 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => togglePrivate(p)}
+                    className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      p.isPrivate
+                        ? "border-border-accent text-text-accent hover:bg-bg-accent-hover"
+                        : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-hover"
+                    }`}
+                  >
+                    {p.isPrivate ? "Private" : "Public"}
+                  </button>
                   <button
                     onClick={() => window.open(`/p/${p.id}`, "_blank")}
                     className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
