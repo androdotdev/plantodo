@@ -50,6 +50,8 @@ export const PATCH = withError(async (
   }
 
   // Merge into existing jsonb using Postgres ||
+  // safe: `fragment` is bound as a Drizzle parameter ($1), not string-concatenated —
+  // sql`` here is just Postgres's jsonb `||` merge operator, which Drizzle doesn't wrap natively
   const fragment = JSON.stringify(body)
   const merged = await db
     .update(plans)
