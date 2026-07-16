@@ -30,7 +30,7 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers) {
+  function makeRequest(headers: Record<string, string>) {
     return { headers: new Map(Object.entries(headers)) };
   }
 
@@ -57,7 +57,7 @@ describe("proxy middleware", () => {
 
     expect(fnVerify).toHaveBeenCalled();
     const call = vi.mocked(NextResponse.next).mock.calls[0];
-    expect(call[0]?.request?.headers?.get("x-user-id")).toBeUndefined();
+    expect(call[0]?.request?.headers?.has("x-user-id")).toBe(false);
   });
 
   it("falls back to session when no API key is present", async () => {
@@ -74,13 +74,30 @@ describe("proxy middleware", () => {
     expect(call[0]?.request?.headers?.get("x-user-id")).toBe("user-session-456");
   });
 
-  it("does not set x-user-id when no auth at all", async () => {
+  it("strips client-supplied x-user-id when no auth at all", async () => {
     fnSession.mockResolvedValueOnce(null);
 
-    const req = makeRequest({});
+    const req = makeRequest({ "x-user-id": "fake-user-999" });
     await proxy(req);
 
     const call = vi.mocked(NextResponse.next).mock.calls[0];
-    expect(call[0]?.request?.headers?.get("x-user-id")).toBeUndefined();
+    expect(call[0]?.request?.headers?.has("x-user-id")).toBe(false);
+  });
+
+  it("strips client-supplied x-user-id even when auth succeeds", async () => {
+    fnVerify.mockResolvedValueOnce({
+      valid: true,
+      key: { referenceId: "real-user-456" },
+    });
+
+    const req = makeRequest({
+      "x-api-key": "ptd_valid",
+      "x-user-id": "fake-user-999",
+    });
+    await proxy(req);
+
+    const call = vi.mocked(NextResponse.next).mock.calls[0];
+    // x-user-id should be the verified value, not the forged one
+    expect(call[0]?.request?.headers?.get("x-user-id")).toBe("real-user-456");
   });
 });

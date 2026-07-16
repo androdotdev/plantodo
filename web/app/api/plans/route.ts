@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { plans } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
+import { getAuthenticatedUserId } from "@/lib/auth-user"
 
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
@@ -13,7 +14,7 @@ function getUserId(request: NextRequest): string | null {
 }
 
 export const POST = withError(async (request: NextRequest) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { html, title } = await request.json()
@@ -41,7 +42,7 @@ export const GET = withError(async (request: NextRequest) => {
 })
 
 export const DELETE = withError(async (request: NextRequest) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   await db.delete(plans).where(eq(plans.userId, userId))

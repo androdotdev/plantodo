@@ -3,16 +3,13 @@ import { db } from "@/db"
 import { plans } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
-
-function getUserId(request: NextRequest): string | null {
-  return request.headers.get("x-user-id")
-}
+import { getAuthenticatedUserId } from "@/lib/auth-user"
 
 export const PATCH = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params

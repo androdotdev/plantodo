@@ -74,7 +74,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 |--------|------|------|-------------|
 | POST | `/api/plans` | x-api-key / session | Upload plan HTML, returns `{ id, url }` |
 | GET | `/api/plans` | x-api-key / session | List plans for this user |
-| GET | `/api/plans/:id` | x-api-key / session | Get plan with HTML content |
+| GET | `/api/plans/:id` | **public** | Get plan with HTML content (share-link model) |
 | DELETE | `/api/plans/:id` | x-api-key / session | Delete one plan (owner only) |
 | PATCH | `/api/plans/:id` | x-api-key / session | Replace plan HTML (preserves ID/URL) |
 | DELETE | `/api/plans` | x-api-key / session | Delete ALL plans for this user |
@@ -116,7 +116,12 @@ Configuration saved to `~/.ptd/config.json`. Key override via `PTD_API_KEY` or `
 1. User signs in via Google on landing page
 2. Better Auth creates user + session, redirects to `/dashboard`
 3. User generates API keys from dashboard
-4. CLI uses `x-api-key` header → server calls `auth.api.verifyApiKey()` to authenticate plan API calls
+4. `web/proxy.ts` (Next.js middleware) converts `x-api-key` or session cookie → `x-user-id` header:
+   - **Always strips** any client-supplied `x-user-id` first
+   - Sets it only if `verifyApiKey()` or `getSession()` succeeds
+   - Every path — success or failure — produces a request where `x-user-id` is either the verified value or absent entirely
+5. Route handlers read `x-user-id` from the forwarded request
+6. **Defense-in-depth**: sensitive mutating routes (POST, DELETE, PATCH) call `getAuthenticatedUserId()` directly instead of trusting the forwarded header — re-verifying auth independently via `verifyApiKey()`/`getSession()`
 
 ## Env Vars (`web/.env`)
 

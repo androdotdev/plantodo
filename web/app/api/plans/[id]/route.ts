@@ -3,25 +3,19 @@ import { db } from "@/db"
 import { plans } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
+import { getAuthenticatedUserId } from "@/lib/auth-user"
 
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
 
-function getUserId(request: NextRequest): string | null {
-  return request.headers.get("x-user-id")
-}
-
+// GET /api/plans/:id — public, no auth (share-link model)
 export const GET = withError(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const userId = getUserId(request)
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
   const { id } = await params
   const plan = await db.select().from(plans).where(eq(plans.id, id)).then(r => r[0])
   if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   return NextResponse.json(plan)
 })
@@ -30,7 +24,7 @@ export const DELETE = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
@@ -46,7 +40,7 @@ export const PATCH = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
