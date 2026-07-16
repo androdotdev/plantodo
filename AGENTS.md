@@ -95,6 +95,8 @@ ptd data set <id> --key <k> --value '<json>'  # set one key in data
 ptd data set <id> --file data.json  # merge whole object into data
 
 ptd upload index.html
+ptd upload index.html --data '{"status":"draft"}'   # attach data in the same call
+ptd upload index.html --data-file meta.json         # or merge a whole JSON file
 ptd ls                     # list plans
 ptd list                   # same
 ptd delete <plan-id>

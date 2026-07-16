@@ -39,6 +39,41 @@ function printUploadOutput(url: string) {
   console.log(`${dim("Shareable:")} ${green("[public]")}`);
 }
 
+/**
+ * Parse the --data / --data-file options shared by `upload` and `replace`.
+ * Returns null if neither was passed. Exits with an error on invalid JSON.
+ */
+function parseDataOption(options: { data?: string; dataFile?: string }): Record<string, unknown> | null {
+  if (options.dataFile) {
+    const content = readFileSync(resolve(options.dataFile), "utf-8");
+    try {
+      const parsed = JSON.parse(content);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        console.error(red(`✗ File "${options.dataFile}" must contain a JSON object`));
+        process.exit(1);
+      }
+      return parsed;
+    } catch {
+      console.error(red(`✗ File "${options.dataFile}" is not valid JSON`));
+      process.exit(1);
+    }
+  }
+  if (options.data) {
+    try {
+      const parsed = JSON.parse(options.data);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        console.error(red("✗ --data must be a JSON object"));
+        process.exit(1);
+      }
+      return parsed;
+    } catch {
+      console.error(red("✗ --data must be valid JSON"));
+      process.exit(1);
+    }
+  }
+  return null;
+}
+
 const program = new Command()
   .name("ptd")
   .description("PostHTML CLI — upload, list, delete, and replace plans")
@@ -47,8 +82,11 @@ const program = new Command()
 program
   .command("upload <file>")
   .description("Upload an HTML plan file")
-  .action(async (file: string) => {
+  .option("-d, --data <json>", "JSON data to attach (merged into plan.data)")
+  .option("--data-file <path>", "JSON file to merge into plan.data")
+  .action(async (file: string, options: { data?: string; dataFile?: string }) => {
     const html = readFileSync(resolve(file), "utf-8");
+    const data = parseDataOption(options);
 
     process.stdout.write(`${dim("→ Validating HTML structure...")}\n`);
     const isValid = /<!DOCTYPE html>/i.test(html);
@@ -59,6 +97,16 @@ program
       method: "POST",
       body: JSON.stringify({ html, title: extractTitle(html, file) }),
     });
+
+    if (data) {
+      process.stdout.write(`${dim("→ Attaching data...")}\n`);
+      await api(`/api/plans/${result.id}/data`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+      process.stdout.write(`${green("✓ Data attached")}\n`);
+    }
+
     process.stdout.write(`${green("✓ Upload complete")}\n`);
     printUploadOutput(result.url);
   });

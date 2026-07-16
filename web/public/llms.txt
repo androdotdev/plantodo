@@ -38,18 +38,36 @@ Configure your API key:
 ```bash
 ptd setup --key <your-key>
 # or set env vars:
-export PTD_API_KEY=<your-key>
+export PTD_API_KEY=***
 export PTD_URL=https://posthtml.vercel.app
 ```
 
 ### Commands
 ```bash
-ptd upload index.html     # upload a plan
-ptd list                  # list your plans
-ptd delete <id>           # delete a plan
-ptd replace <id> file.html # update plan content
+ptd upload index.html                              # upload a plan
+ptd upload index.html --data '{"status":"draft"}'   # upload + attach JSON data in one call
+ptd upload index.html --data-file meta.json         # or merge a whole JSON file
+ptd list                                            # list your plans
+ptd delete <id>                                     # delete a plan
+ptd replace <id> file.html                          # update plan content (preserves URL, html only)
+ptd data get <id>                                   # read a plan's JSON data
+ptd data set <id> --key <k> --value '<json>'        # merge one key into a plan's JSON data
+ptd data set <id> --file data.json                  # merge a whole JSON file into a plan's data
 ```
+
+## Plan data (`data` field)
+
+Every plan has an arbitrary JSON `data` object alongside its `html`, for anything that
+isn't markup — status, task metadata, structured context, whatever the agent needs to
+track about the plan over time. It's not auto-populated: use `--data`/`--data-file` on
+`upload`, or `ptd data set` at any point after. Reading it back (`ptd data get`
+or `GET /api/plans/:id/data`) requires no auth — same as the plan viewer.
+
+`ptd replace` only updates `html` — it has no `--data` flag. If a plan needs new html
+*and* new data together, create a fresh plan with `ptd upload --data` and delete the old
+one if it's no longer needed, rather than replacing in place.
+
 ## Quick test
 ```bash
-PTD_URL=https://posthtml.vercel.app PTD_API_KEY=<your-key> ptd list
+PTD_URL=https://posthtml.vercel.app PTD_API_KEY=*** ptd list
 ```

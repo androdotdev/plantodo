@@ -26,6 +26,12 @@ ptd upload index.html
 
 Returns `{ id, url }` — the URL is shareable immediately.
 
+Attach JSON data in the same call (see "Plan data" below):
+```bash
+ptd upload index.html --data '{"status":"draft"}'
+ptd upload index.html --data-file meta.json
+```
+
 ### List plans
 ```bash
 ptd list
@@ -38,10 +44,30 @@ Returns `[{ id, title, createdAt, updatedAt }]`.
 ptd replace <plan-id> file.html
 ```
 
+Only updates `html` — there's no `--data` flag on `replace`. If a plan needs new html
+*and* new data at once, upload a fresh plan with `--data` and delete the old one instead
+of replacing in place.
+
 ### Delete a plan
 ```bash
 ptd delete <plan-id>
 ```
+
+## Plan data
+
+Each plan also has a `data` JSON object, separate from its `html` — use this for anything
+that isn't markup: status, progress, task metadata, whatever context you want to persist
+alongside the plan. It defaults to `{}` and is never set automatically, so attach it
+explicitly with `--data`/`--data-file` on `upload`, or update it later:
+
+```bash
+ptd data get <plan-id>                              # read current data
+ptd data set <plan-id> --key status --value '"draft"'   # merge one key
+ptd data set <plan-id> --file meta.json             # merge a whole JSON file
+```
+
+`ptd data set` merges keys into the existing object — it doesn't replace it, so repeated
+calls are safe to accumulate state over a plan's lifetime.
 
 ## Plan URL
 
