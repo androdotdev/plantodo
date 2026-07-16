@@ -14,6 +14,7 @@ export const plans = pgTable("plans", {
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull().default(""),
   data: jsonb("data").notNull().default("{}"),
+  isPrivate: boolean("is_private").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [index("plans_userId_idx").on(table.userId)]);

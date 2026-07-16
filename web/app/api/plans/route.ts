@@ -17,7 +17,7 @@ export const POST = withError(async (request: NextRequest) => {
   const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { html, title } = await request.json()
+  const { html, title, isPrivate } = await request.json()
   if (!html || typeof html !== "string") {
     return NextResponse.json({ error: "html is required" }, { status: 400 })
   }
@@ -25,8 +25,14 @@ export const POST = withError(async (request: NextRequest) => {
     return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
   const id = nanoid(16)
-  await db.insert(plans).values({ id, html, userId, title: title ?? "" })
-  return NextResponse.json({ id, url: `${BASE_URL}/p/${id}`, title: title ?? "" })
+  await db.insert(plans).values({
+    id,
+    html,
+    userId,
+    title: title ?? "",
+    ...(typeof isPrivate === "boolean" ? { isPrivate } : {}),
+  })
+  return NextResponse.json({ id, url: `${BASE_URL}/p/${id}`, title: title ?? "", ...(typeof isPrivate === "boolean" ? { isPrivate } : {}) })
 })
 
 export const GET = withError(async (request: NextRequest) => {
@@ -34,7 +40,7 @@ export const GET = withError(async (request: NextRequest) => {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const list = await db
-    .select({ id: plans.id, title: plans.title, createdAt: plans.createdAt, updatedAt: plans.updatedAt })
+    .select({ id: plans.id, title: plans.title, createdAt: plans.createdAt, updatedAt: plans.updatedAt, isPrivate: plans.isPrivate })
     .from(plans)
     .where(eq(plans.userId, userId))
     .orderBy(plans.createdAt)

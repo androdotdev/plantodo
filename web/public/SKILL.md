@@ -32,6 +32,18 @@ ptd upload index.html --data '{"status":"draft"}'
 ptd upload index.html --data-file meta.json
 ```
 
+Mark a plan private (owner-only) at upload time:
+```bash
+ptd upload index.html --private
+ptd upload index.html --public        # default; explicitly public/shareable
+```
+
+Or set privacy on replace (preserves URL):
+```bash
+ptd replace <plan-id> file.html --private
+ptd replace <plan-id> file.html --public
+```
+
 ### List plans
 ```bash
 ptd list
@@ -71,7 +83,12 @@ calls are safe to accumulate state over a plan's lifetime.
 
 ## Plan URL
 
-After upload, the plan is viewable at `https://posthtml.vercel.app/p/{id}` (no auth needed).
+After upload, the plan is viewable at `https://posthtml.vercel.app/p/{id}`.
+
+Public plans (`is_private=false`, the default) need no auth. Private plans
+(`is_private=true`, set via `ptd upload --private` / `ptd replace --private` or
+`PATCH /api/plans/:id` with `{ "isPrivate": true }`) require the owner's session
+cookie or `x-api-key` — anonymous requests get 401, other users get 403.
 
 ## Quick test
 ```bash
