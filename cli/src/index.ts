@@ -34,9 +34,10 @@ async function api(path: string, init?: RequestInit) {
   return body;
 }
 
-function printUploadOutput(url: string) {
+function printUploadOutput(url: string, isPrivate?: boolean) {
   console.log(`\n${dim("Plan URL:")} ${cyan(url)}`);
-  console.log(`${dim("Shareable:")} ${green("[public]")}`);
+  const visibility = isPrivate ? red("[private]") : green("[public]");
+  console.log(`${dim("Shareable:")} ${visibility}`);
 }
 
 /**
@@ -116,7 +117,7 @@ program
     }
 
     process.stdout.write(`${green("✓ Upload complete")}\n`);
-    printUploadOutput(result.url);
+    printUploadOutput(result.url, result.isPrivate);
   });
 
 program
@@ -131,13 +132,14 @@ program
       return;
     }
     process.stdout.write(`${green(`✓ ${plans.length} plan${plans.length === 1 ? "" : "s"} loaded`)}\n\n`);
-    const header = `${dim("Plan ID")}          ${dim("Title")}                  ${dim("Created")}`;
-    const sep = dim("─".repeat(60));
+    const header = `${dim("Plan ID")}          ${dim("Title")}                  ${dim("Created")}        ${dim("Access")}`;
+    const sep = dim("─".repeat(72));
     console.log(`\n${header}\n${sep}`);
     for (const p of plans) {
       const title = p.title || dim("(untitled)");
       const created = dim(new Date(p.createdAt).toLocaleDateString());
-      console.log(`${cyan(p.id)}  ${title}  ${created}`);
+      const access = p.isPrivate ? red("private") : green("public");
+      console.log(`${cyan(p.id)}  ${title}  ${created}  ${access}`);
     }
     console.log();
   });
@@ -175,7 +177,7 @@ program
       body: JSON.stringify(body),
     });
     process.stdout.write(`${green("✓ Replacement complete")}\n`);
-    printUploadOutput(result.url);
+    printUploadOutput(result.url, result.isPrivate);
   });
 
 program
