@@ -25,18 +25,16 @@ ptd setup --key ${keyText}
 The config file (~/.ptd/config.json) stores the key as "api_key".
 
 ## CLI commands
-- ptd upload <file>      — upload HTML, get back { id, url }
-- ptd list or ptd ls     — list plans
-- ptd delete <id>        — delete a plan
-- ptd replace <id> <file> — update content, same URL
-
-## Plan URLs
-Uploaded plans are publicly viewable at /p/{id} on the server.
+- ptd upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
+- ptd list / ptd ls            — list plans
+- ptd delete <id>             — delete a plan
+- ptd replace <id> <file>      — update content (same URL)
+- ptd data get <id>            — read a plan's JSON data
+- ptd data set <id> --key <k> --value '<json>'   — merge one key
+- ptd data set <id> --file x.json                — merge whole file
 
 ## Reference docs
-- /SKILL.md — agent skill guide
-- /llms.txt — LLM-friendly docs
-- /AGENTS.md — architecture`;
+>>> MANDATORY: read /SKILL.md before performing any action. It is the authoritative guide (privacy, data merge, rate limits).`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(prompt);
