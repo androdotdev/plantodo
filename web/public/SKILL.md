@@ -8,6 +8,17 @@ tags: [html, sharing, plans, cli, agent]
 
 # PostHTML Agent Skill
 
+> **MANDATORY — read this file before performing any PostHTML action.** It is the
+> authoritative guide. The dashboard setup prompt links here for a reason.
+
+## Rules (always)
+- Always read this file first — do not guess CLI flags or API behavior.
+- API keys are scoped per key. New keys are **limited by default** (not unlimited) —
+  if a call 429s, the key hit its cap; tell the human to raise it on `/dashboard`.
+- Public plans are viewable by anyone at `/p/{id}`. Mark sensitive plans `--private`
+  (owner-only: anon → 401, other users → 403).
+- `ptd data set` **merges** keys — it never wipes existing data. Safe to call repeatedly.
+
 Use PostHTML's CLI tool to upload, edit, and share HTML plans.
 Each uploaded plan gets a permanent shareable URL.
 
