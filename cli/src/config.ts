@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-const CONFIG_DIR = resolve(homedir(), ".ptd");
+const CONFIG_DIR = resolve(homedir(), ".post");
 const CONFIG_FILE = resolve(CONFIG_DIR, "config.json");
 
 export interface PtdConfig {

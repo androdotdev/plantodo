@@ -14,8 +14,8 @@ const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
 const config = loadConfig();
-const API_KEY = process.env.PTD_API_KEY ?? process.env.PLANTODO_API_KEY ?? config?.api_key ?? "";
-const BASE_URL = (process.env.PTD_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
+const API_KEY = process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? config?.api_key ?? "";
+const BASE_URL = (process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -76,7 +76,7 @@ function parseDataOption(options: { data?: string; dataFile?: string }): Record<
 }
 
 const program = new Command()
-  .name("ptd")
+  .name("post")
   .description("PostHTML CLI — upload, list, delete, and replace plans")
   .version(version);
 
@@ -182,7 +182,7 @@ program
 
 program
   .command("setup")
-  .description("Save API key to ~/.ptd/config.json")
+  .description("Save API key to ~/.post/config.json")
   .option("-k, --key <key>", "API key (prompts if omitted)")
   .action(async () => {
     let key = program.opts().key as string | undefined;
@@ -200,7 +200,7 @@ program
       process.exit(1);
     }
     saveConfig({ api_key: key });
-    console.log(`${green("✓")} ${dim("saved to ~/.ptd/config.json")}`);
+    console.log(`${green("✓")} ${dim("saved to ~/.post/config.json")}`);
   });
 
 // ── data ────────────────────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ dataCmd
 async function main() {
   if (!API_KEY) {
     console.error(red.bold("✗ No API key configured."));
-    console.error(dim("Set PTD_API_KEY or run 'ptd setup' to configure your API key."));
+    console.error(dim("Set POST_API_KEY or run 'post setup' to configure your API key."));
     process.exit(1);
   }
   await program.parseAsync(process.argv);

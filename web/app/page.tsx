@@ -59,7 +59,7 @@ export default function Home() {
           </div>
           <div className="font-mono text-sm leading-relaxed">
             <p><span className="text-text-muted">$</span> <span className="text-text-primary">npm i -g @androff/posthtml-cli</span></p>
-            <p className="mt-1"><span className="text-text-muted">$</span> <span className="text-text-primary">ptd upload <span className="text-text-accent">index.html</span></span></p>
+            <p className="mt-1"><span className="text-text-muted">$</span> <span className="text-text-primary">post upload <span className="text-text-accent">index.html</span></span></p>
           </div>
         </div>
 
@@ -70,19 +70,19 @@ export default function Home() {
               num: "01",
               title: "Get an API key",
               desc: "Sign in with Google to generate a key for your agent.",
-              code: "ptd setup --key ptd_xxx",
+              code: "post setup --key post_xxx",
             },
             {
               num: "02",
               title: "Configure your agent",
               desc: "Set the API key as an environment variable.",
-              code: 'export PTD_API_KEY="ptd_..."',
+              code: 'export POST_API_KEY="post_..."',
             },
             {
               num: "03",
               title: "Upload & share plans",
               desc: "Your agent can now upload HTML plans and get shareable URLs instantly.",
-              code: "ptd upload plan.html",
+              code: "post upload plan.html",
             },
           ].map((step, i) => (
             <div key={i} className="flex gap-5">
@@ -103,7 +103,7 @@ export default function Home() {
         {/* Execution output */}
         <div className="rounded-md border border-border-default bg-bg-card p-6 mb-12">
           <div className="font-mono text-xs leading-relaxed space-y-1.5">
-            <p><span className="text-text-muted">$</span> <span className="text-text-primary">ptd upload <span className="text-text-accent">workflow.html</span></span></p>
+            <p><span className="text-text-muted">$</span> <span className="text-text-primary">post upload <span className="text-text-accent">workflow.html</span></span></p>
             <p className="text-text-muted">→ Validating HTML structure...</p>
             <p className="text-text-accent">✓ Valid markup</p>
             <p className="text-text-muted">→ Uploading to PostHTML...</p>

@@ -4,7 +4,7 @@ Share HTML plans via short, shareable URLs — built for AI agents and developer
 
 ```bash
 npm i -g @androff/posthtml-cli
-ptd upload index.html
+post upload index.html
 # → https://posthtml.vercel.app/p/abc123
 ```
 
@@ -14,7 +14,7 @@ PostHTML lets you upload raw HTML, get a permanent URL, and share it. Think past
 
 **Key features:**
 - Upload HTML → get a shareable `posthtml.vercel.app/p/<id>` URL
-- CLI (`ptd`) — upload, list, replace, delete from terminal
+- CLI (`post`) — upload, list, replace, delete from terminal
 - API — auth via API keys, integrate into any workflow
 - Google OAuth dashboard — manage keys, view plans
 
@@ -23,7 +23,7 @@ PostHTML lets you upload raw HTML, get a permanent URL, and share it. Think past
 Monorepo (Bun workspaces):
 
 - **`web/`** — Next.js 16 (App Router) — API routes + dashboard + public viewer
-- **`cli/`** — `ptd` CLI — Commander.js, published as `@androff/posthtml-cli`
+- **`cli/`** — `post` CLI — Commander.js, published as `@androff/posthtml-cli`
 
 ## Tech Stack
 
@@ -33,7 +33,7 @@ Monorepo (Bun workspaces):
 | Web | Next.js 16, Tailwind v4 |
 | DB | Neon (serverless Postgres) + Drizzle ORM |
 | Auth | Better Auth (Google OAuth + API keys) |
-| CLI | Commander.js, `ptd` |
+| CLI | Commander.js, `post` |
 
 ## Quick Start
 

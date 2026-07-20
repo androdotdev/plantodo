@@ -9,7 +9,7 @@ Give AI agents the ability to upload, edit, and share HTML plans programmaticall
 Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 
 - **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public plan viewer.
-- **cli/** — `@posthtml/cli` — npm package (`ptd`). `upload`/`list`/`delete`/`replace`/`setup`.
+- **cli/** — `@posthtml/cli` — npm package (`post`). `upload`/`list`/`delete`/`replace`/`setup`.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 - **ORM:** Drizzle ORM v1.0.0-rc.4 + drizzle-kit v1.0.0-rc.4
 - **Auth:** Better Auth — Google OAuth only (no email/password)
 - **API Keys:** Better Auth `@better-auth/api-key` plugin (rate limiting, expiry, refill)
-- **CLI:** Commander.js, Node.js fetch, published as `ptd`
+- **CLI:** Commander.js, Node.js fetch, published as `post`
 - **Package mgr:** Bun
 - **Build:** tsup (cli), Next.js (web)
 - **Language:** TypeScript 6.0.3
@@ -87,23 +87,23 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 ```bash
 npm i -g @androff/posthtml-cli
 
-ptd setup                  # save API key from dashboard
-ptd setup --key ptd_xxx    # or pass directly
+post setup                  # save API key from dashboard
+post setup --key post_xxx    # or pass directly
 
-ptd data get <id>           # get plan json data
-ptd data set <id> --key <k> --value '<json>'  # set one key in data
-ptd data set <id> --file data.json  # merge whole object into data
+post data get <id>           # get plan json data
+post data set <id> --key <k> --value '<json>'  # set one key in data
+post data set <id> --file data.json  # merge whole object into data
 
-ptd upload index.html
-ptd upload index.html --data '{"status":"draft"}'   # attach data in the same call
-ptd upload index.html --data-file meta.json         # or merge a whole JSON file
-ptd ls                     # list plans
-ptd list                   # same
-ptd delete <plan-id>
-ptd replace <plan-id> <file.html>
+post upload index.html
+post upload index.html --data '{"status":"draft"}'   # attach data in the same call
+post upload index.html --data-file meta.json         # or merge a whole JSON file
+post ls                     # list plans
+post list                   # same
+post delete <plan-id>
+post replace <plan-id> <file.html>
 ```
 
-Configuration saved to `~/.ptd/config.json`. Key override via `PTD_API_KEY` or `PLANTODO_API_KEY` env var.
+Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or `POSTHTML_API_KEY` env var.
 
 ## Page Routes
 
@@ -139,8 +139,8 @@ GOOGLE_CLIENT_SECRET     — Google OAuth client secret
 ## CLI Env Vars
 
 ```
-PTD_API_KEY              — API key (overrides config file)
-PTD_URL                  — Server URL (default http://localhost:3000)
+POST_API_KEY              — API key (overrides config file)
+POST_URL                  — Server URL (default http://localhost:3000)
 ```
 
 ## Design System

@@ -16,22 +16,22 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
 The human has provided you with an API key.
 
 ### Option A: Environment variables (recommended)
-PTD_API_KEY=${keyText}
+POST_API_KEY=${keyText}
 
 ### Option B: CLI config file
 npm i -g @androff/posthtml-cli
-ptd setup --key ${keyText}
+post setup --key ${keyText}
 
-The config file (~/.ptd/config.json) stores the key as "api_key".
+The config file (~/.post/config.json) stores the key as "api_key".
 
 ## CLI commands
-- ptd upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
-- ptd list / ptd ls            — list plans
-- ptd delete <id>             — delete a plan
-- ptd replace <id> <file>      — update content (same URL)
-- ptd data get <id>            — read a plan's JSON data
-- ptd data set <id> --key <k> --value '<json>'   — merge one key
-- ptd data set <id> --file x.json                — merge whole file
+- post upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
+- post list / post ls            — list plans
+- post delete <id>             — delete a plan
+- post replace <id> <file>      — update content (same URL)
+- post data get <id>            — read a plan's JSON data
+- post data set <id> --key <k> --value '<json>'   — merge one key
+- post data set <id> --file x.json                — merge whole file
 
 ## Reference docs
 >>> MANDATORY: read /SKILL.md before performing any action. It is the authoritative guide (privacy, data merge, rate limits).`;
