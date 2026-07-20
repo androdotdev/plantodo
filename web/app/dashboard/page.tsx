@@ -239,7 +239,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Collapsible sidebar */}
         <aside
           className={`${collapsed ? "w-16" : "w-60"} shrink-0 border-r border-border-default bg-bg-elevated flex flex-col transition-[width] duration-200`}
