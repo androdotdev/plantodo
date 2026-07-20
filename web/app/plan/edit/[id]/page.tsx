@@ -1,95 +1,117 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { authClient, SessionData } from "@/lib/auth-client"
-import { PlanEditor } from "@/app/dashboard/components/PlanEditor"
-import { ArrowLeft, Save, Edit3 } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { authClient, SessionData } from "@/lib/auth-client";
+import { usePlansStore } from "@/lib/plans-store";
+import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
+import { ArrowLeft, Save, Edit3 } from "lucide-react";
+import Link from "next/link";
 
 export default function PlanEditPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter()
-  const [id, setId] = useState<string | null>(null)
-  const [session, setSession] = useState<SessionData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [title, setTitle] = useState("")
-  const [html, setHtml] = useState("")
-  const [titleSaving, setTitleSaving] = useState(false)
-  const [htmlSaving, setHtmlSaving] = useState(false)
-  const [titleError, setTitleError] = useState<string | null>(null)
-  const [htmlError, setHtmlError] = useState<string | null>(null)
-  const [titleSaved, setTitleSaved] = useState(false)
-  const [htmlSaved, setHtmlSaved] = useState(false)
+  const router = useRouter();
+  const [id, setId] = useState<string | null>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [html, setHtml] = useState("");
+  const [titleSaving, setTitleSaving] = useState(false);
+  const [htmlSaving, setHtmlSaving] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [htmlError, setHtmlError] = useState<string | null>(null);
+  const [titleSaved, setTitleSaved] = useState(false);
+  const [htmlSaved, setHtmlSaved] = useState(false);
 
   useEffect(() => {
-    params.then((p) => setId(p.id))
-  }, [params])
+    params.then((p) => setId(p.id));
+  }, [params]);
 
   useEffect(() => {
-    if (!id) return
+    if (!id) return;
     authClient.getSession().then(({ data }) => {
       if (!data) {
-        router.push("/")
-        return
+        router.push("/");
+        return;
       }
-      setSession(data)
+      setSession(data);
+
+      // Prefer store (populated by dashboard) to avoid a redundant refetch.
+      const cached = usePlansStore.getState().getDetail(id);
+      if (cached) {
+        setTitle(cached.title ?? "");
+        setHtml(cached.html ?? "");
+        setLoading(false);
+        return;
+      }
+
       fetch(`/api/plans/${id}`).then((res) => {
         if (!res.ok) {
-          router.push("/dashboard")
-          return
+          router.push("/dashboard");
+          return;
         }
         res.json().then((data) => {
-          setTitle(data.title ?? "")
-          setHtml(data.html ?? "")
-          setLoading(false)
-        })
-      })
-    })
-  }, [id, router])
+          setTitle(data.title ?? "");
+          setHtml(data.html ?? "");
+          usePlansStore.getState().setDetail({
+            id,
+            title: data.title ?? "",
+            html: data.html ?? "",
+            data: data.data ?? {},
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            isPrivate: data.isPrivate ?? false,
+          });
+          setLoading(false);
+        });
+      });
+    });
+  }, [id, router]);
 
   async function saveTitle() {
-    setTitleSaving(true)
-    setTitleError(null)
-    setTitleSaved(false)
+    setTitleSaving(true);
+    setTitleError(null);
+    setTitleSaved(false);
     try {
       const res = await fetch(`/api/plans/${id}/setting`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
-      })
+      });
       if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? "Failed to save title")
+        const body = await res.json();
+        throw new Error(body.error ?? "Failed to save title");
       }
-      setTitleSaved(true)
-      setTimeout(() => setTitleSaved(false), 2000)
+      setTitleSaved(true);
+      if (id) usePlansStore.getState().patchDetail(id, { title });
+      setTimeout(() => setTitleSaved(false), 2000);
     } catch (e) {
-      setTitleError(e instanceof Error ? e.message : "Something went wrong")
+      setTitleError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
-      setTitleSaving(false)
+      setTitleSaving(false);
     }
   }
 
   async function saveHtml() {
-    setHtmlSaving(true)
-    setHtmlError(null)
-    setHtmlSaved(false)
+    setHtmlSaving(true);
+    setHtmlError(null);
+    setHtmlSaved(false);
     try {
       const res = await fetch(`/api/plans/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html }),
-      })
+      });
       if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? "Failed to save plan")
+        const body = await res.json();
+        throw new Error(body.error ?? "Failed to save plan");
       }
-      setHtmlSaved(true)
-      setTimeout(() => setHtmlSaved(false), 2000)
+      setHtmlSaved(true);
+      if (id) usePlansStore.getState().patchDetail(id, { html });
+      setTimeout(() => setHtmlSaved(false), 2000);
     } catch (e) {
-      setHtmlError(e instanceof Error ? e.message : "Something went wrong")
+      setHtmlError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
-      setHtmlSaving(false)
+      setHtmlSaving(false);
     }
   }
 
