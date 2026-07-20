@@ -272,6 +272,7 @@ export default function Dashboard() {
           </nav>
           <button
             onClick={() => setCollapsed((c) => !c)}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className="m-3 flex items-center gap-3 rounded-sm border border-border-default px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
           >
             {collapsed ? <PanelLeft size={16} className="shrink-0" /> : <PanelLeftClose size={16} className="shrink-0" />}
@@ -279,8 +280,8 @@ export default function Dashboard() {
           </button>
         </aside>
 
-        <main className="flex-1 min-w-0">
-          <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 space-y-8">
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="mx-auto max-w-5xl px-5 sm:px-8 py-6 space-y-5">
             {activeSection === "api" && (
               <>
                 {/* API Keys Section */}
