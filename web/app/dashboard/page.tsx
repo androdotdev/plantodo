@@ -63,11 +63,17 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
+
+  function runBusy(key: string, fn: () => Promise<void>) {
+    setBusy((prev) => ({ ...prev, [key]: true }));
+    return fn().finally(() => setBusy((prev) => ({ ...prev, [key]: false })));
+  }
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
     defaultValues: {
       name: "",
-      unlimited: true,
+      unlimited: false,
       remaining: 100,
       rateLimitEnabled: false,
       rateLimitMax: 100,
@@ -110,23 +116,27 @@ export default function Dashboard() {
 
   async function deletePlan(id: string) {
     if (!confirm("Delete this plan? The URL will stop working.")) return;
-    const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-    }
+    await runBusy(`del-plan-${id}`, async () => {
+      const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPlans((prev) => prev.filter((p) => p.id !== id));
+      }
+    });
   }
 
   async function togglePrivate(p: Plan) {
-    const res = await fetch(`/api/plans/${p.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isPrivate: !p.isPrivate }),
+    await runBusy(`toggle-${p.id}`, async () => {
+      const res = await fetch(`/api/plans/${p.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPrivate: !p.isPrivate }),
+      });
+      if (res.ok) {
+        setPlans((prev) =>
+          prev.map((plan) => (plan.id === p.id ? { ...plan, isPrivate: !p.isPrivate } : plan)),
+        );
+      }
     });
-    if (res.ok) {
-      setPlans((prev) =>
-        prev.map((plan) => (plan.id === p.id ? { ...plan, isPrivate: !p.isPrivate } : plan)),
-      );
-    }
   }
 
   const onSubmit = useCallback(async (data: NewKeyForm) => {
@@ -173,10 +183,12 @@ export default function Dashboard() {
 
   async function deleteKey(id: string) {
     if (!confirm("Revoke this key? Any service using it will lose access.")) return;
-    const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setKeys((prev) => prev.filter((k) => k.id !== id));
-    }
+    await runBusy(`del-key-${id}`, async () => {
+      const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setKeys((prev) => prev.filter((k) => k.id !== id));
+      }
+    });
   }
 
   async function copy(text: string) {
@@ -387,9 +399,10 @@ export default function Dashboard() {
                   </button>
                   <button
                     onClick={() => deleteKey(k.id)}
-                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors"
+                    disabled={busy[`del-key-${k.id}`]}
+                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
                   >
-                    Revoke
+                    {busy[`del-key-${k.id}`] ? "Revoking…" : "Revoke"}
                   </button>
                 </div>
               </div>
@@ -407,19 +420,23 @@ export default function Dashboard() {
           </div>
           <button
             onClick={async () => {
-              const res = await fetch("/api/plans", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
-              })
-              if (res.ok) {
-                const { id } = await res.json()
-                router.push(`/plan/edit/${id}`)
-              }
+              if (busy["new-plan"]) return;
+              await runBusy("new-plan", async () => {
+                const res = await fetch("/api/plans", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
+                });
+                if (res.ok) {
+                  const { id } = await res.json();
+                  router.push(`/plan/edit/${id}`);
+                }
+              });
             }}
-            className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors"
+            disabled={busy["new-plan"]}
+            className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
-            New Plan
+            {busy["new-plan"] ? "Creating…" : "New Plan"}
           </button>
         </div>
 
@@ -451,13 +468,14 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => togglePrivate(p)}
-                    className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    disabled={busy[`toggle-${p.id}`]}
+                    className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
                       p.isPrivate
                         ? "border-border-accent text-text-accent hover:bg-bg-accent-hover"
                         : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-hover"
                     }`}
                   >
-                    {p.isPrivate ? "Private" : "Public"}
+                    {busy[`toggle-${p.id}`] ? "…" : p.isPrivate ? "Private" : "Public"}
                   </button>
                   <button
                     onClick={() => window.open(`/p/${p.id}`, "_blank")}
@@ -473,9 +491,10 @@ export default function Dashboard() {
                   </button>
                   <button
                     onClick={() => deletePlan(p.id)}
-                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors"
+                    disabled={busy[`del-plan-${p.id}`]}
+                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
                   >
-                    Delete
+                    {busy[`del-plan-${p.id}`] ? "Deleting…" : "Delete"}
                   </button>
                 </div>
               </div>
