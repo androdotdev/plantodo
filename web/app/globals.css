@@ -8,7 +8,7 @@ html {
   --font-sans: "Courier New", Courier, monospace;
   --font-mono: "Courier New", Courier, monospace;
 
-  /* Backgrounds */
+  /* Backgrounds (dark default) */
   --color-bg-base: #0a0a0a;
   --color-bg-card: #111111;
   --color-bg-card-hover: #1a1a1a;
@@ -38,7 +38,35 @@ html {
   /* Danger */
   --color-danger: #ff4444;
 
-  /* Radius */
-  --radius-sm: 2px;
-  --radius-md: 4px;
+  /* Radius (softer) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+/* Light theme — calm soft gray, overrides the same token vars */
+.light {
+  --color-bg-base: #f7f8f7;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f0f1f0;
+  --color-bg-elevated: #f0f1f0;
+  --color-bg-accent: #e3f6ec;
+  --color-bg-danger: #fbe9e9;
+  --color-bg-danger-hover: #f6d6d6;
+
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5a5a5a;
+  --color-text-muted: #8a8a8a;
+  --color-text-accent: #00a857;
+  --color-text-danger: #d12b2b;
+
+  --color-border-default: #e2e4e2;
+  --color-border-hover: #c9ccc9;
+  --color-border-accent: #00a857;
+  --color-border-danger: #d12b2b;
+
+  --color-accent: #00a857;
+  --color-accent-hover: #00c267;
+  --color-accent-text: #ffffff;
+
+  --color-danger: #d12b2b;
 }
