@@ -122,7 +122,7 @@ export default function Dashboard() {
   }
 
   async function deletePlan(id: string) {
-    if (!confirm("Delete this plan? The URL will stop working.")) return;
+    if (!confirm("Delete this post? The URL will stop working.")) return;
     await runBusy(`del-plan-${id}`, async () => {
       const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -259,7 +259,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setActiveSection("plans")}
-              title="Plans"
+              title="Posts"
               className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                 activeSection === "plans"
                   ? "bg-bg-accent text-text-accent"
@@ -267,7 +267,7 @@ export default function Dashboard() {
               }`}
             >
               <FileText size={16} className="shrink-0" />
-              {!collapsed && <span>Plans</span>}
+              {!collapsed && <span>Posts</span>}
             </button>
           </nav>
           <button
@@ -280,8 +280,8 @@ export default function Dashboard() {
           </button>
         </aside>
 
-        <main className="flex-1 min-w-0 overflow-y-auto">
-          <div className="mx-auto max-w-5xl px-5 sm:px-8 py-6 space-y-5">
+        <main className="flex-1 min-w-0 flex flex-col">
+          <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-6 flex flex-col flex-1 min-h-0">
             {activeSection === "api" && (
               <>
                 {/* API Keys Section */}
@@ -482,13 +482,13 @@ export default function Dashboard() {
             )}
 
             {activeSection === "plans" && (
-              <>
+              <div className="flex flex-col flex-1 min-h-0">
                 {/* Plans Section */}
-                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                   <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Plans</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Posts</h2>
                     <p className="mt-1 text-xs text-text-secondary">
-                      Your uploaded HTML plans. Deleting a plan breaks its URL.
+                      Your uploaded HTML posts. Deleting a post breaks its URL.
                     </p>
                   </div>
                   <button
@@ -498,7 +498,7 @@ export default function Dashboard() {
                         const res = await fetch("/api/plans", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
+                          body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Post</title></head>\n<body>\n\n</body>\n</html>" }),
                         });
                         if (res.ok) {
                           const { id } = await res.json();
@@ -509,21 +509,22 @@ export default function Dashboard() {
                     disabled={busy["new-plan"]}
                     className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    {busy["new-plan"] ? "Creating…" : "New Plan"}
+                    {busy["new-plan"] ? "Creating…" : "New Post"}
                   </button>
                 </div>
 
-                {plansLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
-                  </div>
-                ) : plans.length === 0 ? (
-                  <div className="rounded-md border border-border-default p-10 text-center">
-                    <p className="text-sm text-text-secondary">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {plans.map((p) => (
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-5">
+                  {plansLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
+                    </div>
+                  ) : plans.length === 0 ? (
+                    <div className="rounded-md border border-border-default p-10 text-center">
+                      <p className="text-sm text-text-secondary">No posts yet. Click &ldquo;New Post&rdquo; to create one.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {plans.map((p) => (
                       <div
                         key={p.id}
                         className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
@@ -574,7 +575,8 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
-              </>
+              </div>
+            </div>
             )}
           </div>
         </main>
