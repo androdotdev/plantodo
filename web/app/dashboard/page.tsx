@@ -8,6 +8,7 @@ import { usePlansStore } from "@/lib/plans-store";
 import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
 import Link from "next/link";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 interface ApiKey {
   id: string;
@@ -224,6 +225,7 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
+            <ThemeToggle />
             <button
               onClick={() => authClient.signOut()}
               className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
