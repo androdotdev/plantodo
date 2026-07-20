@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
+import { usePlansStore } from "@/lib/plans-store";
+import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
 import Link from "next/link";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 
@@ -110,6 +112,7 @@ export default function Dashboard() {
     if (res.ok) {
       const data = await res.json();
       setPlans(data ?? []);
+      usePlansStore.getState().setList(data ?? []);
     }
     setPlansLoading(false);
   }
@@ -120,6 +123,8 @@ export default function Dashboard() {
       const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
       if (res.ok) {
         setPlans((prev) => prev.filter((p) => p.id !== id));
+        usePlansStore.getState().removeFromList(id);
+        usePlansStore.getState().removeDetail(id);
       }
     });
   }
@@ -135,6 +140,7 @@ export default function Dashboard() {
         setPlans((prev) =>
           prev.map((plan) => (plan.id === p.id ? { ...plan, isPrivate: !p.isPrivate } : plan)),
         );
+        usePlansStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
       }
     });
   }
