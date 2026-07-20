@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const payload: Record<string, unknown> = {
     name,
-    prefix: "ptd",
+    prefix: "post",
     userId: session.user.id,
   }
 

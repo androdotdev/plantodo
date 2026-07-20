@@ -40,10 +40,10 @@ describe("proxy middleware", () => {
       key: { referenceId: "user-123" },
     });
 
-    const req = makeRequest({ "x-api-key": "ptd_valid_key" });
+    const req = makeRequest({ "x-api-key": "post_valid_key" });
     await proxy(req);
 
-    expect(fnVerify).toHaveBeenCalledWith({ body: { key: "ptd_valid_key" } });
+    expect(fnVerify).toHaveBeenCalledWith({ body: { key: "post_valid_key" } });
     expect(NextResponse.next).toHaveBeenCalled();
     const call = vi.mocked(NextResponse.next).mock.calls[0];
     expect(call[0]?.request?.headers?.get("x-user-id")).toBe("user-123");
@@ -52,7 +52,7 @@ describe("proxy middleware", () => {
   it("does not set x-user-id when API key is invalid", async () => {
     fnVerify.mockResolvedValueOnce({ valid: false, key: null });
 
-    const req = makeRequest({ "x-api-key": "ptd_invalid" });
+    const req = makeRequest({ "x-api-key": "post_invalid" });
     await proxy(req);
 
     expect(fnVerify).toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe("proxy middleware", () => {
     });
 
     const req = makeRequest({
-      "x-api-key": "ptd_valid",
+      "x-api-key": "post_valid",
       "x-user-id": "fake-user-999",
     });
     await proxy(req);

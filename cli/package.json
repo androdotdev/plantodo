@@ -5,7 +5,7 @@
   "license": "MIT",
   "keywords": [
     "plantodo",
-    "ptd",
+    "posthtml",
     "plans",
     "html"
   ],
@@ -16,7 +16,7 @@
   },
   "type": "module",
   "bin": {
-    "ptd": "./dist/index.js"
+    "post": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

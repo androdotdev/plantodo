@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { usePlansStore } from "@/lib/plans-store";
 import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
 import Link from "next/link";
+import { KeyRound, FileText, PanelLeftClose, PanelLeft } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 import { ThemeToggle } from "./components/ThemeToggle";
 
@@ -67,6 +68,8 @@ export default function Dashboard() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const [activeSection, setActiveSection] = useState<"api" | "plans">("api");
+  const [collapsed, setCollapsed] = useState(false);
 
   function runBusy(key: string, fn: () => Promise<void>) {
     setBusy((prev) => ({ ...prev, [key]: true }));
@@ -211,14 +214,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-primary"
+    <div className="min-h-screen bg-bg-base text-text-primary flex flex-col"
       style={{
         backgroundImage: `radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)`,
         backgroundSize: "24px 24px",
       }}
     >
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 h-14 flex items-center justify-between">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <img src="/icon.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
@@ -236,294 +239,345 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 sm:px-8 py-10 space-y-8">
-        {/* API Keys Section */}
-        <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">API Keys</h1>
-            <p className="mt-1 text-xs text-text-secondary">
-              Manage your API keys for the CLI and programmatic access.
-            </p>
-          </div>
-        </div>
-
-        {newKey && (
-          <div className="rounded-md border border-border-accent bg-bg-accent p-5">
-            <p className="text-xs font-medium text-text-accent uppercase tracking-wider">
-              Key generated — copy it now. You won&apos;t see it again.
-            </p>
-            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary select-all">
-                {newKey}
-              </code>
-              <button
-                onClick={() => copy(newKey)}
-                className="rounded-sm border border-border-accent px-3 py-2 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-md border border-border-default bg-bg-card p-6">
-          <h2 className="text-sm font-medium">Generate New Key</h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  {...register("name")}
-                  placeholder="Key name (optional)"
-                  className="w-full rounded-sm border border-border-default bg-bg-elevated px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-border-hover"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors shrink-0"
-              >
-                {submitting ? "Generating\u2026" : "Generate Key"}
-              </button>
-            </div>
-
-            <details className="group">
-              <summary className="cursor-pointer text-xs text-text-secondary hover:text-text-primary transition-colors select-none">
-                Advanced settings
-              </summary>
-              <div className="mt-4 space-y-4 pl-1">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    {...register("unlimited")}
-                    className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
-                  />
-                  <span className="text-sm text-text-primary">Unlimited usage (no cap)</span>
-                </label>
-
-                {!unlimited && (
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs text-text-muted w-28 shrink-0">Max uses</label>
-                    <input
-                      type="number"
-                      {...register("remaining", { valueAsNumber: true })}
-                      min={1}
-                      className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
-                    />
-                  </div>
-                )}
-
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    {...register("rateLimitEnabled")}
-                    className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
-                  />
-                  <span className="text-sm text-text-primary">Rate limiting</span>
-                </label>
-
-                {rateLimitEnabled && (
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs text-text-muted w-28 shrink-0">Max per window</label>
-                    <input
-                      type="number"
-                      {...register("rateLimitMax", { valueAsNumber: true })}
-                      min={1}
-                      className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
-                    />
-                    <label className="text-xs text-text-muted">requests per</label>
-                    <select
-                      {...register("rateLimitTimeWindow", { valueAsNumber: true })}
-                      className="rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
-                    >
-                      <option value={3600000}>hour</option>
-                      <option value={86400000}>day</option>
-                      <option value={604800000}>week</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </details>
-          </form>
-          {error && <p className="mt-2 text-xs text-text-danger">{error}</p>}
-        </div>
-
-        {keys.length === 0 ? (
-          <div className="rounded-md border border-border-default p-10 text-center">
-            <p className="text-sm text-text-secondary">No API keys yet. Generate one above.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {keys.map((k) => (
-              <div
-                key={k.id}
-                className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-                    <span className="text-sm font-medium truncate">
-                      {k.name || <span className="text-text-muted italic">unnamed</span>}
-                    </span>
-                    <code className="text-xs text-text-muted select-all">
-                      {k.start}
-                    </code>
-                    {k.enabled && (
-                      <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent">
-                        active
-                      </span>
-                    )}
-                    {!k.enabled && (
-                      <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-danger text-text-danger">
-                        revoked
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-text-muted">
-                    Created {formatDate(k.createdAt)}
-                    {k.lastRequest && ` · Last used ${formatDate(k.lastRequest)}`}
-                  </p>
-                  {k.remaining !== null && (
-                    <p className="mt-0.5 text-xs text-text-muted">
-                      {k.remaining} uses remaining
-                    </p>
-                  )}
-                  {k.rateLimitEnabled && (
-                    <p className="mt-0.5 text-xs text-text-muted">
-                      Rate limit: {k.rateLimitMax}/{formatTimeWindow(k.rateLimitTimeWindow)}
-                    </p>
-                  )}
-                  {k.lastRequest && (
-                    <p className="mt-0.5 text-xs text-text-accent">
-                      Last action: ptd upload via <span className="font-semibold">{k.name || "unnamed"}</span>
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => copy(k.start)}
-                    className="rounded-sm border border-border-accent px-3 py-1.5 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
-                  >
-                    Copy
-                  </button>
-                  <button
-                    onClick={() => deleteKey(k.id)}
-                    disabled={busy[`del-key-${k.id}`]}
-                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
-                  >
-                    {busy[`del-key-${k.id}`] ? "Revoking…" : "Revoke"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Plans Section */}
-        <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Plans</h2>
-            <p className="mt-1 text-xs text-text-secondary">
-              Your uploaded HTML plans. Deleting a plan breaks its URL.
-            </p>
-          </div>
+      <div className="flex flex-1 min-h-0">
+        {/* Collapsible sidebar */}
+        <aside
+          className={`${collapsed ? "w-16" : "w-60"} shrink-0 border-r border-border-default bg-bg-elevated flex flex-col transition-[width] duration-200`}
+        >
+          <nav className="flex-1 p-3 space-y-1">
+            <button
+              onClick={() => setActiveSection("api")}
+              title="API Keys"
+              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
+                activeSection === "api"
+                  ? "bg-bg-accent text-text-accent"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
+              }`}
+            >
+              <KeyRound size={16} className="shrink-0" />
+              {!collapsed && <span>API Keys</span>}
+            </button>
+            <button
+              onClick={() => setActiveSection("plans")}
+              title="Plans"
+              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
+                activeSection === "plans"
+                  ? "bg-bg-accent text-text-accent"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
+              }`}
+            >
+              <FileText size={16} className="shrink-0" />
+              {!collapsed && <span>Plans</span>}
+            </button>
+          </nav>
           <button
-            onClick={async () => {
-              if (busy["new-plan"]) return;
-              await runBusy("new-plan", async () => {
-                const res = await fetch("/api/plans", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
-                });
-                if (res.ok) {
-                  const { id } = await res.json();
-                  router.push(`/plan/edit/${id}`);
-                }
-              });
-            }}
-            disabled={busy["new-plan"]}
-            className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
+            onClick={() => setCollapsed((c) => !c)}
+            className="m-3 flex items-center gap-3 rounded-sm border border-border-default px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
           >
-            {busy["new-plan"] ? "Creating…" : "New Plan"}
+            {collapsed ? <PanelLeft size={16} className="shrink-0" /> : <PanelLeftClose size={16} className="shrink-0" />}
+            {!collapsed && <span>Collapse</span>}
           </button>
-        </div>
+        </aside>
 
-        {plansLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="rounded-md border border-border-default p-10 text-center">
-            <p className="text-sm text-text-secondary">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {plans.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium truncate">
-                      {p.title || <span className="text-text-muted italic">untitled</span>}
-                    </span>
+        <main className="flex-1 min-w-0">
+          <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 space-y-8">
+            {activeSection === "api" && (
+              <>
+                {/* API Keys Section */}
+                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">API Keys</h1>
+                    <p className="mt-1 text-xs text-text-secondary">
+                      Manage your API keys for the CLI and programmatic access.
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-text-muted">
-                    {p.id} · Created {formatDate(p.createdAt)}
-                  </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => togglePrivate(p)}
-                    disabled={busy[`toggle-${p.id}`]}
-                    className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                      p.isPrivate
-                        ? "border-border-accent text-text-accent hover:bg-bg-accent-hover"
-                        : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-hover"
-                    }`}
-                  >
-                    {busy[`toggle-${p.id}`] ? "…" : p.isPrivate ? "Private" : "Public"}
-                  </button>
-                  <button
-                    onClick={() => window.open(`/p/${p.id}`, "_blank")}
-                    className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => router.push(`/plan/edit/${p.id}`)}
-                    className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deletePlan(p.id)}
-                    disabled={busy[`del-plan-${p.id}`]}
-                    className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
-                  >
-                    {busy[`del-plan-${p.id}`] ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* Agent setup prompt */}
-        <div className="rounded-md border border-border-default bg-bg-card p-6">
-          <div className="flex items-center gap-2">
-            <span className="text-text-muted text-xs">&#9881;</span>
-            <h2 className="text-sm font-medium text-text-primary">Agent setup prompt</h2>
+                {newKey && (
+                  <div className="rounded-md border border-border-accent bg-bg-accent p-5">
+                    <p className="text-xs font-medium text-text-accent uppercase tracking-wider">
+                      Key generated — copy it now. You won&apos;t see it again.
+                    </p>
+                    <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary select-all">
+                        {newKey}
+                      </code>
+                      <button
+                        onClick={() => copy(newKey)}
+                        className="rounded-sm border border-border-accent px-3 py-2 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-md border border-border-default bg-bg-card p-6">
+                  <h2 className="text-sm font-medium">Generate New Key</h2>
+                  <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          {...register("name")}
+                          placeholder="Key name (optional)"
+                          className="w-full rounded-sm border border-border-default bg-bg-elevated px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-border-hover"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors shrink-0"
+                      >
+                        {submitting ? "Generating…" : "Generate Key"}
+                      </button>
+                    </div>
+
+                    <details className="group">
+                      <summary className="cursor-pointer text-xs text-text-secondary hover:text-text-primary transition-colors select-none">
+                        Advanced settings
+                      </summary>
+                      <div className="mt-4 space-y-4 pl-1">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            {...register("unlimited")}
+                            className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
+                          />
+                          <span className="text-sm text-text-primary">Unlimited usage (no cap)</span>
+                        </label>
+
+                        {!unlimited && (
+                          <div className="flex items-center gap-3">
+                            <label className="text-xs text-text-muted w-28 shrink-0">Max uses</label>
+                            <input
+                              type="number"
+                              {...register("remaining", { valueAsNumber: true })}
+                              min={1}
+                              className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
+                            />
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            {...register("rateLimitEnabled")}
+                            className="rounded-sm border-border-default bg-bg-elevated text-text-primary focus:ring-border-hover"
+                          />
+                          <span className="text-sm text-text-primary">Rate limiting</span>
+                        </label>
+
+                        {rateLimitEnabled && (
+                          <div className="flex items-center gap-3">
+                            <label className="text-xs text-text-muted w-28 shrink-0">Max per window</label>
+                            <input
+                              type="number"
+                              {...register("rateLimitMax", { valueAsNumber: true })}
+                              min={1}
+                              className="w-28 rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
+                            />
+                            <label className="text-xs text-text-muted">requests per</label>
+                            <select
+                              {...register("rateLimitTimeWindow", { valueAsNumber: true })}
+                              className="rounded-sm border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-border-hover"
+                            >
+                              <option value={3600000}>hour</option>
+                              <option value={86400000}>day</option>
+                              <option value={604800000}>week</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  </form>
+                  {error && <p className="mt-2 text-xs text-text-danger">{error}</p>}
+                </div>
+
+                {keys.length === 0 ? (
+                  <div className="rounded-md border border-border-default p-10 text-center">
+                    <p className="text-sm text-text-secondary">No API keys yet. Generate one above.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {keys.map((k) => (
+                      <div
+                        key={k.id}
+                        className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                            <span className="text-sm font-medium truncate">
+                              {k.name || <span className="text-text-muted italic">unnamed</span>}
+                            </span>
+                            <code className="text-xs text-text-muted select-all">
+                              {k.start}
+                            </code>
+                            {k.enabled && (
+                              <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent">
+                                active
+                              </span>
+                            )}
+                            {!k.enabled && (
+                              <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-danger text-text-danger">
+                                revoked
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-xs text-text-muted">
+                            Created {formatDate(k.createdAt)}
+                            {k.lastRequest && ` · Last used ${formatDate(k.lastRequest)}`}
+                          </p>
+                          {k.remaining !== null && (
+                            <p className="mt-0.5 text-xs text-text-muted">
+                              {k.remaining} uses remaining
+                            </p>
+                          )}
+                          {k.rateLimitEnabled && (
+                            <p className="mt-0.5 text-xs text-text-muted">
+                              Rate limit: {k.rateLimitMax}/{formatTimeWindow(k.rateLimitTimeWindow)}
+                            </p>
+                          )}
+                          {k.lastRequest && (
+                            <p className="mt-0.5 text-xs text-text-accent">
+                              Last action: post upload via <span className="font-semibold">{k.name || "unnamed"}</span>
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => copy(k.start)}
+                            className="rounded-sm border border-border-accent px-3 py-1.5 text-xs font-medium text-text-accent hover:bg-bg-accent transition-colors"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            onClick={() => deleteKey(k.id)}
+                            disabled={busy[`del-key-${k.id}`]}
+                            className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
+                          >
+                            {busy[`del-key-${k.id}`] ? "Revoking…" : "Revoke"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Agent setup prompt */}
+                <div className="rounded-md border border-border-default bg-bg-card p-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-text-muted text-xs">⚙</span>
+                    <h2 className="text-sm font-medium text-text-primary">Agent setup prompt</h2>
+                  </div>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    Copy this prompt into your agent&apos;s system configuration.
+                  </p>
+                  <div className="mt-4">
+                    <AgentSetupPrompt apiKey={newKey ?? undefined} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeSection === "plans" && (
+              <>
+                {/* Plans Section */}
+                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Plans</h2>
+                    <p className="mt-1 text-xs text-text-secondary">
+                      Your uploaded HTML plans. Deleting a plan breaks its URL.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (busy["new-plan"]) return;
+                      await runBusy("new-plan", async () => {
+                        const res = await fetch("/api/plans", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>" }),
+                        });
+                        if (res.ok) {
+                          const { id } = await res.json();
+                          router.push(`/plan/edit/${id}`);
+                        }
+                      });
+                    }}
+                    disabled={busy["new-plan"]}
+                    className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
+                  >
+                    {busy["new-plan"] ? "Creating…" : "New Plan"}
+                  </button>
+                </div>
+
+                {plansLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
+                  </div>
+                ) : plans.length === 0 ? (
+                  <div className="rounded-md border border-border-default p-10 text-center">
+                    <p className="text-sm text-text-secondary">No plans yet. Click &ldquo;New Plan&rdquo; to create one.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {plans.map((p) => (
+                      <div
+                        key={p.id}
+                        className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium truncate">
+                              {p.title || <span className="text-text-muted italic">untitled</span>}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-text-muted">
+                            {p.id} · Created {formatDate(p.createdAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => togglePrivate(p)}
+                            disabled={busy[`toggle-${p.id}`]}
+                            className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                              p.isPrivate
+                                ? "border-border-accent text-text-accent hover:bg-bg-accent-hover"
+                                : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-hover"
+                            }`}
+                          >
+                            {busy[`toggle-${p.id}`] ? "…" : p.isPrivate ? "Private" : "Public"}
+                          </button>
+                          <button
+                            onClick={() => window.open(`/p/${p.id}`, "_blank")}
+                            className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => router.push(`/plan/edit/${p.id}`)}
+                            className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deletePlan(p.id)}
+                            disabled={busy[`del-plan-${p.id}`]}
+                            className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
+                          >
+                            {busy[`del-plan-${p.id}`] ? "Deleting…" : "Delete"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <p className="mt-1 text-xs text-text-secondary">
-            Copy this prompt into your agent&apos;s system configuration.
-          </p>
-          <div className="mt-4">
-            <AgentSetupPrompt apiKey={newKey ?? undefined} />
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
