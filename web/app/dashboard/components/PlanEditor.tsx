@@ -15,16 +15,17 @@ const MonacoEditor = dynamic(
   },
 )
 
-export function PlanEditor({ value, onChange, height = "300px", onMount }: {
+export function PlanEditor({ value, onChange, height = "300px", language = "html", onMount }: {
   value: string
   onChange: (v: string) => void
   height?: string
+  language?: string
   onMount?: (editor: editor.IStandaloneCodeEditor) => void
 }) {
   return (
     <MonacoEditor
       height={height}
-      defaultLanguage="html"
+      defaultLanguage={language}
       theme="vs-dark"
       value={value}
       onChange={(v) => onChange(v ?? "")}

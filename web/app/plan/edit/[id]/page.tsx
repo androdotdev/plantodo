@@ -5,22 +5,29 @@ import { useRouter } from "next/navigation";
 import { authClient, SessionData } from "@/lib/auth-client";
 import { usePlansStore } from "@/lib/plans-store";
 import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
-import { ArrowLeft, Save, Edit3 } from "lucide-react";
+import { ArrowLeft, Save, Edit3, FileCode, Database } from "lucide-react";
 import Link from "next/link";
+
+type Tab = "html" | "data";
 
 export default function PlanEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [id, setId] = useState<string | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("html");
   const [title, setTitle] = useState("");
   const [html, setHtml] = useState("");
+  const [data, setData] = useState("{}");
   const [titleSaving, setTitleSaving] = useState(false);
   const [htmlSaving, setHtmlSaving] = useState(false);
+  const [dataSaving, setDataSaving] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [htmlError, setHtmlError] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [titleSaved, setTitleSaved] = useState(false);
   const [htmlSaved, setHtmlSaved] = useState(false);
+  const [dataSaved, setDataSaved] = useState(false);
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -40,6 +47,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
       if (cached) {
         setTitle(cached.title ?? "");
         setHtml(cached.html ?? "");
+        setData(JSON.stringify(cached.data ?? {}, null, 2));
         setLoading(false);
         return;
       }
@@ -52,6 +60,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         res.json().then((data) => {
           setTitle(data.title ?? "");
           setHtml(data.html ?? "");
+          setData(JSON.stringify(data.data ?? {}, null, 2));
           usePlansStore.getState().setDetail({
             id,
             title: data.title ?? "",
@@ -66,6 +75,38 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
       });
     });
   }, [id, router]);
+
+  async function saveData() {
+    setDataSaving(true);
+    setDataError(null);
+    setDataSaved(false);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      setDataError("Invalid JSON — fix syntax before saving");
+      setDataSaving(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/plans/${id}/data`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: parsed }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error ?? "Failed to save data");
+      }
+      setDataSaved(true);
+      if (id) usePlansStore.getState().patchDetail(id, { data: parsed as Record<string, unknown> });
+      setTimeout(() => setDataSaved(false), 2000);
+    } catch (e) {
+      setDataError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setDataSaving(false);
+    }
+  }
 
   async function saveTitle() {
     setTitleSaving(true);
@@ -188,23 +229,67 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         </div>
         {titleError && <p className="text-xs text-text-danger ml-8">{titleError}</p>}
 
-        {/* HTML editor */}
+        {/* File tabs (VS Code-like) */}
         <div className="rounded-md border border-border-default bg-bg-card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border-default">
-            <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">HTML</span>
-            <button
-              onClick={saveHtml}
-              disabled={htmlSaving}
-              className="flex items-center gap-2 rounded-sm bg-accent px-4 py-1.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors"
-            >
-              <Save size={14} />
-              {htmlSaving ? "Saving..." : htmlSaved ? "Saved!" : "Save Edit"}
-            </button>
+          <div className="flex items-center justify-between px-3 border-b border-border-default bg-bg-elevated">
+            <div className="flex">
+              <button
+                onClick={() => setTab("html")}
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
+                  tab === "html"
+                    ? "border-border-accent text-text-primary"
+                    : "border-transparent text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <FileCode size={14} />
+                index.html
+              </button>
+              <button
+                onClick={() => setTab("data")}
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
+                  tab === "data"
+                    ? "border-border-accent text-text-primary"
+                    : "border-transparent text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <Database size={14} />
+                data.json
+              </button>
+            </div>
+            {tab === "html" ? (
+              <button
+                onClick={saveHtml}
+                disabled={htmlSaving}
+                className="flex items-center gap-2 rounded-sm bg-accent px-4 py-1.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors"
+              >
+                <Save size={14} />
+                {htmlSaving ? "Saving..." : htmlSaved ? "Saved!" : "Save HTML"}
+              </button>
+            ) : (
+              <button
+                onClick={saveData}
+                disabled={dataSaving}
+                className="flex items-center gap-2 rounded-sm bg-accent px-4 py-1.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors"
+              >
+                <Save size={14} />
+                {dataSaving ? "Saving..." : dataSaved ? "Saved!" : "Save Data"}
+              </button>
+            )}
           </div>
-          <PlanEditor value={html} onChange={setHtml} height="500px" />
-          {htmlError && <p className="text-xs text-text-danger px-5 py-2">{htmlError}</p>}
+
+          {tab === "html" ? (
+            <>
+              <PlanEditor value={html} onChange={setHtml} height="500px" />
+              {htmlError && <p className="text-xs text-text-danger px-5 py-2">{htmlError}</p>}
+            </>
+          ) : (
+            <>
+              <PlanEditor value={data} onChange={setData} language="json" height="500px" />
+              {dataError && <p className="text-xs text-text-danger px-5 py-2">{dataError}</p>}
+            </>
+          )}
         </div>
       </main>
     </div>
-  )
+  );
 }
