@@ -235,7 +235,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             <div className="flex">
               <button
                 onClick={() => setTab("html")}
-                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 -mb-px transition-colors ${
                   tab === "html"
                     ? "border-border-accent text-text-primary"
                     : "border-transparent text-text-secondary hover:text-text-primary"
@@ -246,7 +246,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
               </button>
               <button
                 onClick={() => setTab("data")}
-                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 transition-colors ${
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 -mb-px transition-colors ${
                   tab === "data"
                     ? "border-border-accent text-text-primary"
                     : "border-transparent text-text-secondary hover:text-text-primary"

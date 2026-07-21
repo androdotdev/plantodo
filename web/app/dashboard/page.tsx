@@ -239,11 +239,11 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="grid flex-1 min-h-0"
+        style={{ gridTemplateColumns: collapsed ? "64px 1fr" : "240px 1fr" }}
+      >
         {/* Collapsible sidebar */}
-        <aside
-          className={`${collapsed ? "w-16" : "w-60"} shrink-0 border-r border-border-default bg-bg-elevated flex flex-col transition-[width] duration-200`}
-        >
+        <aside className="min-h-0 overflow-y-auto border-r border-border-default bg-bg-elevated flex flex-col">
           <nav className="flex-1 p-3 space-y-1">
             <button
               onClick={() => setActiveSection("api")}
@@ -280,8 +280,8 @@ export default function Dashboard() {
           </button>
         </aside>
 
-        <main className="flex-1 min-w-0 flex flex-col">
-          <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-6 flex flex-col flex-1 min-h-0">
+        <main className="min-h-0 overflow-y-auto flex flex-col">
+          <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-6 space-y-5">
             {activeSection === "api" && (
               <>
                 {/* API Keys Section */}
@@ -482,9 +482,9 @@ export default function Dashboard() {
             )}
 
             {activeSection === "plans" && (
-              <div className="flex flex-col flex-1 min-h-0">
+              <>
                 {/* Plans Section */}
-                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Posts</h2>
                     <p className="mt-1 text-xs text-text-secondary">
@@ -513,7 +513,7 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-5">
+                <div className="space-y-4">
                   {plansLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
@@ -576,7 +576,7 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-            </div>
+              </>
             )}
           </div>
         </main>
