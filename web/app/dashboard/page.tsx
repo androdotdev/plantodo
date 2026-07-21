@@ -214,7 +214,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-primary flex flex-col"
+    <div className="h-screen overflow-hidden bg-bg-base text-text-primary flex flex-col"
       style={{
         backgroundImage: `radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)`,
         backgroundSize: "24px 24px",
