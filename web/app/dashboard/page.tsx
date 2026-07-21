@@ -69,7 +69,16 @@ export default function Dashboard() {
   const [plansLoading, setPlansLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [activeSection, setActiveSection] = useState<"api" | "plans">("api");
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sidebar-collapsed") === "true"
+    }
+    return false
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", String(collapsed))
+  }, [collapsed])
 
   function runBusy(key: string, fn: () => Promise<void>) {
     setBusy((prev) => ({ ...prev, [key]: true }));
