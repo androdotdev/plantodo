@@ -18,6 +18,9 @@ const PRIVATE_HTML = `<!DOCTYPE html>
 <a class="home" href="/">Go home</a>
 </main></body></html>`;
 
+const DATA_SCRIPT = (data: unknown) =>
+  `<script type="application/json" id="__ph_data">${JSON.stringify(data ?? {})}</script>`;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -25,7 +28,7 @@ export async function GET(
   const { id } = await params;
 
   const plan = await db
-    .select({ html: plans.html, isPrivate: plans.isPrivate, userId: plans.userId })
+    .select({ html: plans.html, data: plans.data, isPrivate: plans.isPrivate, userId: plans.userId })
     .from(plans)
     .where(eq(plans.id, id))
     .then((rows) => rows[0]);
@@ -45,7 +48,12 @@ export async function GET(
     }
   }
 
-  return new NextResponse(plan.html, {
+  const injected = plan.html.replace(
+    "</body>",
+    `${DATA_SCRIPT(plan.data)}\n</body>`
+  );
+
+  return new NextResponse(injected, {
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
