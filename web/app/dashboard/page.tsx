@@ -243,7 +243,7 @@ export default function Dashboard() {
         style={{ gridTemplateColumns: collapsed ? "64px 1fr" : "240px 1fr" }}
       >
         {/* Collapsible sidebar */}
-        <aside className="min-h-0 overflow-y-auto border-r border-border-default bg-bg-elevated flex flex-col">
+        <aside className="border-r border-border-default bg-bg-elevated flex flex-col">
           <nav className="flex-1 p-3 space-y-1">
             <button
               onClick={() => setActiveSection("api")}
