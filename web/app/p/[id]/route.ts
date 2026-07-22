@@ -18,8 +18,75 @@ const PRIVATE_HTML = `<!DOCTYPE html>
 <a class="home" href="/">Go home</a>
 </main></body></html>`;
 
+// safe: `</` inside the JSON payload can't prematurely close the script tag —
+// browsers only scan for the literal byte sequence "</script", so escaping
+// just the "<" of "</" is sufficient and keeps the JSON otherwise untouched.
 const DATA_SCRIPT = (data: unknown) =>
-  `<script type="application/json" id="__ph_data">${JSON.stringify(data ?? {})}</script>`;
+  `<script type="application/json" id="__ph_data">${JSON.stringify(data ?? {}).replace(/</g, "\\u003c")}</script>`;
+
+// Minimal auto-bind runtime: fills {{field}} text, data-bind-attr="attr:path",
+// and <template data-each="path"> loops from __ph_data. No fetch, no user JS
+// required for the common case — posts can still write their own script and
+// ignore this entirely if they need more than flat/loop binding.
+const RUNTIME_SCRIPT = `<script>
+(function () {
+  var el = document.getElementById("__ph_data");
+  if (!el) return;
+  var data;
+  try { data = JSON.parse(el.textContent); } catch (e) { return; }
+
+  function get(obj, path) {
+    return path.split(".").reduce(function (o, k) {
+      return o == null ? undefined : o[k];
+    }, obj);
+  }
+
+  function interpolate(text, ctx) {
+    return text.replace(/\\{\\{\\s*([\\w.]+)\\s*\\}\\}/g, function (_, path) {
+      var v = path === "this" ? ctx : get(ctx, path);
+      return v == null ? "" : String(v);
+    });
+  }
+
+  function bind(root, ctx) {
+    root.querySelectorAll("template[data-each]").forEach(function (tpl) {
+      var items = get(ctx, tpl.getAttribute("data-each")) || [];
+      var frag = document.createDocumentFragment();
+      items.forEach(function (item) {
+        var wrapper = document.createElement("div");
+        wrapper.appendChild(tpl.content.cloneNode(true));
+        bind(wrapper, item);
+        while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
+      });
+      tpl.replaceWith(frag);
+    });
+
+    root.querySelectorAll("[data-bind-attr]").forEach(function (node) {
+      node.getAttribute("data-bind-attr").split(";").forEach(function (pair) {
+        var parts = pair.split(":");
+        var attr = (parts[0] || "").trim();
+        var path = (parts[1] || "").trim();
+        if (!attr || !path) return;
+        var v = get(ctx, path);
+        if (v != null) node.setAttribute(attr, v);
+      });
+    });
+
+    root.querySelectorAll("*").forEach(function (node) {
+      if (node.tagName === "TEMPLATE") return;
+      Array.prototype.forEach.call(node.childNodes, function (child) {
+        if (child.nodeType === 3 && child.textContent.indexOf("{{") !== -1) {
+          child.textContent = interpolate(child.textContent, ctx);
+        }
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    bind(document.body, data);
+  });
+})();
+</script>`;
 
 export async function GET(
   request: NextRequest,
@@ -48,10 +115,10 @@ export async function GET(
     }
   }
 
-  const injected = plan.html.replace(
-    "</body>",
-    `${DATA_SCRIPT(plan.data)}\n</body>`
-  );
+  const scripts = `${DATA_SCRIPT(plan.data)}\n${RUNTIME_SCRIPT}`;
+  const injected = plan.html.includes("</body>")
+    ? plan.html.replace("</body>", `${scripts}\n</body>`)
+    : `${plan.html}\n${scripts}`;
 
   return new NextResponse(injected, {
     headers: { "Content-Type": "text/html; charset=utf-8" },
