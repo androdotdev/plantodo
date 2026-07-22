@@ -5,7 +5,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { db } from "@/db"
-import { plans } from "@/db/schema"
+import { posts } from "@/db/schema"
 import { and, eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
@@ -21,22 +21,22 @@ const MAX_HTML_SIZE = 524_288 // 512KB
 function getToolDefs() {
   return [
     {
-      name: "list_plans",
-      description: "List all plans for the authenticated user",
+      name: "list_posts",
+      description: "List all posts for the authenticated user",
       inputSchema: { type: "object", properties: {} },
     },
     {
-      name: "get_plan",
-      description: "Get plan HTML content by ID",
+      name: "get_post",
+      description: "Get post HTML content by ID",
       inputSchema: {
         type: "object",
-        properties: { id: { type: "string", description: "Plan ID" } },
+        properties: { id: { type: "string", description: "Post ID" } },
         required: ["id"],
       },
     },
     {
-      name: "upload_plan",
-      description: "Create a new plan from HTML content",
+      name: "upload_post",
+      description: "Create a new post from HTML content",
       inputSchema: {
         type: "object",
         properties: {
@@ -47,12 +47,12 @@ function getToolDefs() {
       },
     },
     {
-      name: "replace_plan",
-      description: "Replace an existing plan's HTML while preserving its ID and URL",
+      name: "replace_post",
+      description: "Replace an existing post's HTML while preserving its ID and URL",
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Plan ID to replace" },
+          id: { type: "string", description: "Post ID to replace" },
           html: { type: "string", description: "New HTML content" },
           title: { type: "string", description: "Optional new title" },
         },
@@ -60,11 +60,11 @@ function getToolDefs() {
       },
     },
     {
-      name: "delete_plan",
-      description: "Delete a plan by ID",
+      name: "delete_post",
+      description: "Delete a post by ID",
       inputSchema: {
         type: "object",
-        properties: { id: { type: "string", description: "Plan ID to delete" } },
+        properties: { id: { type: "string", description: "Post ID to delete" } },
         required: ["id"],
       },
     },
@@ -73,53 +73,53 @@ function getToolDefs() {
 
 async function handleToolCall(name: string, args: Record<string, unknown> | undefined, userId: string) {
   switch (name) {
-    // ── list_plans ───────────────────────────────────────────────────────
-    case "list_plans": {
+    // ── list_posts ───────────────────────────────────────────────────────
+    case "list_posts": {
       const list = await db
         .select({
-          id: plans.id,
-          title: plans.title,
-          createdAt: plans.createdAt,
-          updatedAt: plans.updatedAt,
+          id: posts.id,
+          title: posts.title,
+          createdAt: posts.createdAt,
+          updatedAt: posts.updatedAt,
         })
-        .from(plans)
-        .where(eq(plans.userId, userId))
-        .orderBy(plans.createdAt)
+        .from(posts)
+        .where(eq(posts.userId, userId))
+        .orderBy(posts.createdAt)
 
       return {
         content: [{ type: "text" as const, text: JSON.stringify(list, null, 2) }],
       }
     }
 
-    // ── get_plan ─────────────────────────────────────────────────────────
-    case "get_plan": {
+    // ── get_post ─────────────────────────────────────────────────────────
+    case "get_post": {
       if (!args?.id || typeof args.id !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id is required" }) }], isError: true }
       }
 
-      const plan = (await db
+      const post = (await db
         .select()
-        .from(plans)
-        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
+        .from(posts)
+        .where(and(eq(posts.id, args.id), eq(posts.userId, userId)))
         .limit(1))[0]
 
-      if (!plan) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
+      if (!post) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
       }
 
       return {
         content: [
-          { type: "text" as const, text: plan.html },
+          { type: "text" as const, text: post.html },
           {
             type: "text" as const,
-            text: JSON.stringify({ id: plan.id, title: plan.title, createdAt: plan.createdAt, updatedAt: plan.updatedAt }),
+            text: JSON.stringify({ id: post.id, title: post.title, createdAt: post.createdAt, updatedAt: post.updatedAt }),
           },
         ],
       }
     }
 
-    // ── upload_plan ──────────────────────────────────────────────────────
-    case "upload_plan": {
+    // ── upload_post ──────────────────────────────────────────────────────
+    case "upload_post": {
       if (!args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "html is required" }) }], isError: true }
       }
@@ -130,15 +130,15 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       const id = nanoid(16)
       const title = typeof args.title === "string" ? args.title : ""
 
-      await db.insert(plans).values({ id, html: args.html, userId, title })
+      await db.insert(posts).values({ id, html: args.html, userId, title })
 
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}` }, null, 2) }],
       }
     }
 
-    // ── replace_plan ─────────────────────────────────────────────────────
-    case "replace_plan": {
+    // ── replace_post ─────────────────────────────────────────────────────
+    case "replace_post": {
       if (!args?.id || typeof args.id !== "string" || !args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id and html are required" }) }], isError: true }
       }
@@ -148,45 +148,45 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
 
       const existing = (await db
         .select()
-        .from(plans)
-        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
+        .from(posts)
+        .where(and(eq(posts.id, args.id), eq(posts.userId, userId)))
         .limit(1))[0]
 
       if (!existing) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
       }
 
       await db
-        .update(plans)
+        .update(posts)
         .set({
           html: args.html,
           title: typeof args.title === "string" ? args.title : existing.title,
           updatedAt: new Date(),
         })
-        .where(eq(plans.id, args.id))
+        .where(eq(posts.id, args.id))
 
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ id: args.id, url: `${BASE_URL}/p/${args.id}` }, null, 2) }],
       }
     }
 
-    // ── delete_plan ──────────────────────────────────────────────────────
-    case "delete_plan": {
+    // ── delete_post ──────────────────────────────────────────────────────
+    case "delete_post": {
       if (!args?.id || typeof args.id !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id is required" }) }], isError: true }
       }
 
       const existing = (await db
         .select()
-        .from(plans)
-        .where(and(eq(plans.id, args.id), eq(plans.userId, userId)))
+        .from(posts)
+        .where(and(eq(posts.id, args.id), eq(posts.userId, userId)))
         .limit(1))[0]
 
       if (!existing) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Plan not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
       }
 
-      await db.delete(plans).where(eq(plans.id, args.id))
+      await db.delete(posts).where(eq(posts.id, args.id))
 
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ success: true }) }],

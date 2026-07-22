@@ -35,7 +35,7 @@ async function api(path: string, init?: RequestInit) {
 }
 
 function printUploadOutput(url: string, isPrivate?: boolean) {
-  console.log(`\n${dim("Plan URL:")} ${cyan(url)}`);
+  console.log(`\n${dim("Post URL:")} ${cyan(url)}`);
   const visibility = isPrivate ? red("[private]") : green("[public]");
   console.log(`${dim("Shareable:")} ${visibility}`);
 }
@@ -77,16 +77,16 @@ function parseDataOption(options: { data?: string; dataFile?: string }): Record<
 
 const program = new Command()
   .name("post")
-  .description("PostHTML CLI — upload, list, delete, and replace plans")
+  .description("PostHTML CLI — upload, list, delete, and replace posts")
   .version(version);
 
 program
   .command("upload <file>")
-  .description("Upload an HTML plan file")
-  .option("-d, --data <json>", "JSON data to attach (merged into plan.data)")
-  .option("--data-file <path>", "JSON file to merge into plan.data")
-  .option("--private", "Make the plan private (owner-only access)")
-  .option("--public", "Make the plan public (default, shareable)")
+  .description("Upload an HTML post file")
+  .option("-d, --data <json>", "JSON data to attach (merged into post.data)")
+  .option("--data-file <path>", "JSON file to merge into post.data")
+  .option("--private", "Make the post private (owner-only access)")
+  .option("--public", "Make the post public (default, shareable)")
   .action(async (file: string, options: { data?: string; dataFile?: string; private?: boolean; public?: boolean }) => {
     const html = readFileSync(resolve(file), "utf-8");
     const data = parseDataOption(options);
@@ -102,14 +102,14 @@ program
     process.stdout.write(`${dim("→ Uploading to PostHTML...")}\n`);
     const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
-    const result = await api("/api/plans", {
+    const result = await api("/api/posts", {
       method: "POST",
       body: JSON.stringify(body),
     });
 
     if (data) {
       process.stdout.write(`${dim("→ Attaching data...")}\n`);
-      await api(`/api/plans/${result.id}/data`, {
+      await api(`/api/posts/${result.id}/data`, {
         method: "PATCH",
         body: JSON.stringify(data),
       });
@@ -123,19 +123,19 @@ program
 program
   .command("list")
   .alias("ls")
-  .description("List your plans")
+  .description("List your posts")
   .action(async () => {
-    process.stdout.write(`${dim("→ Fetching your plans...")}\n`);
-    const plans = await api("/api/plans");
-    if (plans.length === 0) {
-      process.stdout.write(`${dim("No plans found.")}\n`);
+    process.stdout.write(`${dim("→ Fetching your posts...")}\n`);
+    const posts = await api("/api/posts");
+    if (posts.length === 0) {
+      process.stdout.write(`${dim("No posts found.")}\n`);
       return;
     }
-    process.stdout.write(`${green(`✓ ${plans.length} plan${plans.length === 1 ? "" : "s"} loaded`)}\n\n`);
-    const header = `${dim("Plan ID")}          ${dim("Title")}                  ${dim("Created")}        ${dim("Access")}`;
+    process.stdout.write(`${green(`✓ ${posts.length} post${posts.length === 1 ? "" : "s"} loaded`)}\n\n`);
+    const header = `${dim("Post ID")}          ${dim("Title")}                  ${dim("Created")}        ${dim("Access")}`;
     const sep = dim("─".repeat(72));
     console.log(`\n${header}\n${sep}`);
-    for (const p of plans) {
+    for (const p of posts) {
       const title = p.title || dim("(untitled)");
       const created = dim(new Date(p.createdAt).toLocaleDateString());
       const access = p.isPrivate ? red("private") : green("public");
@@ -146,18 +146,18 @@ program
 
 program
   .command("delete <id>")
-  .description("Delete a plan")
+  .description("Delete a post")
   .action(async (id: string) => {
-    process.stdout.write(`${dim("→ Deleting plan...")}\n`);
-    await api(`/api/plans/${id}`, { method: "DELETE" });
-    process.stdout.write(`${green(`✓ Plan ${id} deleted`)}\n`);
+    process.stdout.write(`${dim("→ Deleting post...")}\n`);
+    await api(`/api/posts/${id}`, { method: "DELETE" });
+    process.stdout.write(`${green(`✓ Post ${id} deleted`)}\n`);
   });
 
 program
   .command("replace <id> <file>")
-  .description("Replace a plan with a new HTML file (preserves ID)")
-  .option("--private", "Make the plan private (owner-only access)")
-  .option("--public", "Make the plan public (default, shareable)")
+  .description("Replace a post with a new HTML file (preserves ID)")
+  .option("--private", "Make the post private (owner-only access)")
+  .option("--public", "Make the post public (default, shareable)")
   .action(async (id: string, file: string, options: { private?: boolean; public?: boolean }) => {
     const html = readFileSync(resolve(file), "utf-8");
 
@@ -169,10 +169,10 @@ program
     const isValid = /<!DOCTYPE html>/i.test(html);
     process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
 
-    process.stdout.write(`${dim(`→ Replacing plan ${id}...`)}\n`);
+    process.stdout.write(`${dim(`→ Replacing post ${id}...`)}\n`);
     const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
-    const result = await api(`/api/plans/${id}`, {
+    const result = await api(`/api/posts/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });
@@ -206,20 +206,20 @@ program
 // ── data ────────────────────────────────────────────────────────────────────
 const dataCmd = program
   .command("data")
-  .description("Manage plan JSON data");
+  .description("Manage post JSON data");
 
 dataCmd
   .command("get <id>")
-  .description("Get plan data")
+  .description("Get post data")
   .action(async (id: string) => {
-    process.stdout.write(`${dim("→ Fetching plan data...")}\n`);
-    const data = await api(`/api/plans/${id}/data`);
+    process.stdout.write(`${dim("→ Fetching post data...")}\n`);
+    const data = await api(`/api/posts/${id}/data`);
     console.log(JSON.stringify(data, null, 2));
   });
 
 dataCmd
   .command("set <id>")
-  .description("Merge data into a plan")
+  .description("Merge data into a post")
   .option("-k, --key <key>", "JSON key to set")
   .option("-v, --value <value>", 'JSON value (required with --key, e.g. \'[{"repo":"cardfoi"}]\')')
   .option("-f, --file <path>", "JSON file to merge (whole object)")
@@ -254,8 +254,8 @@ dataCmd
       process.exit(1);
     }
 
-    process.stdout.write(`${dim("→ Merging data into plan...")}\n`);
-    const result = await api(`/api/plans/${id}/data`, {
+    process.stdout.write(`${dim("→ Merging data into post...")}\n`);
+    const result = await api(`/api/posts/${id}/data`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });

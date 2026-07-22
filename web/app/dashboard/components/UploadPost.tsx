@@ -1,16 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { PlanEditor } from "./PlanEditor"
+import { PostEditor } from "./PostEditor"
 
-interface UploadPlanProps {
+interface UploadPostProps {
   onDone: () => void
-  editingPlan?: { id: string; title: string; html: string } | null
+  editingPost?: { id: string; title: string; html: string } | null
 }
 
-export function UploadPlan({ onDone, editingPlan }: UploadPlanProps) {
-  const [title, setTitle] = useState(editingPlan?.title ?? "")
-  const [html, setHtml] = useState(editingPlan?.html ?? "<!DOCTYPE html>\n<html>\n<head><title>Plan</title></head>\n<body>\n\n</body>\n</html>")
+export function UploadPost({ onDone, editingPost }: UploadPostProps) {
+  const [title, setTitle] = useState(editingPost?.title ?? "")
+  const [html, setHtml] = useState(editingPost?.html ?? "<!DOCTYPE html>\n<html>\n<head><title>Post</title></head>\n<body>\n\n</body>\n</html>")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,8 +18,8 @@ export function UploadPlan({ onDone, editingPlan }: UploadPlanProps) {
     setSaving(true)
     setError(null)
     try {
-      if (editingPlan) {
-        const res = await fetch(`/api/plans/${editingPlan.id}`, {
+      if (editingPost) {
+        const res = await fetch(`/api/posts/${editingPost.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ html }),
@@ -29,7 +29,7 @@ export function UploadPlan({ onDone, editingPlan }: UploadPlanProps) {
           throw new Error(body.error ?? "Failed to save")
         }
       } else {
-        const res = await fetch("/api/plans", {
+        const res = await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ html, title: title || undefined }),
@@ -50,20 +50,20 @@ export function UploadPlan({ onDone, editingPlan }: UploadPlanProps) {
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
       <h2 className="text-sm font-medium">
-        {editingPlan ? `Replace: ${editingPlan.title || editingPlan.id}` : "Upload New Plan"}
+        {editingPost ? `Replace: ${editingPost.title || editingPost.id}` : "Upload New Post"}
       </h2>
 
-      {!editingPlan && (
+      {!editingPost && (
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Plan title (optional)"
+          placeholder="Post title (optional)"
           className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
         />
       )}
 
-      <PlanEditor value={html} onChange={setHtml} />
+      <PostEditor value={html} onChange={setHtml} />
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 
@@ -79,7 +79,7 @@ export function UploadPlan({ onDone, editingPlan }: UploadPlanProps) {
           disabled={saving}
           className="rounded-lg bg-zinc-100 px-5 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 transition-colors"
         >
-          {saving ? "Saving\u2026" : editingPlan ? "Save" : "Upload"}
+          {saving ? "Saving\u2026" : editingPost ? "Save" : "Upload"}
         </button>
       </div>
     </div>

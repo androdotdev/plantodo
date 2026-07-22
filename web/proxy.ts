@@ -10,4 +10,4 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next({ request: { headers } })
 }
 
-export const config = { matcher: "/api/plans/:path*" }
+export const config = { matcher: "/api/posts/:path*" }

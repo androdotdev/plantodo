@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { plans } from "@/db/schema"
+import { posts } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
@@ -8,22 +8,22 @@ import { getAuthenticatedUserId } from "@/lib/auth-user"
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
 
-// GET /api/plans/:id — public unless plan.isPrivate, then owner-only
+// GET /api/posts/:id — public unless post.isPrivate, then owner-only
 export const GET = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
-  const plan = await db.select().from(plans).where(eq(plans.id, id)).then(r => r[0])
-  if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const post = await db.select().from(posts).where(eq(posts.id, id)).then(r => r[0])
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  if (plan.isPrivate) {
+  if (post.isPrivate) {
     const userId = await getAuthenticatedUserId(request)
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  return NextResponse.json(plan)
+  return NextResponse.json(post)
 })
 
 export const DELETE = withError(async (
@@ -34,11 +34,11 @@ export const DELETE = withError(async (
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const plan = await db.select({ userId: plans.userId }).from(plans).where(eq(plans.id, id)).then(r => r[0])
-  if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const post = await db.select({ userId: posts.userId }).from(posts).where(eq(posts.id, id)).then(r => r[0])
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  await db.delete(plans).where(eq(plans.id, id))
+  await db.delete(posts).where(eq(posts.id, id))
   return NextResponse.json({ success: true })
 })
 
@@ -58,14 +58,14 @@ export const PATCH = withError(async (
     return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
 
-  const plan = await db.select({ userId: plans.userId }).from(plans).where(eq(plans.id, id)).then(r => r[0])
-  if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const post = await db.select({ userId: posts.userId }).from(posts).where(eq(posts.id, id)).then(r => r[0])
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const updates: Record<string, string | boolean> = {}
   if (html) updates.html = html
   if (title !== undefined) updates.title = title
   if (typeof isPrivate === "boolean") updates.isPrivate = isPrivate
-  await db.update(plans).set(updates).where(eq(plans.id, id))
+  await db.update(posts).set(updates).where(eq(posts.id, id))
   return NextResponse.json({ id, url: `${BASE_URL}/p/${id}`, ...(title !== undefined ? { title } : {}), ...(typeof isPrivate === "boolean" ? { isPrivate } : {}) })
 })

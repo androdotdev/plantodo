@@ -15,7 +15,7 @@ const MonacoEditor = dynamic(
   },
 )
 
-export function PlanEditor({ value, onChange, height = "300px", language = "html", onMount }: {
+export function PostEditor({ value, onChange, height = "300px", language = "html", onMount }: {
   value: string
   onChange: (v: string) => void
   height?: string
