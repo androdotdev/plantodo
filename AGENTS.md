@@ -59,6 +59,41 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 |--------|------|------|-------------|
 | GET/POST | `/api/auth/*` | — | Google OAuth, session, callback |
 
+### MCP (Model Context Protocol)
+
+Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET/POST | `/api/mcp` | `x-api-key` header | MCP server (header auth, backward compat) |
+| GET/POST | `/api/mcp/{token}` | URL path token | MCP server (URL-based auth) |
+
+**MCP URL format:** `https://posthtml.vercel.app/api/mcp/<mcp_...token>`
+
+**How to set up:**
+1. Sign in at `posthtml.vercel.app` → Dashboard
+2. Go to **MCP Server** section in the sidebar
+3. Click **Generate URL** — creates a dedicated `mcp_` prefixed token
+4. Copy the URL and paste it into your MCP client config
+
+**Example Claude Desktop config:**
+```json
+{
+  "mcpServers": {
+    "posthtml": {
+      "url": "https://posthtml.vercel.app/api/mcp/mcp_xxx..."
+    }
+  }
+}
+```
+
+**Design notes:**
+- MCP tokens are separate from CLI API keys — revoking one doesn't affect the other
+- Tokens are identified by `mcp_` prefix for recognizability in logs
+- Only one active MCP token per user — regenerate replaces it in place
+- The old `/api/mcp` route with `x-api-key` header remains supported
+- URL path tokens appear in access logs (unlike headers) — dedicated token + easy regenerate is the mitigation
+
 ### API Key Management (dashboard — session auth)
 
 | Method | Path | Auth | Description |
@@ -111,7 +146,7 @@ Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or
 | Path | Auth | Content |
 |------|------|---------|
 | `/` | public | Hero + Google sign-in + agent docs links |
-| `/dashboard` | session | API key management (generate, list, copy, revoke, configure) |
+| `/dashboard` | session | API keys, MCP setup, post management |
 | `/p/:id` | public | Serves uploaded post HTML |
 
 ## Auth Flow
