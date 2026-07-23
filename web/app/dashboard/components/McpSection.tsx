@@ -27,20 +27,15 @@ export default function McpSection() {
     const res = await fetch("/api/keys");
     if (res.ok) {
       const data = await res.json();
-      // Match by prefix, not name — more robust if the name ever changes
       const mcp = (data.keys ?? []).find(
         (k: McpKey) => k.prefix === "mcp"
       );
       setMcpKey(mcp ?? null);
-      // Don't reconstruct URL from mcp.start — it's only the truncated prefix,
-      // the full secret was shown once at creation and never again
+      // Don't reconstruct URL from start — the full secret was shown
+      // once at creation and never returned by list endpoints
       setNewUrl(null);
     }
     setLoading(false);
-  }
-
-  function buildUrl(key: string) {
-    return `${window.location.origin}/api/mcp/${key}`;
   }
 
   async function generateMcpKey() {
@@ -61,7 +56,7 @@ export default function McpSection() {
       }
 
       const key = await res.json();
-      setNewUrl(buildUrl(key.key));
+      setNewUrl(key.mcpUrl);
       fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -82,8 +77,7 @@ export default function McpSection() {
     setError(null);
 
     try {
-      // Create new key first, then delete old one —
-      // worst case: briefly two active keys, never zero
+      // Create new key first — worst case: briefly two keys active, never zero
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,12 +91,12 @@ export default function McpSection() {
 
       const key = await res.json();
 
-      // Old key safe to delete now — new one is confirmed working
+      // Old key safe to delete now — new one confirmed working
       if (mcpKey) {
         await fetch(`/api/keys/${mcpKey.id}`, { method: "DELETE" });
       }
 
-      setNewUrl(buildUrl(key.key));
+      setNewUrl(key.mcpUrl);
       fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
