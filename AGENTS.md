@@ -2,13 +2,13 @@
 
 ## Overview
 
-Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI. Manage drafts via CLI or API.
+Give AI agents the ability to upload, edit, and share HTML posts programmatically via CLI. Manage drafts via CLI or API.
 
 ## Architecture
 
 Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 
-- **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public plan viewer.
+- **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public post viewer.
 - **cli/** — `@posthtml/cli` — npm package (`post`). `upload`/`list`/`delete`/`replace`/`setup`.
 
 ## Tech Stack
@@ -38,7 +38,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | `verification` | (unused — Google-only auth) |
 | `apikey` | API keys with rate limiting, expiry, remaining count |
 
-### `plans`
+### `posts`
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -47,6 +47,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | `user_id` | TEXT FK → user.id | Owner user (cascade delete on user deletion) |
 | `title` | TEXT | Optional display name, default `""` |
 | `data` | JSONB | Arbitrary JSON data for partial updates, default `{}` |
+| `is_private` | BOOLEAN | Visibility flag, default false |
 | `created_at` | TIMESTAMP | auto-set |
 | `updated_at` | TIMESTAMP | auto-updated |
 
@@ -68,19 +69,19 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | PATCH | `/api/keys/:id` | Session cookie | Update an API key (name, rate limit, etc.) |
 | DELETE | `/api/keys/:id` | Session cookie | Revoke an API key |
 
-### Plans (CLI/API — key auth via `x-api-key`, browser via session)
+### Posts (CLI/API — key auth via `x-api-key`, browser via session)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/plans` | x-api-key / session | Upload plan HTML, returns `{ id, url }` |
-| GET | `/api/plans` | x-api-key / session | List plans for this user |
-| GET | `/api/plans/:id` | **public** | Get plan with HTML content (share-link model) |
-| DELETE | `/api/plans/:id` | x-api-key / session | Delete one plan (owner only) |
-| PATCH | `/api/plans/:id` | x-api-key / session | Replace plan HTML (preserves ID/URL) |
-| DELETE | `/api/plans` | x-api-key / session | Delete ALL plans for this user |
-| GET | `/p/:id` | public | Serve plan HTML directly from DB |
-| GET | `/api/plans/:id/data` | public | Get plan JSON data |
-| PATCH | `/api/plans/:id/data` | x-api-key | Merge JSON data into plan (keys override, atomic merge) |
+| POST | `/api/posts` | x-api-key / session | Upload post HTML, returns `{ id, url }` |
+| GET | `/api/posts` | x-api-key / session | List posts for this user |
+| GET | `/api/posts/:id` | **public** | Get post with HTML content (share-link model) |
+| DELETE | `/api/posts/:id` | x-api-key / session | Delete one post (owner only) |
+| PATCH | `/api/posts/:id` | x-api-key / session | Replace post HTML (preserves ID/URL) |
+| DELETE | `/api/posts` | x-api-key / session | Delete ALL posts for this user |
+| GET | `/p/:id` | public | Serve post HTML directly from DB |
+| GET | `/api/posts/:id/data` | public | Get post JSON data |
+| PATCH | `/api/posts/:id/data` | x-api-key | Merge JSON data into post (keys override, atomic merge) |
 
 ## CLI Usage
 
@@ -90,17 +91,17 @@ npm i -g @androff/posthtml-cli
 post setup                  # save API key from dashboard
 post setup --key post_xxx    # or pass directly
 
-post data get <id>           # get plan json data
+post data get <id>           # get post json data
 post data set <id> --key <k> --value '<json>'  # set one key in data
 post data set <id> --file data.json  # merge whole object into data
 
 post upload index.html
 post upload index.html --data '{"status":"draft"}'   # attach data in the same call
 post upload index.html --data-file meta.json         # or merge a whole JSON file
-post ls                     # list plans
+post ls                     # list posts
 post list                   # same
-post delete <plan-id>
-post replace <plan-id> <file.html>
+post delete <post-id>
+post replace <post-id> <file.html>
 ```
 
 Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or `POSTHTML_API_KEY` env var.
@@ -111,7 +112,7 @@ Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or
 |------|------|---------|
 | `/` | public | Hero + Google sign-in + agent docs links |
 | `/dashboard` | session | API key management (generate, list, copy, revoke, configure) |
-| `/p/:id` | public | Serves uploaded plan HTML |
+| `/p/:id` | public | Serves uploaded post HTML |
 
 ## Auth Flow
 

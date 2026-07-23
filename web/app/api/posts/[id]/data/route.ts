@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { plans } from "@/db/schema"
+import { posts } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
-// GET /api/plans/:id/data — public unless plan.isPrivate, then owner-only
+// GET /api/posts/:id/data — public unless post.isPrivate, then owner-only
 export const GET = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
   const row = await db
-    .select({ data: plans.data, isPrivate: plans.isPrivate, userId: plans.userId })
-    .from(plans)
-    .where(eq(plans.id, id))
+    .select({ data: posts.data, isPrivate: posts.isPrivate, userId: posts.userId })
+    .from(posts)
+    .where(eq(posts.id, id))
     .then(r => r[0])
 
   if (!row) {
@@ -30,7 +30,7 @@ export const GET = withError(async (
   return NextResponse.json(row.data ?? {})
 })
 
-// PATCH /api/plans/:id/data — auth via x-api-key, merges into existing jsonb
+// PATCH /api/posts/:id/data — auth via x-api-key, merges into existing jsonb
 export const PATCH = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -41,14 +41,14 @@ export const PATCH = withError(async (
   const { id } = await params
 
   // Verify ownership
-  const plan = await db
-    .select({ userId: plans.userId })
-    .from(plans)
-    .where(eq(plans.id, id))
+  const post = await db
+    .select({ userId: posts.userId })
+    .from(posts)
+    .where(eq(posts.id, id))
     .then(r => r[0])
 
-  if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const body = await request.json()
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -60,10 +60,10 @@ export const PATCH = withError(async (
   // sql`` here is just Postgres's jsonb `||` merge operator, which Drizzle doesn't wrap natively
   const fragment = JSON.stringify(body)
   const merged = await db
-    .update(plans)
-    .set({ data: sql`${plans.data} || ${fragment}::jsonb` })
-    .where(eq(plans.id, id))
-    .returning({ data: plans.data })
+    .update(posts)
+    .set({ data: sql`${posts.data} || ${fragment}::jsonb` })
+    .where(eq(posts.id, id))
+    .returning({ data: posts.data })
 
   return NextResponse.json(merged[0].data)
 })

@@ -8,7 +8,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-export const plans = pgTable("plans", {
+export const posts = pgTable("posts", {
   id: text("id").primaryKey(),
   html: text("html").notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -17,7 +17,7 @@ export const plans = pgTable("plans", {
   isPrivate: boolean("is_private").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
-}, (table) => [index("plans_userId_idx").on(table.userId)]);
+}, (table) => [index("posts_userId_idx").on(table.userId)]);
 
 
 export const user = pgTable("user", {

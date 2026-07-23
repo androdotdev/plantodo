@@ -10,7 +10,7 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
   const keyText = apiKey || "YOUR_API_KEY_HERE";
   const [copied, setCopied] = useState(false);
 
-  const prompt = `You have access to PostHTML — a service that uploads HTML plans and returns shareable URLs.
+  const prompt = `You have access to PostHTML — a service that uploads HTML posts and returns shareable URLs.
 
 ## Setup
 The human has provided you with an API key.
@@ -26,10 +26,10 @@ The config file (~/.post/config.json) stores the key as "api_key".
 
 ## CLI commands
 - post upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
-- post list / post ls            — list plans
-- post delete <id>             — delete a plan
+- post list / post ls            — list posts
+- post delete <id>             — delete a post
 - post replace <id> <file>      — update content (same URL)
-- post data get <id>            — read a plan's JSON data
+- post data get <id>            — read a post's JSON data
 - post data set <id> --key <k> --value '<json>'   — merge one key
 - post data set <id> --file x.json                — merge whole file
 

@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
-import { usePlansStore } from "@/lib/plans-store";
-import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
+import { usePostsStore } from "@/lib/posts-store";
+import { PostEditor } from "@/app/dashboard/components/PostEditor";
 import Link from "next/link";
 import { KeyRound, FileText, PanelLeftClose, PanelLeft } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
@@ -25,7 +25,7 @@ interface ApiKey {
   enabled: boolean;
 }
 
-interface Plan {
+interface Post {
   id: string;
   title: string;
   createdAt: string;
@@ -65,10 +65,10 @@ export default function Dashboard() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [plansLoading, setPlansLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [activeSection, setActiveSection] = useState<"api" | "plans">("api");
+  const [activeSection, setActiveSection] = useState<"api" | "posts">("api");
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true"
@@ -106,7 +106,7 @@ export default function Dashboard() {
       } else {
         setSession(data);
         fetchKeys();
-        fetchPlans();
+        fetchPosts();
       }
     });
   }, [router]);
@@ -120,40 +120,40 @@ export default function Dashboard() {
     setLoading(false);
   }
 
-  async function fetchPlans() {
-    const res = await fetch("/api/plans");
+  async function fetchPosts() {
+    const res = await fetch("/api/posts");
     if (res.ok) {
       const data = await res.json();
-      setPlans(data ?? []);
-      usePlansStore.getState().setList(data ?? []);
+      setPosts(data ?? []);
+      usePostsStore.getState().setList(data ?? []);
     }
-    setPlansLoading(false);
+    setPostsLoading(false);
   }
 
-  async function deletePlan(id: string) {
+  async function deletePost(id: string) {
     if (!confirm("Delete this post? The URL will stop working.")) return;
-    await runBusy(`del-plan-${id}`, async () => {
-      const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
+    await runBusy(`del-post-${id}`, async () => {
+      const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setPlans((prev) => prev.filter((p) => p.id !== id));
-        usePlansStore.getState().removeFromList(id);
-        usePlansStore.getState().removeDetail(id);
+        setPosts((prev) => prev.filter((p) => p.id !== id));
+        usePostsStore.getState().removeFromList(id);
+        usePostsStore.getState().removeDetail(id);
       }
     });
   }
 
-  async function togglePrivate(p: Plan) {
+  async function togglePrivate(p: Post) {
     await runBusy(`toggle-${p.id}`, async () => {
-      const res = await fetch(`/api/plans/${p.id}`, {
+      const res = await fetch(`/api/posts/${p.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPrivate: !p.isPrivate }),
       });
       if (res.ok) {
-        setPlans((prev) =>
-          prev.map((plan) => (plan.id === p.id ? { ...plan, isPrivate: !p.isPrivate } : plan)),
+        setPosts((prev) =>
+          prev.map((post) => (post.id === p.id ? { ...post, isPrivate: !p.isPrivate } : post)),
         );
-        usePlansStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
+        usePostsStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
       }
     });
   }
@@ -267,10 +267,10 @@ export default function Dashboard() {
               {!collapsed && <span>API Keys</span>}
             </button>
             <button
-              onClick={() => setActiveSection("plans")}
+              onClick={() => setActiveSection("posts")}
               title="Posts"
               className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeSection === "plans"
+                activeSection === "posts"
                   ? "bg-bg-accent text-text-accent"
                   : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
               }`}
@@ -490,9 +490,9 @@ export default function Dashboard() {
               </>
             )}
 
-            {activeSection === "plans" && (
+            {activeSection === "posts" && (
               <>
-                {/* Plans Section */}
+                {/* Posts Section */}
                 <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Posts</h2>
@@ -502,38 +502,38 @@ export default function Dashboard() {
                   </div>
                   <button
                     onClick={async () => {
-                      if (busy["new-plan"]) return;
-                      await runBusy("new-plan", async () => {
-                        const res = await fetch("/api/plans", {
+                      if (busy["new-post"]) return;
+                      await runBusy("new-post", async () => {
+                        const res = await fetch("/api/posts", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Post</title></head>\n<body>\n\n</body>\n</html>" }),
                         });
                         if (res.ok) {
                           const { id } = await res.json();
-                          router.push(`/plan/edit/${id}`);
+                          router.push(`/post/edit/${id}`);
                         }
                       });
                     }}
-                    disabled={busy["new-plan"]}
+                    disabled={busy["new-post"]}
                     className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    {busy["new-plan"] ? "Creating…" : "New Post"}
+                    {busy["new-post"] ? "Creating…" : "New Post"}
                   </button>
                 </div>
 
                 <div className="space-y-4">
-                  {plansLoading ? (
+                  {postsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
                     </div>
-                  ) : plans.length === 0 ? (
+                  ) : posts.length === 0 ? (
                     <div className="rounded-md border border-border-default p-10 text-center">
                       <p className="text-sm text-text-secondary">No posts yet. Click &ldquo;New Post&rdquo; to create one.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {plans.map((p) => (
+                      {posts.map((p) => (
                       <div
                         key={p.id}
                         className="rounded-md border border-border-default bg-bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
@@ -567,17 +567,17 @@ export default function Dashboard() {
                             View
                           </button>
                           <button
-                            onClick={() => router.push(`/plan/edit/${p.id}`)}
+                            onClick={() => router.push(`/post/edit/${p.id}`)}
                             className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => deletePlan(p.id)}
-                            disabled={busy[`del-plan-${p.id}`]}
+                            onClick={() => deletePost(p.id)}
+                            disabled={busy[`del-post-${p.id}`]}
                             className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
                           >
-                            {busy[`del-plan-${p.id}`] ? "Deleting…" : "Delete"}
+                            {busy[`del-post-${p.id}`] ? "Deleting…" : "Delete"}
                           </button>
                         </div>
                       </div>

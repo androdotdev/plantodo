@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { nanoid } from "nanoid"
 import { db } from "@/db"
-import { plans } from "@/db/schema"
+import { posts } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
@@ -25,7 +25,7 @@ export const POST = withError(async (request: NextRequest) => {
     return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
   const id = nanoid(16)
-  await db.insert(plans).values({
+  await db.insert(posts).values({
     id,
     html,
     userId,
@@ -40,10 +40,10 @@ export const GET = withError(async (request: NextRequest) => {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const list = await db
-    .select({ id: plans.id, title: plans.title, createdAt: plans.createdAt, updatedAt: plans.updatedAt, isPrivate: plans.isPrivate })
-    .from(plans)
-    .where(eq(plans.userId, userId))
-    .orderBy(plans.createdAt)
+    .select({ id: posts.id, title: posts.title, createdAt: posts.createdAt, updatedAt: posts.updatedAt, isPrivate: posts.isPrivate })
+    .from(posts)
+    .where(eq(posts.userId, userId))
+    .orderBy(posts.createdAt)
   return NextResponse.json(list)
 })
 
@@ -51,6 +51,6 @@ export const DELETE = withError(async (request: NextRequest) => {
   const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  await db.delete(plans).where(eq(plans.userId, userId))
+  await db.delete(posts).where(eq(posts.userId, userId))
   return NextResponse.json({ success: true })
 })

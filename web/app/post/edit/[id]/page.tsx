@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient, SessionData } from "@/lib/auth-client";
-import { usePlansStore } from "@/lib/plans-store";
-import { PlanEditor } from "@/app/dashboard/components/PlanEditor";
+import { usePostsStore } from "@/lib/posts-store";
+import { PostEditor } from "@/app/dashboard/components/PostEditor";
 import { ArrowLeft, Save, Edit3, FileCode, Database } from "lucide-react";
 import Link from "next/link";
 
 type Tab = "html" | "data";
 
-export default function PlanEditPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PostEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [id, setId] = useState<string | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
@@ -43,7 +43,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
       setSession(data);
 
       // Prefer store (populated by dashboard) to avoid a redundant refetch.
-      const cached = usePlansStore.getState().getDetail(id);
+      const cached = usePostsStore.getState().getDetail(id);
       if (cached) {
         setTitle(cached.title ?? "");
         setHtml(cached.html ?? "");
@@ -52,7 +52,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         return;
       }
 
-      fetch(`/api/plans/${id}`).then((res) => {
+      fetch(`/api/posts/${id}`).then((res) => {
         if (!res.ok) {
           router.push("/dashboard");
           return;
@@ -61,7 +61,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
           setTitle(data.title ?? "");
           setHtml(data.html ?? "");
           setData(JSON.stringify(data.data ?? {}, null, 2));
-          usePlansStore.getState().setDetail({
+          usePostsStore.getState().setDetail({
             id,
             title: data.title ?? "",
             html: data.html ?? "",
@@ -89,7 +89,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
       return;
     }
     try {
-      const res = await fetch(`/api/plans/${id}/data`, {
+      const res = await fetch(`/api/posts/${id}/data`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: parsed }),
@@ -99,7 +99,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         throw new Error(body.error ?? "Failed to save data");
       }
       setDataSaved(true);
-      if (id) usePlansStore.getState().patchDetail(id, { data: parsed as Record<string, unknown> });
+      if (id) usePostsStore.getState().patchDetail(id, { data: parsed as Record<string, unknown> });
       setTimeout(() => setDataSaved(false), 2000);
     } catch (e) {
       setDataError(e instanceof Error ? e.message : "Something went wrong");
@@ -113,7 +113,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     setTitleError(null);
     setTitleSaved(false);
     try {
-      const res = await fetch(`/api/plans/${id}/setting`, {
+      const res = await fetch(`/api/posts/${id}/setting`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
@@ -123,7 +123,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         throw new Error(body.error ?? "Failed to save title");
       }
       setTitleSaved(true);
-      if (id) usePlansStore.getState().patchDetail(id, { title });
+      if (id) usePostsStore.getState().patchDetail(id, { title });
       setTimeout(() => setTitleSaved(false), 2000);
     } catch (e) {
       setTitleError(e instanceof Error ? e.message : "Something went wrong");
@@ -137,17 +137,17 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     setHtmlError(null);
     setHtmlSaved(false);
     try {
-      const res = await fetch(`/api/plans/${id}`, {
+      const res = await fetch(`/api/posts/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html }),
       });
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error ?? "Failed to save plan");
+        throw new Error(body.error ?? "Failed to save post");
       }
       setHtmlSaved(true);
-      if (id) usePlansStore.getState().patchDetail(id, { html });
+      if (id) usePostsStore.getState().patchDetail(id, { html });
       setTimeout(() => setHtmlSaved(false), 2000);
     } catch (e) {
       setHtmlError(e instanceof Error ? e.message : "Something went wrong");
@@ -210,7 +210,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Plan title"
+                placeholder="Post title"
                 className="flex-1 bg-transparent text-xl font-semibold text-text-primary placeholder-text-muted focus:outline-none border-b border-transparent focus:border-border-hover pb-1 transition-colors"
               />
             </div>
@@ -279,12 +279,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
 
           {tab === "html" ? (
             <>
-              <PlanEditor value={html} onChange={setHtml} height="500px" />
+              <PostEditor value={html} onChange={setHtml} height="500px" />
               {htmlError && <p className="text-xs text-text-danger px-5 py-2">{htmlError}</p>}
             </>
           ) : (
             <>
-              <PlanEditor value={data} onChange={setData} language="json" height="500px" />
+              <PostEditor value={data} onChange={setData} language="json" height="500px" />
               {dataError && <p className="text-xs text-text-danger px-5 py-2">{dataError}</p>}
             </>
           )}

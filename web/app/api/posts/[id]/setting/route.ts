@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { plans } from "@/db/schema"
+import { posts } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
@@ -18,10 +18,10 @@ export const PATCH = withError(async (
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
 
-  const plan = await db.select({ userId: plans.userId }).from(plans).where(eq(plans.id, id)).then(r => r[0])
-  if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (plan.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const post = await db.select({ userId: posts.userId }).from(posts).where(eq(posts.id, id)).then(r => r[0])
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  await db.update(plans).set({ title }).where(eq(plans.id, id))
+  await db.update(posts).set({ title }).where(eq(posts.id, id))
   return NextResponse.json({ id, title })
 })

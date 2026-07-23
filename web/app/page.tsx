@@ -46,7 +46,7 @@ export default function Home() {
             The HTML sharing tool for AI agents
           </p>
           <p className="mt-3 text-xs text-text-muted max-w-lg mx-auto leading-relaxed">
-            Give your agent the ability to upload, share, and manage HTML plans
+            Give your agent the ability to upload, share, and manage HTML posts
             with a single CLI command.
           </p>
         </div>
@@ -80,9 +80,9 @@ export default function Home() {
             },
             {
               num: "03",
-              title: "Upload & share plans",
-              desc: "Your agent can now upload HTML plans and get shareable URLs instantly.",
-              code: "post upload plan.html",
+              title: "Upload & share posts",
+              desc: "Your agent can now upload HTML posts and get shareable URLs instantly.",
+              code: "post upload post.html",
             },
           ].map((step, i) => (
             <div key={i} className="flex gap-5">
@@ -108,7 +108,7 @@ export default function Home() {
             <p className="text-text-accent">✓ Valid markup</p>
             <p className="text-text-muted">→ Uploading to PostHTML...</p>
             <p className="text-text-accent">✓ Upload complete</p>
-            <p className="mt-2"><span className="text-text-accent">Plan URL:</span> <span className="text-text-primary">https://posthtml.vercel.app/p/xyz789</span></p>
+            <p className="mt-2"><span className="text-text-accent">Post URL:</span> <span className="text-text-primary">https://posthtml.vercel.app/p/xyz789</span></p>
             <p><span className="text-text-accent">Shareable:</span> <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent ml-1">public</span></p>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function Home() {
                 Go to Dashboard
               </button>
               <p className="mt-3 text-xs text-text-muted">
-                Manage your API keys and plans.
+                Manage your API keys and posts.
               </p>
             </>
           ) : (
