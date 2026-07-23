@@ -56,8 +56,16 @@ export default function McpSection() {
       }
 
       const key = await res.json();
+      // Build mcpKey state from the create response directly —
+      // don't call fetchMcpKey() which would wipe newUrl with setNewUrl(null)
+      setMcpKey({
+        id: key.id,
+        start: key.start,
+        prefix: "mcp",
+        createdAt: new Date().toISOString(),
+        enabled: true,
+      });
       setNewUrl(key.mcpUrl);
-      fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -96,8 +104,15 @@ export default function McpSection() {
         await fetch(`/api/keys/${mcpKey.id}`, { method: "DELETE" });
       }
 
+      // Build state from response, don't re-fetch
+      setMcpKey({
+        id: key.id,
+        start: key.start,
+        prefix: "mcp",
+        createdAt: new Date().toISOString(),
+        enabled: true,
+      });
       setNewUrl(key.mcpUrl);
-      fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

@@ -50,12 +50,16 @@ export async function POST(req: NextRequest) {
     payload.rateLimitEnabled = false
   }
 
-  const { key: keyString } = await auth.api.createApiKey({ body: payload })
+  const createdKey = await auth.api.createApiKey({ body: payload })
 
-  const result: Record<string, unknown> = { key: keyString }
+  const result: Record<string, unknown> = {
+    key: createdKey.key,
+    id: createdKey.id,
+    start: createdKey.start,
+  }
   if (body.purpose === "mcp") {
     const baseUrl = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
-    result.mcpUrl = `${baseUrl}/api/mcp/${keyString}`
+    result.mcpUrl = `${baseUrl}/api/mcp/${createdKey.key}`
   }
 
   return NextResponse.json(result)
