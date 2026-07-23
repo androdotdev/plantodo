@@ -6,6 +6,7 @@ import { Cable } from "lucide-react";
 interface McpKey {
   id: string;
   start: string;
+  prefix: string;
   createdAt: string;
   enabled: boolean;
 }
@@ -26,15 +27,20 @@ export default function McpSection() {
     const res = await fetch("/api/keys");
     if (res.ok) {
       const data = await res.json();
+      // Match by prefix, not name — more robust if the name ever changes
       const mcp = (data.keys ?? []).find(
-        (k: McpKey & { name: string | null }) => k.name === "MCP connector"
+        (k: McpKey) => k.prefix === "mcp"
       );
       setMcpKey(mcp ?? null);
-      if (mcp) {
-        setNewUrl(`https://posthtml.vercel.app/api/mcp/${mcp.start}...`);
-      }
+      // Don't reconstruct URL from mcp.start — it's only the truncated prefix,
+      // the full secret was shown once at creation and never again
+      setNewUrl(null);
     }
     setLoading(false);
+  }
+
+  function buildUrl(key: string) {
+    return `${window.location.origin}/api/mcp/${key}`;
   }
 
   async function generateMcpKey() {
@@ -55,7 +61,7 @@ export default function McpSection() {
       }
 
       const key = await res.json();
-      setNewUrl(`https://posthtml.vercel.app/api/mcp/${key.key}`);
+      setNewUrl(buildUrl(key.key));
       fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -76,12 +82,8 @@ export default function McpSection() {
     setError(null);
 
     try {
-      // Delete old key
-      if (mcpKey) {
-        await fetch(`/api/keys/${mcpKey.id}`, { method: "DELETE" });
-      }
-
-      // Create new key
+      // Create new key first, then delete old one —
+      // worst case: briefly two active keys, never zero
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,7 +96,13 @@ export default function McpSection() {
       }
 
       const key = await res.json();
-      setNewUrl(`https://posthtml.vercel.app/api/mcp/${key.key}`);
+
+      // Old key safe to delete now — new one is confirmed working
+      if (mcpKey) {
+        await fetch(`/api/keys/${mcpKey.id}`, { method: "DELETE" });
+      }
+
+      setNewUrl(buildUrl(key.key));
       fetchMcpKey();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -102,6 +110,8 @@ export default function McpSection() {
       setGenerating(false);
     }
   }
+
+  const hasUrlToShow = newUrl !== null;
 
   async function copyUrl() {
     if (!newUrl) return;
@@ -139,25 +149,29 @@ export default function McpSection() {
       )}
 
       <div className="rounded-md border border-border-default bg-bg-card p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          {newUrl ? (
-            <>
-              <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2.5 text-sm text-text-primary select-all break-all">
-                {newUrl}
-              </code>
-              <button
-                onClick={copyUrl}
-                className="rounded-sm border border-border-default bg-bg-card px-4 py-2.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors shrink-0"
-              >
-                {copied ? "Copied!" : "Copy URL"}
-              </button>
-            </>
-          ) : (
-            <p className="text-xs text-text-muted">
-              No MCP URL generated yet. Click below to create one.
-            </p>
-          )}
-        </div>
+        {hasUrlToShow ? (
+          <div className="flex items-center gap-2">
+            <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2.5 text-sm text-text-primary select-all break-all">
+              {newUrl}
+            </code>
+            <button
+              onClick={copyUrl}
+              className="rounded-sm border border-border-default bg-bg-card px-4 py-2.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors shrink-0"
+            >
+              {copied ? "Copied!" : "Copy URL"}
+            </button>
+          </div>
+        ) : mcpKey ? (
+          <p className="text-xs text-text-muted leading-relaxed">
+            An MCP key already exists <span className="text-text-primary">(starts with <code className="text-text-primary">{mcpKey.start}</code>)</span>.
+            The full URL was only shown once at creation. Click{" "}
+            <span className="text-text-accent">Regenerate</span> below to get a new one.
+          </p>
+        ) : (
+          <p className="text-xs text-text-muted">
+            No MCP URL generated yet. Click below to create one.
+          </p>
+        )}
 
         <div className="flex items-center gap-3 pt-2 border-t border-border-default">
           <button
