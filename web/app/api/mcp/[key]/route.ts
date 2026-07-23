@@ -1,16 +1,21 @@
-import { authenticate, runMcp } from "./lib"
+import { authenticate, runMcp } from "../lib"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-// ── POST handler: header-based auth (backward compat) ───────────────────────
+// ── POST handler: URL-based auth (no headers needed) ────────────────────────
+// Usage: MCP client points to https://posthtml.vercel.app/api/mcp/<api-key>
 
-export async function POST(request: Request) {
-  const apiKey = request.headers.get("x-api-key")
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ key: string }> },
+) {
+  const apiKey = (await params).key
+
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: "Unauthorized — x-api-key header required" }),
-      { status: 401, headers: { "content-type": "application/json" } },
+      JSON.stringify({ error: "API key is required in the URL path" }),
+      { status: 400, headers: { "content-type": "application/json" } },
     )
   }
 
