@@ -1,6 +1,6 @@
 {
   "name": "@androff/posthtml-cli",
-  "version": "0.8.0",
+  "version": "0.8",
   "description": "PostHTML — CLI tool to upload/delete/list posts",
   "license": "MIT",
   "keywords": [
