@@ -7,8 +7,9 @@ import { useForm } from "react-hook-form";
 import { usePostsStore } from "@/lib/posts-store";
 import { PostEditor } from "@/app/dashboard/components/PostEditor";
 import Link from "next/link";
-import { KeyRound, FileText, PanelLeftClose, PanelLeft } from "lucide-react";
+import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
+import McpSection from "./components/McpSection";
 import { ThemeToggle } from "./components/ThemeToggle";
 
 interface ApiKey {
@@ -68,7 +69,7 @@ export default function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [activeSection, setActiveSection] = useState<"api" | "posts">("api");
+  const [activeSection, setActiveSection] = useState<"api" | "mcp" | "posts">("api");
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true"
@@ -265,6 +266,18 @@ export default function Dashboard() {
             >
               <KeyRound size={16} className="shrink-0" />
               {!collapsed && <span>API Keys</span>}
+            </button>
+            <button
+              onClick={() => setActiveSection("mcp")}
+              title="MCP Server"
+              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
+                activeSection === "mcp"
+                  ? "bg-bg-accent text-text-accent"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
+              }`}
+            >
+              <Cable size={16} className="shrink-0" />
+              {!collapsed && <span>MCP Server</span>}
             </button>
             <button
               onClick={() => setActiveSection("posts")}
@@ -488,6 +501,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </>
+            )}
+
+            {activeSection === "mcp" && (
+              <McpSection />
             )}
 
             {activeSection === "posts" && (

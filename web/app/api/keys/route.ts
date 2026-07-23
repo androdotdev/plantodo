@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const payload: Record<string, unknown> = {
     name,
-    prefix: "post",
+    prefix: body.purpose === "mcp" ? "mcp" : "post",
     userId: session.user.id,
   }
 
