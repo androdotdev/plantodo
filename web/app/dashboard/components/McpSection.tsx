@@ -20,23 +20,19 @@ export default function McpSection() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchMcpKey();
+    (async () => {
+      const res = await fetch("/api/keys");
+      if (res.ok) {
+        const data = await res.json();
+        const mcp = (data.keys ?? []).find(
+          (k: McpKey) => k.prefix === "mcp"
+        );
+        setMcpKey(mcp ?? null);
+        setNewUrl(null);
+      }
+      setLoading(false);
+    })();
   }, []);
-
-  async function fetchMcpKey() {
-    const res = await fetch("/api/keys");
-    if (res.ok) {
-      const data = await res.json();
-      const mcp = (data.keys ?? []).find(
-        (k: McpKey) => k.prefix === "mcp"
-      );
-      setMcpKey(mcp ?? null);
-      // Don't reconstruct URL from start — the full secret was shown
-      // once at creation and never returned by list endpoints
-      setNewUrl(null);
-    }
-    setLoading(false);
-  }
 
   async function generateMcpKey() {
     setGenerating(true);
@@ -56,8 +52,6 @@ export default function McpSection() {
       }
 
       const key = await res.json();
-      // Build mcpKey state from the create response directly —
-      // don't call fetchMcpKey() which would wipe newUrl with setNewUrl(null)
       setMcpKey({
         id: key.id,
         start: key.start,
@@ -85,7 +79,6 @@ export default function McpSection() {
     setError(null);
 
     try {
-      // Create new key first — worst case: briefly two keys active, never zero
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,12 +92,10 @@ export default function McpSection() {
 
       const key = await res.json();
 
-      // Old key safe to delete now — new one confirmed working
       if (mcpKey) {
         await fetch(`/api/keys/${mcpKey.id}`, { method: "DELETE" });
       }
 
-      // Build state from response, don't re-fetch
       setMcpKey({
         id: key.id,
         start: key.start,
