@@ -1,7 +1,7 @@
 {
   "name": "@androff/posthtml-cli",
-  "version": "0.7.1",
-  "description": "PostHTML — CLI tool to upload/delete/list plans",
+  "version": "0.8.0",
+  "description": "PostHTML — CLI tool to upload/delete/list posts",
   "license": "MIT",
   "keywords": [
     "plantodo",
