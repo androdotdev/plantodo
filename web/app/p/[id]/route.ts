@@ -140,7 +140,7 @@ export async function GET(
   return new NextResponse(injected, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'",
+      "Content-Security-Policy": "default-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' https://i.ytimg.com; script-src 'self' https://www.youtube.com",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "no-referrer",
     },
