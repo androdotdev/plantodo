@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUserId } from "@/lib/auth-user";
+import { verifyToken } from "@/lib/post-token";
 
 export const dynamic = "force-dynamic";
 
@@ -105,13 +106,29 @@ export async function GET(
   }
 
   // Gate private posts to the owner only
+  // On the posts domain, validate a capability token from the URL
+  // instead of the session cookie (which can't cross origins)
   if (post.isPrivate) {
-    const userId = await getAuthenticatedUserId(request);
-    if (!userId) {
-      return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } });
-    }
-    if (post.userId !== userId) {
-      return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
+    const host = request.headers.get("host") || ""
+    const isPostsDomain = host === (process.env.POSTS_DOMAIN ?? false)
+
+    if (isPostsDomain) {
+      const token = request.nextUrl.searchParams.get("key")
+      if (!token) {
+        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } });
+      }
+      const payload = verifyToken(token)
+      if (!payload || payload.postId !== id || payload.userId !== post.userId) {
+        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
+      }
+    } else {
+      const userId = await getAuthenticatedUserId(request);
+      if (!userId) {
+        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } });
+      }
+      if (post.userId !== userId) {
+        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
+      }
     }
   }
 
