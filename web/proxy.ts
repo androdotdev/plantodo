@@ -15,6 +15,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Main domain: redirect /p/:id to the posts domain for true origin isolation
+  if (path.startsWith("/p/")) {
+    const postsDomain = process.env.POSTS_DOMAIN
+    if (postsDomain) {
+      return NextResponse.redirect(
+        `https://${postsDomain}${path}${request.nextUrl.search}`,
+        302,
+      )
+    }
+  }
+
   // API auth — only for /api/posts/* on the main domain
   if (!path.startsWith("/api/posts")) {
     return NextResponse.next()

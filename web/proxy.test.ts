@@ -9,10 +9,11 @@ vi.mock("next/server", () => ({
   NextResponse: {
     next: vi.fn((init) => ({ status: 200, _mock: "NextResponse.next", init })),
     json: vi.fn((data, init) => ({ status: init?.status ?? 200, _json: data })),
+    redirect: vi.fn((url, status) => ({ status: status ?? 302, _mock: "NextResponse.redirect", url })),
   },
   NextRequest: vi.fn().mockImplementation(() => ({
     headers: new Map(),
-    nextUrl: { pathname: "" },
+    nextUrl: { pathname: "", search: "" },
   })),
 }));
 
@@ -33,14 +34,19 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers: Record<string, string>, pathname = "/api/posts"): any {
+  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): any {
     return {
       headers: new Map(Object.entries(headers)),
-      nextUrl: { pathname },
+      nextUrl: { pathname, search },
     };
   }
 
   describe("main domain — API auth flow", () => {
+    beforeEach(() => {
+      // Ensure POSTS_DOMAIN is NOT set for these tests (no redirect)
+      delete process.env.POSTS_DOMAIN
+    })
+
     it("sets x-user-id from a valid API key", async () => {
       fnVerify.mockResolvedValueOnce({
         valid: true,
@@ -109,6 +115,46 @@ describe("proxy middleware", () => {
       expect(fnVerify).not.toHaveBeenCalled();
       expect(fnSession).not.toHaveBeenCalled();
       expect(NextResponse.next).toHaveBeenCalled();
+    });
+  });
+
+  describe("main domain — redirect to posts domain", () => {
+    beforeEach(() => {
+      process.env.POSTS_DOMAIN = "postshare.andro42.qzz.io"
+    })
+
+    afterEach(() => {
+      delete process.env.POSTS_DOMAIN
+    })
+
+    it("redirects /p/:id to the posts domain", async () => {
+      await proxy(makeRequest({}, "/p/some-id"));
+
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        "https://postshare.andro42.qzz.io/p/some-id",
+        302,
+      );
+    });
+
+    it("preserves query params in the redirect", async () => {
+      await proxy(makeRequest({}, "/p/some-id", "?key=abc123"));
+
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        "https://postshare.andro42.qzz.io/p/some-id?key=abc123",
+        302,
+      );
+    });
+
+    it("does not redirect /api/* paths", async () => {
+      fnVerify.mockResolvedValueOnce({
+        valid: true,
+        key: { referenceId: "user-123" },
+      });
+
+      await proxy(makeRequest({ "x-api-key": "valid" }, "/api/posts"));
+
+      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expect(fnVerify).toHaveBeenCalled();
     });
   });
 
