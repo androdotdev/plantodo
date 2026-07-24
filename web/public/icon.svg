@@ -3,17 +3,14 @@
   <circle cx="64" cy="64" r="44" fill="none" stroke="#333" stroke-width="2"/>
 
   <g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <!-- < -->
-    <path d="M42 50 L30 64 L42 78"/>
-
+    <!-- <  -->
+    <path d="M50 53 L40 64 L50 75"/>
     <!-- P -->
-    <path d="M58 84V44"/>
-    <path d="M58 44H72C77 44 80 48 80 54C80 60 77 64 72 64H58"/>
-
+    <path d="M60 82V46"/>
+    <path d="M60 46H70C75 46 78 50 78 56C78 62 75 66 70 66H60"/>
     <!-- / -->
-    <path d="M92 46L82 82"/>
-
+    <path d="M88 50L80 78"/>
     <!-- > -->
-    <path d="M98 50L110 64L98 78"/>
+    <path d="M92 53L102 64L92 75"/>
   </g>
 </svg>
