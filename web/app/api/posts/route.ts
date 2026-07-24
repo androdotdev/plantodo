@@ -9,10 +9,6 @@ import { getAuthenticatedUserId } from "@/lib/auth-user"
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
 
-function getUserId(request: NextRequest): string | null {
-  return request.headers.get("x-user-id")
-}
-
 export const POST = withError(async (request: NextRequest) => {
   const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -36,7 +32,7 @@ export const POST = withError(async (request: NextRequest) => {
 })
 
 export const GET = withError(async (request: NextRequest) => {
-  const userId = getUserId(request)
+  const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const list = await db
