@@ -16,7 +16,7 @@ PostHTML lets you upload raw HTML, get a permanent URL, and share it. Think past
 - Upload HTML → get a shareable `posthtml.vercel.app/p/<id>` URL
 - CLI (`post`) — upload, list, replace, delete from terminal
 - API — auth via API keys, integrate into any workflow
-- **MCP (Model Context Protocol)** — URL-based auth, works with Claude Desktop, Cursor, and any MCP client
+- **MCP (Model Context Protocol) — Beta** — URL-based auth, works with Claude Desktop, Cursor, and any MCP client
 - Google OAuth dashboard — manage keys, MCP tokens, posts
 
 ## Quick Start
@@ -28,10 +28,17 @@ post setup --key <your-api-key>
 post upload index.html
 ```
 
-### MCP (for AI agents)
+### MCP (for AI agents) — Beta
+
+> ⚠ MCP is in beta. Backward compatibility may break as the protocol evolves.
+
+**Recommended — URL token from dashboard:**
 1. Sign in at [posthtml.vercel.app](https://posthtml.vercel.app)
-2. Dashboard → MCP Server → Generate URL
+2. Dashboard → MCP Server (Beta) → Generate URL
 3. Paste URL into your MCP client config
+
+**Alternative — header auth with API key:**
+Use your existing API key as `x-api-key` header on `https://posthtml.vercel.app/api/mcp`.
 
 ```json
 {
