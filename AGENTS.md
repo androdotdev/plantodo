@@ -59,22 +59,27 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 |--------|------|------|-------------|
 | GET/POST | `/api/auth/*` | — | Google OAuth, session, callback |
 
-### MCP (Model Context Protocol)
+### MCP (Model Context Protocol) — Beta
+
+> **⚠ Beta:** The MCP integration is stable and functional but may see breaking changes as the protocol evolves.
 
 Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
+
+MCP works two ways:
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET/POST | `/api/mcp` | `x-api-key` header | MCP server (header auth, backward compat) |
 | GET/POST | `/api/mcp/{token}` | URL path token | MCP server (URL-based auth) |
 
-**MCP URL format:** `https://posthtml.vercel.app/api/mcp/<mcp_...token>`
-
-**How to set up:**
+**How to set up (recommended — token from dashboard):**
 1. Sign in at `posthtml.vercel.app` → Dashboard
-2. Go to **MCP Server** section in the sidebar
+2. Go to **MCP Server** (Beta) section in the sidebar
 3. Click **Generate URL** — creates a dedicated `mcp_` prefixed token
 4. Copy the URL and paste it into your MCP client config
+
+**Alternative — header auth with API key:**
+If you prefer, use your existing API key directly as the `x-api-key` header on `https://posthtml.vercel.app/api/mcp`.
 
 **Example Claude Desktop config:**
 ```json

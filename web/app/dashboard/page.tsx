@@ -269,7 +269,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setActiveSection("mcp")}
-              title="MCP Server"
+              title="MCP Server (Beta)"
               className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                 activeSection === "mcp"
                   ? "bg-bg-accent text-text-accent"
@@ -277,7 +277,7 @@ export default function Dashboard() {
               }`}
             >
               <Cable size={16} className="shrink-0" />
-              {!collapsed && <span>MCP Server</span>}
+              {!collapsed && <span>MCP Server <span className="text-text-muted font-normal">(Beta)</span></span>}
             </button>
             <button
               onClick={() => setActiveSection("posts")}

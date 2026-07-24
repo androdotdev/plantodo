@@ -134,7 +134,7 @@ export default function McpSection() {
       <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary flex items-center gap-2">
-            <Cable size={16} /> MCP Server
+            <Cable size={16} /> MCP Server <span className="text-[10px] font-bold uppercase tracking-wider bg-bg-accent text-text-accent px-1.5 py-0.5 rounded-sm">Beta</span>
           </h1>
           <p className="mt-1 text-xs text-text-secondary">
             Use this URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
