@@ -11,14 +11,4 @@
   <rect x="58" y="36" width="12" height="46" rx="2" fill="#fff"/>
   <rect x="70" y="54" width="22" height="28" rx="2" fill="#fff"/>
   <rect x="46" y="72" width="50" height="10" rx="3" fill="#fff"/>
-
-  <!-- Tiny upload notch -->
-  <path d="M84 44
-           l8 0
-           l0 40
-           l-8 0"
-        fill="none"
-        stroke="#444"
-        stroke-width="2"
-        stroke-linecap="round"/>
 </svg>
