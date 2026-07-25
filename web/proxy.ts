@@ -38,4 +38,4 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next({ request: { headers } })
 }
 
-export const config = { matcher: ["/api/posts/:path*", "/p/:path*"] }
+export const config = { matcher: ["/api/posts", "/api/posts/:path*", "/p/:path*"] }
