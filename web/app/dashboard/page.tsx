@@ -233,7 +233,7 @@ export default function Dashboard() {
       <header className="border-b border-border-default bg-bg-elevated backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <img src="/icon.svg" alt="" className="h-6 w-6" />
+            <img src="/i.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">

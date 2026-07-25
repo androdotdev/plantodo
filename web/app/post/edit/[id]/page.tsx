@@ -176,7 +176,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
         <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
-              <img src="/icon.svg" alt="" className="h-6 w-6" />
+              <img src="/i.svg" alt="" className="h-6 w-6" />
               <span className="font-semibold text-sm">PostHTML</span>
             </Link>
             <span className="text-text-muted mx-2">/</span>

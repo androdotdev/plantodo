@@ -37,7 +37,7 @@ export default function Home() {
         {/* Hero */}
         <div className="text-center border-b border-border-default pb-8 mb-12">
           <div className="flex items-center justify-center gap-3">
-            <img src="/icon.svg" alt="PostHTML logo" className="h-10 w-10" />
+            <img src="/i.svg" alt="PostHTML logo" className="h-10 w-10" />
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
               PostHTML
             </h1>
