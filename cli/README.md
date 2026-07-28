@@ -1,25 +1,118 @@
-# posthtml
+# @androff/posthtml-cli
 
-CLI tool to upload HTML plans and get a shareable URL.
+CLI tool to upload HTML posts and get a shareable URL.
 
 ```
 npm install -g @androff/posthtml-cli
 ```
 
-## Usage
+## Setup
 
+```bash
+# Interactive — prompts for key, input is hidden
+post setup
+
+# Non-interactive (env var is safer than --key on multi-user systems)
+POST_API_KEY=post_xxx post setup
 ```
-post setup --key <key>    # save an API key from https://posthtml.vercel.app/dashboard
-post upload index.html     # upload a plan → https://posthtml.vercel.app/p/<id>
-post list                  # list your plans
-post delete <id>           # delete a plan
-post replace <id> file.html # replace content, same URL
+
+Get your API key from: [posthtml.vercel.app/dashboard](https://posthtml.vercel.app/dashboard)
+
+Configuration saved to `~/.post/config.json` (owner read/write only).
+
+## Commands
+
+### `post upload <file>`
+
+Upload an HTML file as a new post.
+
+```bash
+post upload index.html
+post upload index.html --private                    # owner-only access
+post upload index.html --data '{"status":"draft"}'  # attach JSON data
+post upload index.html --data-file meta.json        # merge data from file
+```
+
+| Option | Description |
+|---|---|
+| `-d, --data <json>` | JSON data string to merge into post.data |
+| `--data-file <path>` | JSON file to merge into post.data |
+| `--private` | Restrict to owner-only access |
+| `--public` | Make shareable (default) |
+
+### `post list` / `post ls`
+
+List your posts.
+
+```bash
+post list
+post ls
+```
+
+### `post replace <id> <file>`
+
+Replace an existing post's HTML while preserving its ID and URL.
+
+```bash
+post replace abc123 index.html
+post replace abc123 index.html --private
+post replace abc123 index.html --public
+```
+
+| Option | Description |
+|---|---|
+| `--private` | Restrict to owner-only access |
+| `--public` | Make shareable (default) |
+
+### `post delete <id>`
+
+Delete a post.
+
+```bash
+post delete abc123
+```
+
+### `post data get <id>`
+
+Get the JSON data attached to a post.
+
+```bash
+post data get abc123
+```
+
+### `post data set <id>`
+
+Merge JSON data into a post. Provide either `--key` + `--value` (one key) or `--file` (whole object).
+
+```bash
+# Set a single key
+post data set abc123 --key status --value '"draft"'
+
+# Merge entire JSON file
+post data set abc123 --file meta.json
+```
+
+| Option | Description |
+|---|---|
+| `-k, --key <key>` | JSON key to set |
+| `-v, --value <value>` | JSON value (required with `--key`) |
+| `-f, --file <path>` | JSON file to merge (whole object) |
+
+### `post setup`
+
+Save your API key to `~/.post/config.json`.
+
+```bash
+post setup
+post setup --key post_xxx    # pass directly (avoid on shared systems)
 ```
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `POST_URL` | `http://localhost:3000` | Server base URL |
-| `POST_API_KEY` | — | API key (overrides `post setup`) |
+| `POST_URL` | `https://posthtml.vercel.app` | Server base URL (overrides config) |
+| `POST_API_KEY` | — | API key (overrides config, safer than `--key`) |
 | `POSTHTML_API_KEY` | — | Legacy alias for `POST_API_KEY` |
+
+Priority: config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error.

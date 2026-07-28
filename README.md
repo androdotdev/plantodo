@@ -14,9 +14,10 @@ PostHTML lets you upload raw HTML, get a permanent URL, and share it. Think past
 
 **Key features:**
 - Upload HTML → get a shareable `posthtml.vercel.app/p/<id>` URL
+- **Data injection** — attach JSON data to posts, use `{{path}}` in HTML for server-side rendering
 - CLI (`post`) — upload, list, replace, delete from terminal
 - API — auth via API keys, integrate into any workflow
-- **MCP (Model Context Protocol) — Beta** — URL-based auth, works with Claude Desktop, Cursor, and any MCP client
+- **MCP (Model Context Protocol) — Beta** — URL-based auth, works with Claude Desktop, Cursor, and any MCP client (tools include `get_post_data`, `set_post_data`)
 - Google OAuth dashboard — manage keys, MCP tokens, posts
 
 ## Quick Start

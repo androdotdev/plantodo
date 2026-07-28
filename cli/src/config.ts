@@ -7,6 +7,7 @@ const CONFIG_FILE = resolve(CONFIG_DIR, "config.json");
 
 export interface PtdConfig {
   api_key: string;
+  url?: string;
 }
 
 export function loadConfig(): PtdConfig | null {

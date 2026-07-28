@@ -1,6 +1,6 @@
 # PostHTML
 
-Give AI agents the ability to upload, edit, and share HTML posts programmatically via CLI or MCP.
+Publishing API for AI agents. Upload HTML templates with `{{placeholder}}` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
 
 ## Stack
 - Next.js 16 App Router, Drizzle ORM, Neon Postgres
@@ -19,6 +19,18 @@ Give AI agents the ability to upload, edit, and share HTML posts programmaticall
 - `web/app/dashboard/page.tsx` — dashboard (API keys, MCP, posts)
 - `cli/src/index.ts` — CLI entrypoint (commander)
 
+## Template interpolation
+
+The core feature: upload HTML with `{{placeholder}}` syntax, values are filled from the post's JSON data at serve time. HTML-escaped by default (safe against XSS).
+
+```html
+<h1>{{title}}</h1>
+<p>{{body}}</p>
+<script>console.log(window.__PH_DATA)</script>
+```
+
+Update data anytime via `set_post_data` (MCP) or `post data set` (CLI) — same URL, fresh output.
+
 ## Auth flow
 1. User signs in with Google via landing page
 2. Session cookie for dashboard
@@ -30,6 +42,8 @@ Give AI agents the ability to upload, edit, and share HTML posts programmaticall
 - Generate from dashboard sidebar → MCP Server → Generate URL
 - No `x-api-key` header needed — auth is in the URL path
 - Old `/api/mcp` with `x-api-key` header still works
+- Available tools: `list_posts`, `get_post`, `upload_post`, `replace_post`, `delete_post`,
+  `get_post_data`, `set_post_data`
 
 ## API auth
 - Dashboard routes: session cookie

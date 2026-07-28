@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import * as readline from "node:readline";
 import { Command } from "commander";
 import chalk from "chalk";
 
@@ -14,8 +15,8 @@ const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
 const config = loadConfig();
-const API_KEY = process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? config?.api_key ?? "";
-const BASE_URL = (process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
+const API_KEY = config?.api_key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
+const BASE_URL = (config?.url ?? process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -38,6 +39,62 @@ function printUploadOutput(url: string, isPrivate?: boolean) {
   console.log(`\n${dim("Post URL:")} ${cyan(url)}`);
   const visibility = isPrivate ? red("[private]") : green("[public]");
   console.log(`${dim("Shareable:")} ${visibility}`);
+}
+
+/**
+ * Read a line from stdin without echoing to terminal.
+ * On TTY uses raw mode (no echo). On pipe falls back to readline.
+ */
+async function readSilent(prompt: string): Promise<string> {
+  const { promise, resolve } = Promise.withResolvers<string>();
+  if (process.stdin.isTTY) {
+      const stdin = process.stdin;
+      const stdout = process.stdout;
+
+      stdout.write(prompt);
+      stdin.setRawMode(true);
+      stdin.resume();
+
+      let input = "";
+      const onData = (chunk: Buffer) => {
+        const c = chunk.toString();
+        if (c === "\r" || c === "\n") {
+          stdin.removeListener("data", onData);
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdout.write("\n");
+          resolve(input);
+        } else if (c === "\x7f" || c === "\x08") {
+          if (input.length > 0) {
+            input = input.slice(0, -1);
+            stdout.write("\b \b");
+          }
+        } else if (c === "\x03") {
+          stdin.removeListener("data", onData);
+          stdin.setRawMode(false);
+          stdin.pause();
+          process.exit(1);
+        } else {
+          input += c;
+          stdout.write("*");
+        }
+      };
+
+      stdin.on("data", onData);
+    } else {
+      // Piped input — no echo risk, use readline
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false,
+      });
+      rl.question(prompt, (answer) => {
+        rl.close();
+        resolve(answer.trim());
+      });
+    }
+
+  return promise;
 }
 
 /**
@@ -184,16 +241,11 @@ program
   .command("setup")
   .description("Save API key to ~/.post/config.json")
   .option("-k, --key <key>", "API key (prompts if omitted)")
-  .action(async () => {
-    let key = program.opts().key as string | undefined;
+  .action(async (opts: { key?: string }) => {
+    let key = opts.key;
     if (!key) {
       console.log(dim(`Get your API key from: ${BASE_URL}/dashboard`));
-      const buf = await new Promise<string>((resolve) => {
-        process.stdout.write("Enter your API key: ");
-        process.stdin.setEncoding("utf-8");
-        process.stdin.once("data", (d: string) => resolve(d.trim()));
-      });
-      key = buf;
+      key = await readSilent("Enter your API key: ");
     }
     if (!key) {
       console.error(red("No API key provided"));
@@ -262,16 +314,16 @@ dataCmd
     console.log(JSON.stringify(result, null, 2));
   });
 
-async function main() {
-  if (!API_KEY) {
+// Require API key for all commands except `setup`
+program.hook("preAction", (thisCommand, actionCommand) => {
+  if (actionCommand.name() !== "setup" && !API_KEY) {
     console.error(red.bold("✗ No API key configured."));
     console.error(dim("Set POST_API_KEY or run 'post setup' to configure your API key."));
     process.exit(1);
   }
-  await program.parseAsync(process.argv);
-}
+});
 
-main().catch((err) => {
+program.parseAsync(process.argv).catch((err) => {
   console.error(red(err instanceof Error ? err.message : String(err)));
   process.exit(1);
 });

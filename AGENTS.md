@@ -65,6 +65,15 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 
 Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
 
+**Available MCP tools:**
+- `list_posts` — list your posts
+- `get_post` — get post HTML by ID
+- `upload_post` — create a new post (`{ html, title? }`)
+- `replace_post` — update post content (`{ id, html, title? }`)
+- `delete_post` — delete a post
+- `get_post_data` — get a post's JSON data
+- `set_post_data` — merge JSON data into a post (`{ id, data: {...} }`)
+
 MCP works two ways:
 
 | Method | Path | Auth | Description |
@@ -144,7 +153,28 @@ post delete <post-id>
 post replace <post-id> <file.html>
 ```
 
-Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or `POSTHTML_API_KEY` env var.
+Configuration saved to `~/.post/config.json`. Key resolution priority: config file > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
+
+## Template interpolation
+
+When serving `/p/:id`, PostHTML resolves `{{path}}` placeholders in the post HTML
+with values from the post's `data` JSON object. Values are HTML-escaped — safe against XSS.
+
+```html
+<!-- Upload this HTML -->
+<h1>{{title}}</h1>
+<p>⭐ {{stars}} stars</p>
+
+<!-- With data: { "title": "Cardfoi", "stars": 42 } -->
+<!-- Viewer receives fully rendered: -->
+<h1>Cardfoi</h1>
+<p>⭐ 42 stars</p>
+```
+
+The raw data is also injected as `window.__PH_DATA` for custom JS:
+```html
+<script>console.log(window.__PH_DATA)</script>
+```
 
 ## Page Routes
 
@@ -152,7 +182,7 @@ Configuration saved to `~/.post/config.json`. Key override via `POST_API_KEY` or
 |------|------|---------|
 | `/` | public | Hero + Google sign-in + agent docs links |
 | `/dashboard` | session | API keys, MCP setup, post management |
-| `/p/:id` | public | Serves uploaded post HTML |
+| `/p/:id` | public | Serves uploaded post HTML (with server-side data interpolation)
 
 ## Auth Flow
 
@@ -180,8 +210,8 @@ GOOGLE_CLIENT_SECRET     — Google OAuth client secret
 ## CLI Env Vars
 
 ```
-POST_API_KEY              — API key (overrides config file)
-POST_URL                  — Server URL (default http://localhost:3000)
+POST_API_KEY              — API key (fallback if not in config file)
+POST_URL                  — Server URL (default https://posthtml.vercel.app)
 ```
 
 ## Design System

@@ -75,8 +75,8 @@ export default function Home() {
             {
               num: "02",
               title: "Configure your agent",
-              desc: "Set the API key as an environment variable.",
-              code: 'export POST_API_KEY="post_..."',
+              desc: "Save the key with `post setup`, or set it as an environment variable.",
+              code: 'post setup --key post_xxx',
             },
             {
               num: "03",

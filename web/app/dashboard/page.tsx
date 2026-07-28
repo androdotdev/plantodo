@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import { usePostsStore } from "@/lib/posts-store";
-import { PostEditor } from "@/app/dashboard/components/PostEditor";
 import Link from "next/link";
 import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
@@ -86,7 +85,7 @@ export default function Dashboard() {
     return fn().finally(() => setBusy((prev) => ({ ...prev, [key]: false })));
   }
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<NewKeyForm>({
+  const { register, handleSubmit, reset, watch } = useForm<NewKeyForm>({
     defaultValues: {
       name: "",
       unlimited: false,

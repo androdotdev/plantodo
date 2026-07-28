@@ -6,7 +6,7 @@ import {
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { db } from "@/db"
 import { posts } from "@/db/schema"
-import { and, eq } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
 
@@ -44,7 +44,7 @@ function getToolDefs() {
     },
     {
       name: "upload_post",
-      description: "Create a new post from HTML content",
+      description: "Create a new post from HTML content. Supports {{placeholder}} syntax — values are filled from post data at view time.",
       inputSchema: {
         type: "object",
         properties: {
@@ -74,6 +74,27 @@ function getToolDefs() {
         type: "object",
         properties: { id: { type: "string", description: "Post ID to delete" } },
         required: ["id"],
+      },
+    },
+    {
+      name: "get_post_data",
+      description: "Get the JSON data attached to a post — these values fill {{placeholder}} in the HTML template at view time",
+      inputSchema: {
+        type: "object",
+        properties: { id: { type: "string", description: "Post ID" } },
+        required: ["id"],
+      },
+    },
+    {
+      name: "set_post_data",
+      description: "Merge a JSON object into a post's data. Changes what viewers see at the post URL — values replace {{placeholder}} in the HTML template on next view.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Post ID" },
+          data: { type: "object", description: "JSON data to merge (top-level keys override existing)" },
+        },
+        required: ["id", "data"],
       },
     },
   ]
@@ -139,8 +160,13 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
 
       await db.insert(posts).values({ id, html: args.html, userId, title })
 
+      // Extract {{placeholder}} names for the response hint
+      const placeholders = [...new Set(
+        Array.from(args.html.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g), m => m[1])
+      )]
+
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}` }, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}`, unresolved_placeholders: placeholders }, null, 2) }],
       }
     }
 
@@ -195,6 +221,58 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
 
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ success: true }) }],
+      }
+    }
+
+    case "get_post_data": {
+      if (!args?.id || typeof args.id !== "string") {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id is required" }) }], isError: true }
+      }
+
+      const row = await db
+        .select({ data: posts.data })
+        .from(posts)
+        .where(and(eq(posts.id, args.id), eq(posts.userId, userId)))
+        .limit(1)
+        .then(r => r[0])
+
+      if (!row) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+      }
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(row.data ?? {}, null, 2) }],
+      }
+    }
+
+    case "set_post_data": {
+      if (!args?.id || typeof args.id !== "string") {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id is required" }) }], isError: true }
+      }
+      if (!args?.data || typeof args.data !== "object" || Array.isArray(args.data)) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "data must be a JSON object" }) }], isError: true }
+      }
+
+      const existing = await db
+        .select({ id: posts.id })
+        .from(posts)
+        .where(and(eq(posts.id, args.id), eq(posts.userId, userId)))
+        .limit(1)
+        .then(r => r[0])
+
+      if (!existing) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+      }
+
+      const fragment = JSON.stringify(args.data)
+      const merged = await db
+        .update(posts)
+        .set({ data: sql`${posts.data} || ${fragment}::jsonb` })
+        .where(eq(posts.id, args.id))
+        .returning({ data: posts.data })
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(merged[0].data, null, 2) }],
       }
     }
 

@@ -10,19 +10,21 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
   const keyText = apiKey || "YOUR_API_KEY_HERE";
   const [copied, setCopied] = useState(false);
 
-  const prompt = `You have access to PostHTML — a service that uploads HTML posts and returns shareable URLs.
+  const prompt = `You have access to PostHTML — a publishing API for AI agents. Upload HTML templates with \`{{placeholder}}\` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
 
 ## Setup
 The human has provided you with an API key.
 
-### Option A: Environment variables (recommended)
-POST_API_KEY=${keyText}
-
-### Option B: CLI config file
+### Option A: CLI config file (recommended)
 npm i -g @androff/posthtml-cli
 post setup --key ${keyText}
 
-The config file (~/.post/config.json) stores the key as "api_key".
+The config file (~/.post/config.json) stores the key.
+
+### Option B: Environment variables (fallback)
+POST_API_KEY=${keyText}
+
+The env var is only used if no config file is found.
 
 ## CLI commands
 - post upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}

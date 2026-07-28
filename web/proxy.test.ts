@@ -1,21 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const { fnVerify, fnSession } = vi.hoisted(() => ({
   fnVerify: vi.fn(),
   fnSession: vi.fn(),
 }));
 
-vi.mock("next/server", () => ({
-  NextResponse: {
-    next: vi.fn((init) => ({ status: 200, _mock: "NextResponse.next", init })),
-    json: vi.fn((data, init) => ({ status: init?.status ?? 200, _json: data })),
-    redirect: vi.fn((url, status) => ({ status: status ?? 302, _mock: "NextResponse.redirect", url })),
-  },
-  NextRequest: vi.fn().mockImplementation(() => ({
-    headers: new Map(),
-    nextUrl: { pathname: "", search: "" },
-  })),
-}));
+vi.mock("next/server", () => {
+  const nextResponse = vi.fn(function (body?: unknown, init?: ResponseInit) {
+    return { status: init?.status ?? 200, body, headers: init?.headers }
+  })
+  nextResponse.next = vi.fn((init) => ({ status: 200, _mock: "NextResponse.next", init }))
+  nextResponse.json = vi.fn((data, init) => ({ status: init?.status ?? 200, _json: data }))
+  nextResponse.redirect = vi.fn((url, status) => ({ status: status ?? 302, _mock: "NextResponse.redirect", url }))
+  return { NextResponse: nextResponse,
+    NextRequest: vi.fn().mockImplementation(() => ({
+      headers: new Map(),
+      nextUrl: { pathname: "", search: "" },
+    })),
+  };
+});
 
 vi.mock("@/lib/auth", () => ({
   auth: {
@@ -34,7 +37,7 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): any {
+  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): { headers: Map<string, string>; nextUrl: { pathname: string; search: string } } {
     return {
       headers: new Map(Object.entries(headers)),
       nextUrl: { pathname, search },
@@ -175,29 +178,29 @@ describe("proxy middleware", () => {
     });
 
     it("blocks /api/* on the posts domain with 404", async () => {
-      const res = await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/api/posts"));
+      await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/api/posts"));
 
-      expect(NextResponse.json).toHaveBeenCalledWith(
-        { error: "Not found" },
-        { status: 404 },
+      expect(NextResponse).toHaveBeenCalledWith(
+        expect.stringContaining("This domain only shows posts"),
+        expect.objectContaining({ status: 404 }),
       );
     });
 
     it("blocks /dashboard on the posts domain with 404", async () => {
-      const res = await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/dashboard"));
+      await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/dashboard"));
 
-      expect(NextResponse.json).toHaveBeenCalledWith(
-        { error: "Not found" },
-        { status: 404 },
+      expect(NextResponse).toHaveBeenCalledWith(
+        expect.stringContaining("This domain only shows posts"),
+        expect.objectContaining({ status: 404 }),
       );
     });
 
     it("blocks root / on the posts domain", async () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/"));
 
-      expect(NextResponse.json).toHaveBeenCalledWith(
-        { error: "Not found" },
-        { status: 404 },
+      expect(NextResponse).toHaveBeenCalledWith(
+        expect.stringContaining("This domain only shows posts"),
+        expect.objectContaining({ status: 404 }),
       );
     });
 

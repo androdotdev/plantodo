@@ -5,6 +5,13 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUserId } from "@/lib/auth-user";
 import { verifyToken } from "@/lib/post-token";
 
+if (!process.env.POSTS_DOMAIN) {
+  console.warn(
+    "[p/[id]] POSTS_DOMAIN env var not set — token-based private post access " +
+    "from the posts domain will silently fall back to session auth.",
+  );
+}
+
 export const dynamic = "force-dynamic";
 
 const PRIVATE_HTML = `<!DOCTYPE html>
@@ -19,75 +26,53 @@ const PRIVATE_HTML = `<!DOCTYPE html>
 <a class="home" href="/">Go home</a>
 </main></body></html>`;
 
-// safe: `</` inside the JSON payload can't prematurely close the script tag —
+const NOT_FOUND_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Post not found</title>
+<style>body{font-family:ui-monospace,monospace;background:#0a0a0a;color:#e8e8e8;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}main{text-align:center;padding:2rem}svg{opacity:.5}h1{font-size:1.25rem;margin:.75rem 0 .5rem}.msg{color:#888;max-width:22rem;font-size:.85rem}.home{border:1px solid #333;color:#888;padding:.5rem 1rem;border-radius:2px;text-decoration:none;display:inline-block;margin-top:1rem}.home:hover{color:#e8e8e8;border-color:#444}</style>
+</head>
+<body><main>
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+<h1>Post not found</h1>
+<p class="msg">This post doesn't exist or may have been deleted.</p>
+<a class="home" href="/">Go home</a>
+</main></body></html>`;
+
+// safe: `<` in the JSON payload can't prematurely close the script tag —
 // browsers only scan for the literal byte sequence "</script", so escaping
 // just the "<" of "</" is sufficient and keeps the JSON otherwise untouched.
 const DATA_SCRIPT = (data: unknown) =>
-  `<script type="application/json" id="__ph_data">${JSON.stringify(data ?? {}).replace(/</g, "\\u003c")}</script>`;
+  `<script>window.__PH_DATA=${JSON.stringify(data ?? {}).replace(/</g, "\\u003c")};</script>`;
 
-// Minimal auto-bind runtime: fills {{field}} text, data-bind-attr="attr:path",
-// and <template data-each="path"> loops from __ph_data. No fetch, no user JS
-// required for the common case — posts can still write their own script and
-// ignore this entirely if they need more than flat/loop binding.
-const RUNTIME_SCRIPT = `<script>
-(function () {
-  var el = document.getElementById("__ph_data");
-  if (!el) return;
-  var data;
-  try { data = JSON.parse(el.textContent); } catch (e) { return; }
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
 
-  function get(obj, path) {
-    return path.split(".").reduce(function (o, k) {
-      return o == null ? undefined : o[k];
-    }, obj);
-  }
-
-  function interpolate(text, ctx) {
-    return text.replace(/\\{\\{\\s*([\\w.]+)\\s*\\}\\}/g, function (_, path) {
-      var v = path === "this" ? ctx : get(ctx, path);
-      return v == null ? "" : String(v);
-    });
-  }
-
-  function bind(root, ctx) {
-    root.querySelectorAll("template[data-each]").forEach(function (tpl) {
-      var items = get(ctx, tpl.getAttribute("data-each")) || [];
-      var frag = document.createDocumentFragment();
-      items.forEach(function (item) {
-        var wrapper = document.createElement("div");
-        wrapper.appendChild(tpl.content.cloneNode(true));
-        bind(wrapper, item);
-        while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
-      });
-      tpl.replaceWith(frag);
-    });
-
-    root.querySelectorAll("[data-bind-attr]").forEach(function (node) {
-      node.getAttribute("data-bind-attr").split(";").forEach(function (pair) {
-        var parts = pair.split(":");
-        var attr = (parts[0] || "").trim();
-        var path = (parts[1] || "").trim();
-        if (!attr || !path) return;
-        var v = get(ctx, path);
-        if (v != null) node.setAttribute(attr, v);
-      });
-    });
-
-    root.querySelectorAll("*").forEach(function (node) {
-      if (node.tagName === "TEMPLATE") return;
-      Array.prototype.forEach.call(node.childNodes, function (child) {
-        if (child.nodeType === 3 && child.textContent.indexOf("{{") !== -1) {
-          child.textContent = interpolate(child.textContent, ctx);
-        }
-      });
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    bind(document.body, data);
-  });
-})();
-</script>`;
+/** Server-side interpolation: resolve {{path}} placeholders with data values.
+ *  Values are HTML-escaped by default — safe against XSS.
+ *  (If raw-HTML injection from data is ever needed, use {{{path}}} triple-brace syntax.)
+ *  HTML arrives fully rendered — no client runtime, no FOUC.
+ *  Post authors who need custom JS read window.__PH_DATA. */
+function interpolate(
+  html: string,
+  data: Record<string, unknown>,
+): string {
+  return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path: string) => {
+    const val =
+      path === "this"
+        ? data
+        : path.split(".").reduce<unknown>((o, k) => {
+            if (k === "__proto__" || k === "constructor" || k === "prototype") return undefined
+            return o != null && typeof o === "object" ? (o as Record<string, unknown>)[k] : undefined
+          }, data)
+    return val != null ? escapeHtml(String(val)) : "{{" + path + "}}"
+  })
+}
 
 export async function GET(
   request: NextRequest,
@@ -102,7 +87,7 @@ export async function GET(
     .then((rows) => rows[0]);
 
   if (!post) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return new NextResponse(NOT_FOUND_HTML, { status: 404, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" } });
   }
 
   // Gate private posts to the owner only
@@ -115,32 +100,39 @@ export async function GET(
     if (isPostsDomain) {
       const token = request.nextUrl.searchParams.get("key")
       if (!token) {
-        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } });
+        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
       const payload = verifyToken(token)
       if (!payload || payload.postId !== id || payload.userId !== post.userId) {
-        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
+        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
     } else {
       const userId = await getAuthenticatedUserId(request);
       if (!userId) {
-        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8" } });
+        return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
       if (post.userId !== userId) {
-        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
+        return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
     }
   }
 
-  const scripts = `${DATA_SCRIPT(post.data)}\n${RUNTIME_SCRIPT}`;
-  const injected = post.html.includes("</body>")
-    ? post.html.replace("</body>", `${scripts}\n</body>`)
-    : `${post.html}\n${scripts}`;
+  const html = post.html ?? "";
+  if (!post.html) {
+    console.warn(`[p/${id}] post.html is null or empty, serving empty content`);
+  }
+
+  const rendered = interpolate(html, (post.data ?? {}) as Record<string, unknown>);
+  const dataScript = `${DATA_SCRIPT(post.data)}\n`;
+  const injected = rendered.includes("</body>")
+    ? rendered.replace("</body>", `${dataScript}\n</body>`)
+    : `${rendered}\n${dataScript}`;
 
   return new NextResponse(injected, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": "default-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' https://i.ytimg.com; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'self' 'unsafe-inline'",
+      "Content-Security-Policy": "default-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' https://i.ytimg.com; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'",
+      "Cache-Control": "public, max-age=300",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "no-referrer",
     },
