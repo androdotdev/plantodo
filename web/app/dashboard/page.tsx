@@ -234,9 +234,7 @@ export default function Dashboard() {
           <Link href="/" className="flex items-center gap-3">
             <img src="/i.svg" alt="" className="h-6 w-6" />
             <span className="font-semibold text-sm">PostHTML</span>
-            <span className="inline-block px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-bg-accent text-text-accent">
-              ALPHA
-            
+            <span className="inline-block px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-bg-accent text-text-accent">ALPHA</span>
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
