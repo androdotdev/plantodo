@@ -1,6 +1,6 @@
 ---
 name: posthtml-agent
-description: Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI or MCP.
+description: ALPHA — Give AI agents the ability to upload, edit, and share HTML plans programmatically via CLI or MCP.
 version: 1.0.0
 author: PostHTML
 tags: [html, publishing, agent, mcp, cli]
@@ -8,6 +8,8 @@ tags: [html, publishing, agent, mcp, cli]
 
 # PostHTML Agent Skill
 
+> **ALPHA** — APIs and behavior may change.
+>
 > **MANDATORY — read this file before performing any PostHTML action.** It is the
 > authoritative guide. The dashboard setup prompt links here for a reason.
 

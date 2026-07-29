@@ -122,10 +122,23 @@ export default function McpSection() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 py-4">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
-        <span className="text-xs text-text-secondary">Loading MCP config...</span>
-      </div>
+      <>
+        <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary flex items-center gap-2">
+              <Cable size={16} /> MCP Server
+            </h1>
+            <p className="mt-1 text-xs text-text-secondary">
+              Use this URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
+            </p>
+          </div>
+        </div>
+        <div className="rounded-md border border-border-default bg-bg-card p-6">
+          <div className="flex items-center gap-3 py-4">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -134,7 +147,7 @@ export default function McpSection() {
       <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary flex items-center gap-2">
-            <Cable size={16} /> MCP Server <span className="text-[10px] font-bold uppercase tracking-wider bg-bg-accent text-text-accent px-1.5 py-0.5 rounded-sm">Beta</span>
+            <Cable size={16} /> MCP Server
           </h1>
           <p className="mt-1 text-xs text-text-secondary">
             Use this URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).

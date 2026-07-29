@@ -16,37 +16,37 @@ html {
  * The :root / .dark / .light blocks below then re-theme those vars at runtime.
  */
 @theme {
-  /* Backgrounds (dark default) */
-  --color-bg-base: #0a0a0a;
-  --color-bg-card: #111111;
-  --color-bg-card-hover: #1a1a1a;
-  --color-bg-elevated: #1a1a1a;
-  --color-bg-accent: #1a3a2a;
-  --color-bg-danger: #3a1a1a;
-  --color-bg-danger-hover: #1a0a0a;
+  /* Backgrounds (dark default — Catppuccin Mocha) */
+  --color-bg-base: #1e1e2e;
+  --color-bg-card: #181825;
+  --color-bg-card-hover: #313244;
+  --color-bg-elevated: #11111b;
+  --color-bg-accent: #302d41;
+  --color-bg-danger: #352024;
+  --color-bg-danger-hover: #2a1515;
 
   /* Text */
-  --color-text-primary: #e8e8e8;
-  --color-text-secondary: #888888;
-  --color-text-muted: #666666;
-  --color-text-accent: #00d96a;
-  --color-text-danger: #ff4444;
+  --color-text-primary: #cdd6f4;
+  --color-text-secondary: #a6adc8;
+  --color-text-muted: #6c7086;
+  --color-text-accent: #cba6f7;
+  --color-text-danger: #f38ba8;
 
   /* Borders */
-  --color-border-default: #333333;
-  --color-border-hover: #444444;
-  --color-border-accent: #00d96a;
-  --color-border-danger: #ff4444;
+  --color-border-default: #45475a;
+  --color-border-hover: #585b70;
+  --color-border-accent: #cba6f7;
+  --color-border-danger: #f38ba8;
 
-  /* Accent (green) */
-  --color-accent: #00d96a;
-  --color-accent-hover: #00ff7f;
-  --color-accent-text: #0a0a0a;
+  /* Accent (mauve) */
+  --color-accent: #cba6f7;
+  --color-accent-hover: #b4befe;
+  --color-accent-text: #1e1e2e;
 
   /* Danger */
-  --color-danger: #ff4444;
+  --color-danger: #f38ba8;
 
-  /* Radius (softer) */
+  /* Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
 }

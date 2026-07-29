@@ -6,7 +6,7 @@ import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import { usePostsStore } from "@/lib/posts-store";
 import Link from "next/link";
-import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable } from "lucide-react";
+import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable, Loader2 } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 import McpSection from "./components/McpSection";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -61,6 +61,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -240,10 +241,14 @@ export default function Dashboard() {
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
             <ThemeToggle />
             <button
-              onClick={() => authClient.signOut()}
-              className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+              onClick={async () => {
+                setSigningOut(true);
+                await authClient.signOut();
+              }}
+              disabled={signingOut}
+              className="rounded-sm border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors disabled:opacity-50"
             >
-              Sign out
+              {signingOut ? <Loader2 size={14} className="animate-spin" /> : "Sign out"}
             </button>
           </div>
         </div>
@@ -269,7 +274,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setActiveSection("mcp")}
-              title="MCP Server (Beta)"
+              title="MCP Server"
               className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                 activeSection === "mcp"
                   ? "bg-bg-accent text-text-accent"
@@ -277,7 +282,7 @@ export default function Dashboard() {
               }`}
             >
               <Cable size={16} className="shrink-0" />
-              {!collapsed && <span>MCP Server <span className="text-text-muted font-normal">(Beta)</span></span>}
+              {!collapsed && <span>MCP Server</span>}
             </button>
             <button
               onClick={() => setActiveSection("posts")}
@@ -352,7 +357,7 @@ export default function Dashboard() {
                         disabled={submitting}
                         className="rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-accent-text hover:bg-accent-hover disabled:opacity-50 transition-colors shrink-0"
                       >
-                        {submitting ? "Generating…" : "Generate Key"}
+                        {submitting ? <Loader2 size={16} className="animate-spin" /> : "Generate Key"}
                       </button>
                     </div>
 
@@ -535,7 +540,7 @@ export default function Dashboard() {
                     disabled={busy["new-post"]}
                     className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    {busy["new-post"] ? "Creating…" : "New Post"}
+                    {busy["new-post"] ? <Loader2 size={16} className="animate-spin" /> : "New Post"}
                   </button>
                 </div>
 
@@ -594,7 +599,7 @@ export default function Dashboard() {
                             disabled={busy[`del-post-${p.id}`]}
                             className="rounded-sm border border-border-danger px-3 py-1.5 text-xs font-medium text-text-danger hover:bg-bg-danger-hover transition-colors disabled:opacity-50"
                           >
-                            {busy[`del-post-${p.id}`] ? "Deleting…" : "Delete"}
+                            {busy[`del-post-${p.id}`] ? <Loader2 size={14} className="animate-spin" /> : "Delete"}
                           </button>
                         </div>
                       </div>
