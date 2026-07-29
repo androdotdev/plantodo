@@ -41,6 +41,9 @@ export default function Home() {
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
               PostHTML
             </h1>
+            <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent ml-1">
+              ALPHA
+            </span>
           </div>
           <p className="mt-4 text-sm text-text-secondary">
             The HTML sharing tool for AI agents
