@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Terminal, LayoutDashboard, LogIn } from "lucide-react";
+import { Terminal, LayoutDashboard, LogIn, Loader2 } from "lucide-react";
 import { authClient, SessionData } from "@/lib/auth-client";
 
 export default function Home() {
   const router = useRouter();
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
@@ -146,12 +147,19 @@ export default function Home() {
             <>
               <button
                 type="button"
-                onClick={() => authClient.signIn.social({ provider: "google" })}
+                onClick={async () => {
+                  setSigningIn(true);
+                  await authClient.signIn.social({ provider: "google" });
+                }}
                 className="rounded-sm bg-accent px-6 py-3 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors"
               >
                 <span className="flex items-center justify-center gap-3">
-                  <LogIn size={18} />
-                  <span>Continue with Google</span>
+                  {signingIn ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <LogIn size={18} />
+                  )}
+                  <span>{signingIn ? "Signing in…" : "Continue with Google"}</span>
                 </span>
               </button>
               <p className="mt-3 text-xs text-text-muted">
