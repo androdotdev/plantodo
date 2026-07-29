@@ -148,6 +148,19 @@ describe("proxy middleware", () => {
       );
     });
 
+    it("redirects authenticated user with a signed token", async () => {
+      process.env.POST_TOKEN_SECRET = "test-secret-that-is-at-least-32-chars!!";
+      fnSession.mockResolvedValueOnce({ user: { id: "user-456" } });
+
+      await proxy(makeRequest({}, "/p/post-123"));
+
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        expect.stringMatching(/^https:\/\/postshare\.andro42\.qzz\.io\/p\/post-123\?key=[\w-]+\.[\w-]+$/),
+        302,
+      );
+      delete process.env.POST_TOKEN_SECRET;
+    });
+
     it("does not redirect /api/* paths", async () => {
       fnVerify.mockResolvedValueOnce({
         valid: true,

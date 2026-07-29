@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
+import { signToken } from "@/lib/post-token"
 
 const NOT_A_POST_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -30,14 +31,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Main domain: redirect /p/:id to the posts domain for true origin isolation
+  // Main domain: redirect /p/:id to the posts domain for origin isolation.
+  // If the user is authenticated, include a signed token so they can access private posts.
   if (path.startsWith("/p/")) {
     const postsDomain = process.env.POSTS_DOMAIN
     if (postsDomain) {
-      return NextResponse.redirect(
-        `https://${postsDomain}${path}${request.nextUrl.search}`,
-        302,
-      )
+      const userId = await getAuthenticatedUserId(request)
+      let redirectUrl = `https://${postsDomain}${path}${request.nextUrl.search}`
+      if (userId) {
+        const postId = path.replace("/p/", "")
+        const token = signToken(postId, userId)
+        const separator = request.nextUrl.search ? "&" : "?"
+        redirectUrl += `${separator}key=${token}`
+      }
+      return NextResponse.redirect(redirectUrl, 302)
     }
   }
 
