@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { signToken } from "@/lib/post-token"
+import { db } from "@/db"
+import { posts } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 const NOT_A_POST_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -40,9 +43,17 @@ export async function proxy(request: NextRequest) {
       let redirectUrl = `https://${postsDomain}${path}${request.nextUrl.search}`
       if (userId) {
         const postId = path.replace("/p/", "")
-        const token = signToken(postId, userId)
-        const separator = request.nextUrl.search ? "&" : "?"
-        redirectUrl += `${separator}key=${token}`
+        // Only sign a capability token for private posts — public posts don't need one
+        const post = await db
+          .select({ isPrivate: posts.isPrivate })
+          .from(posts)
+          .where(eq(posts.id, postId))
+          .then(r => r[0])
+        if (post?.isPrivate) {
+          const token = signToken(postId, userId)
+          const separator = request.nextUrl.search ? "&" : "?"
+          redirectUrl += `${separator}key=${token}`
+        }
       }
       return NextResponse.redirect(redirectUrl, 302)
     }

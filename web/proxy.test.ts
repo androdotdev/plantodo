@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Prevent neon client from throwing during module import in tests
+process.env.DATABASE_URL ??= "postgresql://fake:fake@localhost:5432/test";
+
 const { fnVerify, fnSession } = vi.hoisted(() => ({
   fnVerify: vi.fn(),
   fnSession: vi.fn(),
@@ -26,6 +29,16 @@ vi.mock("@/lib/auth", () => ({
       verifyApiKey: fnVerify,
       getSession: fnSession,
     },
+  },
+}));
+
+vi.mock("@/db", () => ({
+  db: {
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve([{ isPrivate: true }])),
+      })),
+    })),
   },
 }));
 
