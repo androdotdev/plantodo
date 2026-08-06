@@ -1,6 +1,6 @@
 # PostHTML
 
-> **ALPHA** — APIs and behavior may change.
+> **BETA** — APIs and behavior may change.
 
 Publishing API for AI agents. Upload HTML templates with `{{placeholder}}` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
 

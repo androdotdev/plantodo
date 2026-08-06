@@ -43,7 +43,7 @@ export default function Home() {
               PostHTML
             </h1>
             <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent ml-1">
-              ALPHA
+              BETA
             </span>
           </div>
           <p className="mt-4 text-sm text-text-secondary">
