@@ -14,7 +14,7 @@ const red = chalk.red;
 const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
-const config = loadConfig();
+const config = await loadConfig();
 const API_KEY = config?.api_key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
 const BASE_URL = (config?.url ?? process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
@@ -271,7 +271,7 @@ program
 
 program
   .command("setup")
-  .description("Save API key to ~/.post/config.json")
+  .description("Save API key (OS keyring, or ~/.post/config.json when unavailable)")
   .option("-k, --key <key>", "API key (prompts if omitted)")
   .action(async (opts: { key?: string }) => {
     let key = opts.key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY;
@@ -286,8 +286,12 @@ program
     if (key.length > 100) {
       console.warn(yellow("Key looks longer than expected — check you didn't paste it twice."));
     }
-    saveConfig({ api_key: key });
-    console.log(`${green("✓")} ${dim("saved to ~/.post/config.json")}`);
+    const stored = await saveConfig({ api_key: key });
+    console.log(
+      stored === "keyring"
+        ? `${green("✓")} ${dim("saved to the OS keyring")}`
+        : `${green("✓")} ${dim("saved to ~/.post/config.json")}`,
+    );
   });
 
 // ── data ────────────────────────────────────────────────────────────────────

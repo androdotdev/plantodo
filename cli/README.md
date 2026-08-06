@@ -18,7 +18,7 @@ POST_API_KEY=post_xxx post setup
 
 Get your API key from: [posthtml.vercel.app/dashboard](https://posthtml.vercel.app/dashboard)
 
-Configuration saved to `~/.post/config.json` (owner read/write only).
+Configuration saved to `~/.post/config.json`. When an OS keyring is available, the API key is stored there instead (the file keeps only non-secret options); keyring-less machines fall back to the plaintext file at `0600`.
 
 ## Commands
 
@@ -104,7 +104,7 @@ post data set abc123 --file meta.json
 
 ### `post setup`
 
-Save your API key to `~/.post/config.json`.
+Save your API key to the OS keyring (or `~/.post/config.json` on keyring-less machines).
 
 ```bash
 post setup
@@ -119,5 +119,5 @@ post setup --key post_xxx    # pass directly (avoid on shared systems)
 | `POST_API_KEY` | — | API key (used if no config file exists) |
 | `POSTHTML_API_KEY` | — | Legacy alias for `POST_API_KEY` |
 
-Priority: config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
+Priority: OS keyring > config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
 `post setup` itself resolves `--key` > `POST_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.
