@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
     userId: session.user.id,
   }
 
+  // One active MCP token per user: generating a new one revokes the previous.
+  // Enforced server-side so a stale browser tab can't leave two live tokens
+  // (AGENTS.md documents "regenerate replaces it in place").
+  if (body.purpose === "mcp") {
+    const { apiKeys } = await auth.api.listApiKeys({ query: {}, headers: await headers() })
+    const existing = apiKeys.filter(k => k.prefix === "mcp")
+    for (const key of existing) {
+      await auth.api.deleteApiKey({ body: { keyId: key.id }, headers: await headers() })
+    }
+  }
+
   if (body.unlimited !== false) {
     payload.remaining = null
   } else if (body.remaining != null) {
@@ -46,6 +57,12 @@ export async function POST(req: NextRequest) {
     payload.rateLimitEnabled = true
     if (body.rateLimitMax != null) payload.rateLimitMax = body.rateLimitMax
     if (body.rateLimitTimeWindow != null) payload.rateLimitTimeWindow = body.rateLimitTimeWindow
+  } else if (body.purpose === "mcp") {
+    // MCP keys get the same conservative defaults as dashboard keys —
+    // rate limited 1000/24h unless explicitly overridden.
+    payload.rateLimitEnabled = true
+    payload.rateLimitMax = body.rateLimitMax ?? 1000
+    payload.rateLimitTimeWindow = body.rateLimitTimeWindow ?? 86_400_000
   } else {
     payload.rateLimitEnabled = false
   }

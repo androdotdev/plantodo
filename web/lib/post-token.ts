@@ -5,6 +5,8 @@ const TOKEN_EXPIRY_MS = 1_000 * 60 * 60 * 24 * 30 // 30 days
 export interface TokenPayload {
   postId: string
   userId: string
+  /** token version — bumped when the post's visibility toggles, revoking older tokens */
+  v: number
   iat: number
   exp: number
 }
@@ -19,10 +21,10 @@ function getSecret(): string {
  * Sign a capability token for viewing a private post.
  * Token is HMAC-SHA256 over a JSON payload, base64url-encoded.
  */
-export function signToken(postId: string, userId: string): string {
+export function signToken(postId: string, userId: string, version = 1): string {
   const secret = getSecret()
   const now = Date.now()
-  const payload: TokenPayload = { postId, userId, iat: now, exp: now + TOKEN_EXPIRY_MS }
+  const payload: TokenPayload = { postId, userId, v: version, iat: now, exp: now + TOKEN_EXPIRY_MS }
 
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url")
   const sig = createHmac("sha256", secret).update(encoded).digest("base64url")
@@ -60,6 +62,12 @@ export function verifyToken(token: string): TokenPayload | null {
     // Check expiry
     if (Date.now() > payload.exp) {
       return null
+    }
+
+    // Tokens signed before versioning (missing v) are treated as version 1 —
+    // still valid until the post's visibility is first toggled.
+    if (typeof payload.v !== "number") {
+      payload.v = 1
     }
 
     return payload

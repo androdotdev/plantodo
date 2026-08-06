@@ -81,7 +81,7 @@ export async function GET(
   const { id } = await params;
 
   const post = await db
-    .select({ html: posts.html, data: posts.data, isPrivate: posts.isPrivate, userId: posts.userId })
+    .select({ html: posts.html, data: posts.data, isPrivate: posts.isPrivate, userId: posts.userId, tokenVersion: posts.tokenVersion })
     .from(posts)
     .where(eq(posts.id, id))
     .then((rows) => rows[0]);
@@ -103,7 +103,7 @@ export async function GET(
         return new NextResponse(PRIVATE_HTML, { status: 401, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
       const payload = verifyToken(token)
-      if (!payload || payload.postId !== id || payload.userId !== post.userId) {
+      if (!payload || payload.postId !== id || payload.userId !== post.userId || payload.v !== post.tokenVersion) {
         return new NextResponse(PRIVATE_HTML, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } });
       }
     } else {

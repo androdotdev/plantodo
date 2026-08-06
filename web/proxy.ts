@@ -51,14 +51,15 @@ export async function proxy(request: NextRequest) {
 
       const userId = await getAuthenticatedUserId(request)
       if (userId) {
-        // Only sign a capability token for private posts — public posts don't need one
+        // Only sign a capability token for private posts — public posts don't need one.
+        // Token embeds the post's current tokenVersion so a visibility toggle revokes it.
         const post = await db
-          .select({ isPrivate: posts.isPrivate })
+          .select({ isPrivate: posts.isPrivate, tokenVersion: posts.tokenVersion })
           .from(posts)
           .where(eq(posts.id, postId))
           .then(r => r[0])
         if (post?.isPrivate) {
-          url.searchParams.set("key", signToken(postId, userId))
+          url.searchParams.set("key", signToken(postId, userId, post.tokenVersion ?? 1))
         }
       }
       return NextResponse.redirect(url.toString(), 302)
