@@ -155,7 +155,7 @@ post delete <post-id>
 post replace <post-id> <file.html>
 ```
 
-Configuration saved to `~/.post/config.json`. Key resolution priority: config file > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
+Configuration saved to `~/.post/config.json`. When an OS keyring is available (Windows Credential Manager, macOS Keychain, libsecret), the API key is stored there instead and the file keeps only non-secret options; keyring-less machines fall back to the plaintext file at `0600`. Key resolution priority: OS keyring > config file > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
 
 ## Template interpolation
 
