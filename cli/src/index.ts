@@ -63,7 +63,15 @@ async function readSilent(prompt: string): Promise<string> {
           stdin.setRawMode(false);
           stdin.pause();
           stdout.write("\n");
-          resolve(input);
+          // A paste can carry a trailing/embedded newline, and some terminals
+          // deliver the pasted buffer twice — collapse to the first line and
+          // drop exact duplicates so a double-pasted key doesn't get saved twice.
+          let clean = input.split("\r")[0].split("\n")[0];
+          if (clean.length % 2 === 0) {
+            const half = clean.length / 2;
+            if (clean.slice(0, half) === clean.slice(half)) clean = clean.slice(0, half);
+          }
+          resolve(clean);
         } else if (c === "\x7f" || c === "\x08") {
           if (input.length > 0) {
             input = input.slice(0, -1);
@@ -242,7 +250,7 @@ program
   .description("Save API key to ~/.post/config.json")
   .option("-k, --key <key>", "API key (prompts if omitted)")
   .action(async (opts: { key?: string }) => {
-    let key = opts.key;
+    let key = opts.key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY;
     if (!key) {
       console.log(dim(`Get your API key from: ${BASE_URL}/dashboard`));
       key = await readSilent("Enter your API key: ");
@@ -250,6 +258,9 @@ program
     if (!key) {
       console.error(red("No API key provided"));
       process.exit(1);
+    }
+    if (key.length > 100) {
+      console.warn(yellow("Key looks longer than expected — check you didn't paste it twice."));
     }
     saveConfig({ api_key: key });
     console.log(`${green("✓")} ${dim("saved to ~/.post/config.json")}`);

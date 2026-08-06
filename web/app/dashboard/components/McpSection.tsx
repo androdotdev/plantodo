@@ -163,7 +163,7 @@ export default function McpSection() {
 
       <div className="rounded-md border border-border-default bg-bg-card p-6 space-y-4">
         {hasUrlToShow ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <code className="flex-1 rounded-sm border border-border-default bg-bg-elevated px-3 py-2.5 text-sm text-text-primary select-all break-all">
               {newUrl}
             </code>

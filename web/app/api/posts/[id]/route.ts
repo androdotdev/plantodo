@@ -14,7 +14,18 @@ export const GET = withError(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
-  const post = await db.select().from(posts).where(eq(posts.id, id)).then(r => r[0])
+  const post = await db
+    .select({
+      id: posts.id,
+      html: posts.html,
+      data: posts.data,
+      title: posts.title,
+      isPrivate: posts.isPrivate,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+      userId: posts.userId,
+    })
+    .from(posts).where(eq(posts.id, id)).then(r => r[0])
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   if (post.isPrivate) {
@@ -23,7 +34,8 @@ export const GET = withError(async (
     if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  return NextResponse.json(post)
+  const { userId: _userId, ...publicPost } = post
+  return NextResponse.json(publicPost)
 })
 
 export const DELETE = withError(async (
@@ -50,22 +62,40 @@ export const PATCH = withError(async (
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const { html, title, isPrivate } = await request.json()
-  if (typeof title !== "string" && (!html || typeof html !== "string") && typeof isPrivate !== "boolean") {
-    return NextResponse.json({ error: "html, title, or isPrivate is required" }, { status: 400 })
+  const body = await request.json()
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Body must be a JSON object" }, { status: 400 })
   }
-  if (html && typeof html === "string" && html.length > MAX_HTML_SIZE) {
-    return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
+
+  const updates: Record<string, string | boolean> = {}
+  if (body.title !== undefined) {
+    if (typeof body.title !== "string") return NextResponse.json({ error: "title must be a string" }, { status: 400 })
+    updates.title = body.title
+  }
+  if (body.html !== undefined) {
+    if (typeof body.html !== "string") return NextResponse.json({ error: "html must be a string" }, { status: 400 })
+    if (body.html.length > MAX_HTML_SIZE) {
+      return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
+    }
+    updates.html = body.html
+  }
+  if (body.isPrivate !== undefined) {
+    if (typeof body.isPrivate !== "boolean") return NextResponse.json({ error: "isPrivate must be a boolean" }, { status: 400 })
+    updates.isPrivate = body.isPrivate
+  }
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "html, title, or isPrivate is required" }, { status: 400 })
   }
 
   const post = await db.select({ userId: posts.userId }).from(posts).where(eq(posts.id, id)).then(r => r[0])
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const updates: Record<string, string | boolean> = {}
-  if (html) updates.html = html
-  if (title !== undefined) updates.title = title
-  if (typeof isPrivate === "boolean") updates.isPrivate = isPrivate
   await db.update(posts).set(updates).where(eq(posts.id, id))
-  return NextResponse.json({ id, url: `${BASE_URL}/p/${id}`, ...(title !== undefined ? { title } : {}), ...(typeof isPrivate === "boolean" ? { isPrivate } : {}) })
+  return NextResponse.json({
+    id,
+    url: `${BASE_URL}/p/${id}`,
+    ...(updates.title !== undefined ? { title: updates.title } : {}),
+    ...(updates.isPrivate !== undefined ? { isPrivate: updates.isPrivate } : {}),
+  })
 })

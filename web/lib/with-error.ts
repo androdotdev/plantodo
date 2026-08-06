@@ -10,9 +10,13 @@ export function withError(handler: RouteHandler): RouteHandler {
     try {
       return await handler(req, ctx)
     } catch (err) {
+      // Malformed JSON body (from request.json()) is a client error, not a 500
+      if (err instanceof SyntaxError) {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+      }
+      // Never echo internal error details to clients — log server-side only
       console.error("Route error:", err)
-      const message = err instanceof Error ? err.message : "Internal Server Error"
-      return NextResponse.json({ error: message }, { status: 500 })
+      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
   }
 }

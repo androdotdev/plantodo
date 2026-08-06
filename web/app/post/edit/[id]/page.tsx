@@ -92,7 +92,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
       const res = await fetch(`/api/posts/${id}/data`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: parsed }),
+        body: JSON.stringify(parsed),
       });
       if (!res.ok) {
         const body = await res.json();
@@ -231,7 +231,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
 
         {/* File tabs (VS Code-like) */}
         <div className="rounded-md border border-border-default bg-bg-card overflow-hidden">
-          <div className="flex items-center justify-between px-3 border-b border-border-default bg-bg-elevated">
+          <div className="flex flex-wrap items-center justify-between px-3 border-b border-border-default bg-bg-elevated gap-y-2">
             <div className="flex">
               <button
                 onClick={() => setTab("html")}
