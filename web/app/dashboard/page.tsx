@@ -6,7 +6,7 @@ import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import { usePostsStore } from "@/lib/posts-store";
 import Link from "next/link";
-import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable, Loader2 } from "lucide-react";
+import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable, Loader2, Menu } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 import McpSection from "./components/McpSection";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -76,6 +76,7 @@ export default function Dashboard() {
     }
     return false
   });
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(collapsed))
@@ -223,6 +224,48 @@ export default function Dashboard() {
     );
   }
 
+  const sectionButtons: { id: "api" | "mcp" | "posts"; label: string; Icon: typeof KeyRound }[] = [
+    { id: "api", label: "API Keys", Icon: KeyRound },
+    { id: "mcp", label: "MCP Server", Icon: Cable },
+    { id: "posts", label: "Posts", Icon: FileText },
+  ];
+
+  const sidebarContent = (
+    <>
+      <nav className="flex-1 p-3 space-y-1">
+        {sectionButtons.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => {
+              setActiveSection(id);
+              setMobileOpen(false);
+            }}
+            title={label}
+            className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
+              activeSection === id
+                ? "bg-bg-accent text-text-accent"
+                : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
+            }`}
+          >
+            <Icon size={16} className="shrink-0" />
+            {!collapsed && <span>{label}</span>}
+          </button>
+        ))}
+      </nav>
+      <button
+        onClick={() => {
+          setCollapsed((c) => !c);
+          setMobileOpen(false);
+        }}
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className="m-3 flex items-center gap-3 rounded-sm border border-border-default px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+      >
+        {collapsed ? <PanelLeft size={16} className="shrink-0" /> : <PanelLeftClose size={16} className="shrink-0" />}
+        {!collapsed && <span>Collapse</span>}
+      </button>
+    </>
+  );
+
   return (
     <div className="h-screen overflow-hidden bg-bg-base text-text-primary flex flex-col"
       style={{
@@ -239,6 +282,13 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden sm:inline text-xs text-text-secondary">{session?.user?.email}</span>
+            <button
+              onClick={() => setMobileOpen(true)}
+              title="Open menu"
+              className="md:hidden rounded-sm border border-border-default p-2 text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+            >
+              <Menu size={16} />
+            </button>
             <ThemeToggle />
             <button
               onClick={async () => {
@@ -254,58 +304,26 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="grid flex-1 min-h-0"
+      <div className="grid flex-1 min-h-0 relative"
         style={{ gridTemplateColumns: collapsed ? "64px 1fr" : "240px 1fr" }}
       >
-        {/* Collapsible sidebar */}
-        <aside className="min-h-0 overflow-y-auto border-r border-border-default bg-bg-elevated flex flex-col">
-          <nav className="flex-1 p-3 space-y-1">
-            <button
-              onClick={() => setActiveSection("api")}
-              title="API Keys"
-              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeSection === "api"
-                  ? "bg-bg-accent text-text-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
-              }`}
-            >
-              <KeyRound size={16} className="shrink-0" />
-              {!collapsed && <span>API Keys</span>}
-            </button>
-            <button
-              onClick={() => setActiveSection("mcp")}
-              title="MCP Server"
-              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeSection === "mcp"
-                  ? "bg-bg-accent text-text-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
-              }`}
-            >
-              <Cable size={16} className="shrink-0" />
-              {!collapsed && <span>MCP Server</span>}
-            </button>
-            <button
-              onClick={() => setActiveSection("posts")}
-              title="Posts"
-              className={`w-full flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeSection === "posts"
-                  ? "bg-bg-accent text-text-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card-hover"
-              }`}
-            >
-              <FileText size={16} className="shrink-0" />
-              {!collapsed && <span>Posts</span>}
-            </button>
-          </nav>
-          <button
-            onClick={() => setCollapsed((c) => !c)}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="m-3 flex items-center gap-3 rounded-sm border border-border-default px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
-          >
-            {collapsed ? <PanelLeft size={16} className="shrink-0" /> : <PanelLeftClose size={16} className="shrink-0" />}
-            {!collapsed && <span>Collapse</span>}
-          </button>
+        {/* Desktop collapsible sidebar */}
+        <aside className="hidden md:flex min-h-0 overflow-y-auto border-r border-border-default bg-bg-elevated flex-col">
+          {sidebarContent}
         </aside>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/60 md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r border-border-default bg-bg-elevated flex flex-col md:hidden">
+              {sidebarContent}
+            </aside>
+          </>
+        )}
 
         <main className="min-h-0 overflow-y-auto flex flex-col">
           <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-6 space-y-5">

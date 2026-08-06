@@ -132,7 +132,8 @@ export async function GET(
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Content-Security-Policy": "default-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' https://i.ytimg.com; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com; connect-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'",
-      "Cache-Control": "public, max-age=300",
+      // Private post HTML + window.__PH_DATA + ?key= token must never hit shared caches
+      "Cache-Control": post.isPrivate ? "private, no-store" : "public, max-age=300",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "no-referrer",
     },

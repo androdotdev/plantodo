@@ -50,10 +50,10 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): { headers: Map<string, string>; nextUrl: { pathname: string; search: string } } {
+  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): { headers: Map<string, string>; nextUrl: { pathname: string; search: string; searchParams: URLSearchParams } } {
     return {
       headers: new Map(Object.entries(headers)),
-      nextUrl: { pathname, search },
+      nextUrl: { pathname, search, searchParams: new URLSearchParams(search) },
     };
   }
 
@@ -152,11 +152,11 @@ describe("proxy middleware", () => {
       );
     });
 
-    it("preserves query params in the redirect", async () => {
-      await proxy(makeRequest({}, "/p/some-id", "?key=abc123"));
+    it("preserves query params but drops a stale key in the redirect", async () => {
+      await proxy(makeRequest({}, "/p/some-id", "?key=stale-token&utm=test"));
 
       expect(NextResponse.redirect).toHaveBeenCalledWith(
-        "https://postshare.andro42.qzz.io/p/some-id?key=abc123",
+        "https://postshare.andro42.qzz.io/p/some-id?utm=test",
         302,
       );
     });

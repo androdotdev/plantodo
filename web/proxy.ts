@@ -35,14 +35,22 @@ export async function proxy(request: NextRequest) {
   }
 
   // Main domain: redirect /p/:id to the posts domain for origin isolation.
-  // If the user is authenticated, include a signed token so they can access private posts.
+  // If the user is authenticated and the post is private, include a signed
+  // capability token so they can access it on the cookie-isolated origin.
   if (path.startsWith("/p/")) {
     const postsDomain = process.env.POSTS_DOMAIN
     if (postsDomain) {
+      // Normalize the post id (strip trailing slash) so the signed token always
+      // matches the route's param, and drop any stale ?key= from the original URL
+      // so the fresh token is the only one the viewer sees.
+      const postId = path.replace(/^\/p\//, "").replace(/\/+$/, "")
+      const url = new URL(`https://${postsDomain}/p/${postId}`)
+      for (const [k, v] of request.nextUrl.searchParams) {
+        if (k !== "key") url.searchParams.set(k, v)
+      }
+
       const userId = await getAuthenticatedUserId(request)
-      let redirectUrl = `https://${postsDomain}${path}${request.nextUrl.search}`
       if (userId) {
-        const postId = path.replace("/p/", "")
         // Only sign a capability token for private posts — public posts don't need one
         const post = await db
           .select({ isPrivate: posts.isPrivate })
@@ -50,12 +58,10 @@ export async function proxy(request: NextRequest) {
           .where(eq(posts.id, postId))
           .then(r => r[0])
         if (post?.isPrivate) {
-          const token = signToken(postId, userId)
-          const separator = request.nextUrl.search ? "&" : "?"
-          redirectUrl += `${separator}key=${token}`
+          url.searchParams.set("key", signToken(postId, userId))
         }
       }
-      return NextResponse.redirect(redirectUrl, 302)
+      return NextResponse.redirect(url.toString(), 302)
     }
   }
 
