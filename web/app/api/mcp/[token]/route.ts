@@ -24,7 +24,11 @@ async function handle(request: Request, params: Promise<{ token: string }>) {
       )
     }
 
-    return runMcp(request, userId)
+    const started = performance.now()
+    const res = runMcp(request, userId)
+    const duration = performance.now() - started
+    console.log(`[mcp] ${request.method} handled in ${duration.toFixed(1)}ms (auth: url token)`)
+    return res
   } catch (err) {
     console.error("MCP error:", err)
     return new Response(

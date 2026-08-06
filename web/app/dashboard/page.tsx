@@ -66,6 +66,7 @@ export default function Dashboard() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
@@ -121,6 +122,8 @@ export default function Dashboard() {
     if (res.ok) {
       const data = await res.json();
       setKeys(data.keys ?? []);
+    } else {
+      setLoadError("Couldn't load your API keys. Try refreshing the page.");
     }
     setLoading(false);
   }
@@ -131,6 +134,8 @@ export default function Dashboard() {
       const data = await res.json();
       setPosts(data ?? []);
       usePostsStore.getState().setList(data ?? []);
+    } else {
+      setLoadError("Couldn't load your posts. Try refreshing the page.");
     }
     setPostsLoading(false);
   }
@@ -143,6 +148,8 @@ export default function Dashboard() {
         setPosts((prev) => prev.filter((p) => p.id !== id));
         usePostsStore.getState().removeFromList(id);
         usePostsStore.getState().removeDetail(id);
+      } else {
+        setLoadError("Couldn't delete the post. It may already be gone — refresh the list.");
       }
     });
   }
@@ -159,6 +166,8 @@ export default function Dashboard() {
           prev.map((post) => (post.id === p.id ? { ...post, isPrivate: !p.isPrivate } : post)),
         );
         usePostsStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
+      } else {
+        setLoadError("Couldn't update the post's visibility. Try again.");
       }
     });
   }
@@ -211,6 +220,8 @@ export default function Dashboard() {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       if (res.ok) {
         setKeys((prev) => prev.filter((k) => k.id !== id));
+      } else {
+        setLoadError("Couldn't revoke the key. Try again.");
       }
     });
   }
@@ -330,6 +341,18 @@ export default function Dashboard() {
 
         <main className="min-h-0 overflow-y-auto flex flex-col">
           <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-6 space-y-5">
+            {loadError && (
+              <div className="flex items-start justify-between gap-3 rounded-md border border-border-danger bg-bg-danger px-4 py-3">
+                <p className="text-xs text-text-danger">{loadError}</p>
+                <button
+                  onClick={() => setLoadError(null)}
+                  className="shrink-0 text-xs text-text-danger hover:text-text-primary"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             {activeSection === "api" && (
               <>
                 {/* API Keys Section */}

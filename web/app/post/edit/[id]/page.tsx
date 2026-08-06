@@ -15,6 +15,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
   const [id, setId] = useState<string | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("html");
   const [title, setTitle] = useState("");
   const [html, setHtml] = useState("");
@@ -35,7 +36,8 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     if (!id) return;
-    authClient.getSession().then(({ data }) => {
+    let cancelled = false;
+    authClient.getSession().then(async ({ data }) => {
       if (!data) {
         router.push("/");
         return;
@@ -52,28 +54,35 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
         return;
       }
 
-      fetch(`/api/posts/${id}`).then((res) => {
+      try {
+        const res = await fetch(`/api/posts/${id}`);
         if (!res.ok) {
           router.push("/dashboard");
           return;
         }
-        res.json().then((data) => {
-          setTitle(data.title ?? "");
-          setHtml(data.html ?? "");
-          setData(JSON.stringify(data.data ?? {}, null, 2));
-          usePostsStore.getState().setDetail({
-            id,
-            title: data.title ?? "",
-            html: data.html ?? "",
-            data: data.data ?? {},
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-            isPrivate: data.isPrivate ?? false,
-          });
-          setLoading(false);
+        const data = await res.json();
+        if (cancelled) return;
+        setTitle(data.title ?? "");
+        setHtml(data.html ?? "");
+        setData(JSON.stringify(data.data ?? {}, null, 2));
+        usePostsStore.getState().setDetail({
+          id,
+          title: data.title ?? "",
+          html: data.html ?? "",
+          data: data.data ?? {},
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          isPrivate: data.isPrivate ?? false,
         });
-      });
+        setLoading(false);
+      } catch {
+        // Network error — don't leave the user staring at a spinner forever.
+        if (!cancelled) setLoadError("Couldn't load this post. Check your connection and try again.");
+      }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [id, router]);
 
   async function saveData() {
@@ -160,6 +169,23 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-base">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-default border-t-text-accent" />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg-base">
+        <div className="max-w-md space-y-4 text-center">
+          <h1 className="text-sm font-semibold text-text-primary">Couldn&apos;t load this post</h1>
+          <p className="text-xs text-text-secondary">{loadError}</p>
+          <Link
+            href="/dashboard"
+            className="inline-block rounded-sm border border-border-default px-4 py-2 text-xs text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+          >
+            Back to dashboard
+          </Link>
+        </div>
       </div>
     )
   }
