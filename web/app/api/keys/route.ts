@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
+import { BASE_URL } from "@/lib/constants"
 
 // GET /api/keys
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { apiKeys } = await auth.api.listApiKeys({
     query: { },
@@ -18,7 +19,7 @@ export async function GET() {
 // POST /api/keys
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await req.json()
   const name = body.name
@@ -75,8 +76,7 @@ export async function POST(req: NextRequest) {
     start: createdKey.start,
   }
   if (body.purpose === "mcp") {
-    const baseUrl = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
-    result.mcpUrl = `${baseUrl}/api/mcp/${createdKey.key}`
+    result.mcpUrl = `${BASE_URL}/api/mcp/${createdKey.key}`
   }
 
   return NextResponse.json(result)

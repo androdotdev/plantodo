@@ -69,8 +69,8 @@ Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop
 **Available MCP tools:**
 - `list_posts` — list your posts
 - `get_post` — get post HTML by ID
-- `upload_post` — create a new post (`{ html, title? }`)
-- `replace_post` — update post content (`{ id, html, title? }`)
+- `upload_post` — create a new post (`{ html, title?, isPrivate? }`)
+- `replace_post` — update post content (`{ id, html, title?, isPrivate? }`)
 - `delete_post` — delete a post
 - `get_post_data` — get a post's JSON data
 - `set_post_data` — merge JSON data into a post (`{ id, data: {...} }`)

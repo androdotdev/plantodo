@@ -36,6 +36,19 @@ export const auth = betterAuth({
       keyExpiration: {
         defaultExpiresIn: null,
       },
+      // Better Auth's default generator concatenates the prefix with no
+      // separator (`postAbC…`), contradicting the documented `post_`/`mcp_`
+      // prefixes. Emit the separator ourselves; the stored `prefix` column
+      // stays bare (`post`/`mcp`) so lookups like `k.prefix === "mcp"`
+      // keep working, and the full key is what gets verified anyway.
+      customKeyGenerator: ({ length, prefix }) => {
+        const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        const body = Array.from(
+          crypto.getRandomValues(new Uint32Array(length)),
+          v => alphabet[v % alphabet.length],
+        ).join("")
+        return `${prefix ? `${prefix}_` : ""}${body}`
+      },
     })
   ]
 });

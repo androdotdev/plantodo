@@ -9,12 +9,10 @@ import { posts } from "@/db/schema"
 import { and, eq, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
+import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-
-const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
-const MAX_HTML_SIZE = 524_288 // 512KB
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +48,7 @@ function getToolDefs() {
         properties: {
           html: { type: "string", description: "Full HTML content" },
           title: { type: "string", description: "Optional display title" },
+          isPrivate: { type: "boolean", description: "Hide the post from public view (default false)" },
         },
         required: ["html"],
       },
@@ -63,6 +62,7 @@ function getToolDefs() {
           id: { type: "string", description: "Post ID to replace" },
           html: { type: "string", description: "New HTML content" },
           title: { type: "string", description: "Optional new title" },
+          isPrivate: { type: "boolean", description: "Update the post's visibility" },
         },
         required: ["id", "html"],
       },
@@ -109,6 +109,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .select({
           id: posts.id,
           title: posts.title,
+          isPrivate: posts.isPrivate,
           createdAt: posts.createdAt,
           updatedAt: posts.updatedAt,
         })
@@ -141,7 +142,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
           { type: "text" as const, text: post.html },
           {
             type: "text" as const,
-            text: JSON.stringify({ id: post.id, title: post.title, createdAt: post.createdAt, updatedAt: post.updatedAt }),
+            text: JSON.stringify({ id: post.id, title: post.title, isPrivate: post.isPrivate, createdAt: post.createdAt, updatedAt: post.updatedAt }),
           },
         ],
       }
@@ -157,8 +158,9 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
 
       const id = nanoid(16)
       const title = typeof args.title === "string" ? args.title : ""
+      const isPrivate = typeof args.isPrivate === "boolean" ? args.isPrivate : false
 
-      await db.insert(posts).values({ id, html: args.html, userId, title })
+      await db.insert(posts).values({ id, html: args.html, userId, title, isPrivate })
 
       // Extract {{placeholder}} names for the response hint
       const placeholders = [...new Set(
@@ -166,7 +168,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       )]
 
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}`, unresolved_placeholders: placeholders }, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}`, isPrivate, unresolved_placeholders: placeholders }, null, 2) }],
       }
     }
 
@@ -193,12 +195,13 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .set({
           html: args.html,
           title: typeof args.title === "string" ? args.title : existing.title,
+          isPrivate: typeof args.isPrivate === "boolean" ? args.isPrivate : existing.isPrivate,
           updatedAt: new Date(),
         })
         .where(eq(posts.id, args.id))
 
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ id: args.id, url: `${BASE_URL}/p/${args.id}` }, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ id: args.id, url: `${BASE_URL}/p/${args.id}`, isPrivate: typeof args.isPrivate === "boolean" ? args.isPrivate : existing.isPrivate }, null, 2) }],
       }
     }
 
