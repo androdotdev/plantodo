@@ -6,7 +6,7 @@ import { authClient, SessionData } from "@/lib/auth-client";
 import { useForm } from "react-hook-form";
 import { usePostsStore } from "@/lib/posts-store";
 import Link from "next/link";
-import { KeyRound, FileText, PanelLeftClose, PanelLeft, Cable, Loader2, Menu } from "lucide-react";
+import { Rocket, FileText, PanelLeftClose, PanelLeft, Cable, Loader2, Menu } from "lucide-react";
 import AgentSetupPrompt from "./components/AgentSetupPrompt";
 import McpSection from "./components/McpSection";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -238,8 +238,8 @@ export default function Dashboard() {
     );
   }
 
-  const sectionButtons: { id: "api" | "mcp" | "posts"; label: string; Icon: typeof KeyRound }[] = [
-    { id: "api", label: "API Keys", Icon: KeyRound },
+  const sectionButtons: { id: "api" | "mcp" | "posts"; label: string; Icon: typeof Rocket }[] = [
+    { id: "api", label: "Get Started", Icon: Rocket },
     { id: "mcp", label: "MCP Server", Icon: Cable },
     { id: "posts", label: "Posts", Icon: FileText },
   ];
@@ -355,12 +355,12 @@ export default function Dashboard() {
             )}
             {activeSection === "api" && (
               <>
-                {/* API Keys Section */}
+                {/* Get Started Section */}
                 <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">API Keys</h1>
+                    <h1 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Get Started</h1>
                     <p className="mt-1 text-xs text-text-secondary">
-                      Manage your API keys for the CLI and programmatic access.
+                      Generate an API key, then copy the setup prompt into your agent to start publishing.
                     </p>
                   </div>
                 </div>

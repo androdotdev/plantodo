@@ -185,7 +185,7 @@ Both paths are ALWAYS applied to every served post: `{{}}` interpolation (HTML-e
 | Path | Auth | Content |
 |------|------|---------|
 | `/` | public | Hero + Google sign-in + agent docs links |
-| `/dashboard` | session | API keys, MCP setup, post management |
+| `/dashboard` | session | Get Started (API keys + agent prompt), MCP setup, post management |
 | `/p/:id` | public | Serves uploaded post HTML (with server-side data interpolation)
 
 ## Auth Flow
