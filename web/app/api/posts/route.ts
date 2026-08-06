@@ -5,12 +5,10 @@ import { posts } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
+import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-
-const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
-const MAX_HTML_SIZE = 524_288 // 512KB
 
 export const POST = withError(async (request: NextRequest) => {
   const userId = await getAuthenticatedUserId(request)
