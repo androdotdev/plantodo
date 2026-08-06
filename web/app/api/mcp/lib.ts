@@ -10,6 +10,7 @@ import { and, eq, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
+import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -42,12 +43,13 @@ function getToolDefs() {
     },
     {
       name: "upload_post",
-      description: "Create a new post from HTML content. Supports {{placeholder}} syntax — values are filled from post data at view time.",
+      description: "Create a new post from HTML or Markdown content. Supports {{placeholder}} syntax — values are filled from post data at view time.",
       inputSchema: {
         type: "object",
         properties: {
-          html: { type: "string", description: "Full HTML content" },
+          html: { type: "string", description: "Full HTML content (or Markdown when type is 'markdown')" },
           title: { type: "string", description: "Optional display title" },
+          type: { type: "string", enum: [...POST_TYPES], description: "Content format: 'html' (default) or 'markdown'" },
           isPrivate: { type: "boolean", description: "Hide the post from public view (default false)" },
         },
         required: ["html"],
@@ -60,8 +62,9 @@ function getToolDefs() {
         type: "object",
         properties: {
           id: { type: "string", description: "Post ID to replace" },
-          html: { type: "string", description: "New HTML content" },
+          html: { type: "string", description: "New HTML content (or Markdown when type is 'markdown')" },
           title: { type: "string", description: "Optional new title" },
+          type: { type: "string", enum: [...POST_TYPES], description: "Content format: 'html' (default) or 'markdown'" },
           isPrivate: { type: "boolean", description: "Update the post's visibility" },
         },
         required: ["id", "html"],
@@ -152,29 +155,37 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       if (!args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "html is required" }) }], isError: true }
       }
+      if (args.type !== undefined && !isPostType(args.type)) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: `type must be one of: ${POST_TYPES.join(", ")}` }) }], isError: true }
+      }
       if (args.html.length > MAX_HTML_SIZE) {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "HTML content exceeds 512KB limit" }) }], isError: true }
       }
 
       const id = nanoid(16)
       const title = typeof args.title === "string" ? args.title : ""
+      const type = args.type ?? "html"
       const isPrivate = typeof args.isPrivate === "boolean" ? args.isPrivate : false
+      const rendered = renderPostHtml(args.html, type)
 
-      await db.insert(posts).values({ id, html: args.html, userId, title, isPrivate })
+      await db.insert(posts).values({ id, html: rendered, userId, title, type, isPrivate })
 
-      // Extract {{placeholder}} names for the response hint
+      // Extract {{placeholder}} names from the rendered output for the hint
       const placeholders = [...new Set(
-        Array.from(args.html.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g), m => m[1])
+        Array.from(rendered.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g), m => m[1])
       )]
 
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}`, isPrivate, unresolved_placeholders: placeholders }, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ id, url: `${BASE_URL}/p/${id}`, type, isPrivate, unresolved_placeholders: placeholders }, null, 2) }],
       }
     }
 
     case "replace_post": {
       if (!args?.id || typeof args.id !== "string" || !args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id and html are required" }) }], isError: true }
+      }
+      if (args.type !== undefined && !isPostType(args.type)) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: `type must be one of: ${POST_TYPES.join(", ")}` }) }], isError: true }
       }
       if (args.html.length > MAX_HTML_SIZE) {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "HTML content exceeds 512KB limit" }) }], isError: true }
@@ -190,18 +201,22 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
       }
 
+      const type = args.type ?? existing.type ?? "html"
+      const rendered = renderPostHtml(args.html, type)
+
       await db
         .update(posts)
         .set({
-          html: args.html,
+          html: rendered,
           title: typeof args.title === "string" ? args.title : existing.title,
+          type,
           isPrivate: typeof args.isPrivate === "boolean" ? args.isPrivate : existing.isPrivate,
           updatedAt: new Date(),
         })
         .where(eq(posts.id, args.id))
 
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ id: args.id, url: `${BASE_URL}/p/${args.id}`, isPrivate: typeof args.isPrivate === "boolean" ? args.isPrivate : existing.isPrivate }, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ id: args.id, url: `${BASE_URL}/p/${args.id}`, type, isPrivate: typeof args.isPrivate === "boolean" ? args.isPrivate : existing.isPrivate }, null, 2) }],
       }
     }
 

@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
+import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -78,17 +79,25 @@ export const PATCH = withError(async (
     if (body.html.length > MAX_HTML_SIZE) {
       return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
     }
-    updates.html = body.html
+    // Convert when html is (re)submitted; `type` labels the source format of
+    // the html in this request, so a type-only PATCH just relabels the post.
+    updates.html = renderPostHtml(body.html, body.type)
+    if (body.type !== undefined) updates.type = body.type
+  } else if (body.type !== undefined) {
+    if (!isPostType(body.type)) {
+      return NextResponse.json({ error: `type must be one of: ${POST_TYPES.join(", ")}` }, { status: 400 })
+    }
+    updates.type = body.type
   }
   if (body.isPrivate !== undefined) {
     if (typeof body.isPrivate !== "boolean") return NextResponse.json({ error: "isPrivate must be a boolean" }, { status: 400 })
     updates.isPrivate = body.isPrivate
   }
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ error: "html, title, or isPrivate is required" }, { status: 400 })
+    return NextResponse.json({ error: "html, title, type, or isPrivate is required" }, { status: 400 })
   }
 
-  const post = await db.select({ userId: posts.userId, isPrivate: posts.isPrivate, tokenVersion: posts.tokenVersion }).from(posts).where(eq(posts.id, id)).then(r => r[0])
+  const post = await db.select({ userId: posts.userId, isPrivate: posts.isPrivate, tokenVersion: posts.tokenVersion, type: posts.type }).from(posts).where(eq(posts.id, id)).then(r => r[0])
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
@@ -103,6 +112,7 @@ export const PATCH = withError(async (
     id,
     url: `${BASE_URL}/p/${id}`,
     ...(updates.title !== undefined ? { title: updates.title } : {}),
+    type: updates.type !== undefined ? updates.type : post.type,
     isPrivate: updates.isPrivate !== undefined ? updates.isPrivate : post.isPrivate,
   })
 })

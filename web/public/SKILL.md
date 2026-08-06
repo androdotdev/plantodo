@@ -70,6 +70,7 @@ post upload index.html                                     # returns {id, url}
 post upload index.html --data '{"status":"draft"}'          # attach JSON data
 post upload index.html --data-file meta.json               # data from file
 post upload index.html --private                           # owner-only
+post upload README.md --mark                               # Markdown → HTML server-side
 ```
 
 ### List / Replace / Delete

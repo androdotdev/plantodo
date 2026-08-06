@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
+import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -14,22 +15,33 @@ export const POST = withError(async (request: NextRequest) => {
   const userId = await getAuthenticatedUserId(request)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { html, title, isPrivate } = await request.json()
+  const { html, title, isPrivate, type } = await request.json()
   if (!html || typeof html !== "string") {
     return NextResponse.json({ error: "html is required" }, { status: 400 })
+  }
+  if (type !== undefined && !isPostType(type)) {
+    return NextResponse.json({ error: `type must be one of: ${POST_TYPES.join(", ")}` }, { status: 400 })
   }
   if (html.length > MAX_HTML_SIZE) {
     return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
   const id = nanoid(16)
+  const rendered = renderPostHtml(html, type)
   await db.insert(posts).values({
     id,
-    html,
+    html: rendered,
     userId,
     title: title ?? "",
+    type: type ?? "html",
     ...(typeof isPrivate === "boolean" ? { isPrivate } : {}),
   })
-  return NextResponse.json({ id, url: `${BASE_URL}/p/${id}`, title: title ?? "", ...(typeof isPrivate === "boolean" ? { isPrivate } : {}) })
+  return NextResponse.json({
+    id,
+    url: `${BASE_URL}/p/${id}`,
+    title: title ?? "",
+    type: type ?? "html",
+    ...(typeof isPrivate === "boolean" ? { isPrivate } : {}),
+  })
 })
 
 export const GET = withError(async (request: NextRequest) => {
