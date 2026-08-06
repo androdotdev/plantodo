@@ -15,16 +15,16 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
 ## Setup
 The human has provided you with an API key.
 
-### Option A: CLI config file (recommended)
+### Option A: CLI setup (recommended)
 npm i -g @androff/posthtml-cli
 post setup --key ${keyText}
 
-The config file (~/.post/config.json) stores the key.
+The key is stored in the OS keyring (falls back to ~/.post/config.json).
 
 ### Option B: Environment variables (fallback)
 POST_API_KEY=${keyText}
 
-The env var is only used if no config file is found.
+The env var is only used if no stored key is found.
 
 ## CLI commands
 - post upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
