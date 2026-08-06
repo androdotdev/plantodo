@@ -18,6 +18,12 @@ const NOT_A_POST_HTML = `<!DOCTYPE html>
 <a class="home" href="__MAIN_URL__">Go to PostHTML</a>
 </main></body></html>`;
 
+// Explicit route table for the /p/ namespace — the posts domain resolves ONLY
+// single-segment viewer paths (optional trailing slash tolerated). Sub-paths
+// (/p/foo/bar, /p/), the bare /p, and anything else are not post URLs and get
+// the branded fallback instead of falling through to the real app.
+const POST_VIEWER_RE = /^\/p\/([^/]+)\/?$/
+
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host") || ""
   const isPostsDomain = host === (process.env.POSTS_DOMAIN ?? false)
@@ -26,7 +32,7 @@ export async function proxy(request: NextRequest) {
   // Posts domain: only /p/:id may resolve — everything else gets this
   // branded fallback instead of falling through to the real app.
   if (isPostsDomain) {
-    if (!path.startsWith("/p/")) {
+    if (!POST_VIEWER_RE.test(path)) {
       const mainUrl = process.env.BETTER_AUTH_URL ?? "https://posthtml.vercel.app"
       const html = NOT_A_POST_HTML.replace("__MAIN_URL__", mainUrl)
       return new NextResponse(html, { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } })
@@ -37,13 +43,14 @@ export async function proxy(request: NextRequest) {
   // Main domain: redirect /p/:id to the posts domain for origin isolation.
   // If the user is authenticated and the post is private, include a signed
   // capability token so they can access it on the cookie-isolated origin.
-  if (path.startsWith("/p/")) {
+  const viewer = path.match(POST_VIEWER_RE)
+  if (viewer) {
     const postsDomain = process.env.POSTS_DOMAIN
     if (postsDomain) {
-      // Normalize the post id (strip trailing slash) so the signed token always
-      // matches the route's param, and drop any stale ?key= from the original URL
-      // so the fresh token is the only one the viewer sees.
-      const postId = path.replace(/^\/p\//, "").replace(/\/+$/, "")
+      // The regex guarantees a clean single segment (no trailing slash), so the
+      // signed token always matches the route's param. Drop any stale ?key=
+      // from the original URL so the fresh token is the only one the viewer sees.
+      const postId = viewer[1]
       const url = new URL(`https://${postsDomain}/p/${postId}`)
       for (const [k, v] of request.nextUrl.searchParams) {
         if (k !== "key") url.searchParams.set(k, v)

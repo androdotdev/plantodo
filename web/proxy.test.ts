@@ -157,6 +157,15 @@ describe("proxy middleware", () => {
       );
     });
 
+    it("normalizes a trailing slash before redirecting", async () => {
+      await proxy(makeRequest({}, "/p/some-id/"));
+
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        "https://postshare.andro42.qzz.io/p/some-id",
+        302,
+      );
+    });
+
     it("preserves query params but drops a stale key in the redirect", async () => {
       await proxy(makeRequest({}, "/p/some-id", "?key=stale-token&utm=test"));
 
@@ -228,6 +237,24 @@ describe("proxy middleware", () => {
 
     it("blocks root / on the posts domain", async () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/"));
+
+      expect(NextResponse).toHaveBeenCalledWith(
+        expect.stringContaining("This domain only shows posts"),
+        expect.objectContaining({ status: 404 }),
+      );
+    });
+
+    it("blocks sub-paths of /p/ on the posts domain", async () => {
+      await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/p/foo/bar"));
+
+      expect(NextResponse).toHaveBeenCalledWith(
+        expect.stringContaining("This domain only shows posts"),
+        expect.objectContaining({ status: 404 }),
+      );
+    });
+
+    it("blocks bare /p/ on the posts domain", async () => {
+      await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/p/"));
 
       expect(NextResponse).toHaveBeenCalledWith(
         expect.stringContaining("This domain only shows posts"),
