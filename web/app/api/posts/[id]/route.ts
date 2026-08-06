@@ -67,7 +67,7 @@ export const PATCH = withError(async (
     return NextResponse.json({ error: "Body must be a JSON object" }, { status: 400 })
   }
 
-  const updates: Record<string, string | boolean> = {}
+  const updates: Record<string, string | boolean | number> = {}
   if (body.title !== undefined) {
     if (typeof body.title !== "string") return NextResponse.json({ error: "title must be a string" }, { status: 400 })
     updates.title = body.title
@@ -87,9 +87,15 @@ export const PATCH = withError(async (
     return NextResponse.json({ error: "html, title, or isPrivate is required" }, { status: 400 })
   }
 
-  const post = await db.select({ userId: posts.userId }).from(posts).where(eq(posts.id, id)).then(r => r[0])
+  const post = await db.select({ userId: posts.userId, isPrivate: posts.isPrivate, tokenVersion: posts.tokenVersion }).from(posts).where(eq(posts.id, id)).then(r => r[0])
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+  // A visibility toggle must invalidate every previously issued capability
+  // token — bump the post's token version so old ?key= tokens stop verifying.
+  if (updates.isPrivate !== undefined && updates.isPrivate !== post.isPrivate) {
+    updates.tokenVersion = post.tokenVersion + 1
+  }
 
   await db.update(posts).set(updates).where(eq(posts.id, id))
   return NextResponse.json({

@@ -90,10 +90,13 @@ export default function Dashboard() {
   const { register, handleSubmit, reset, watch } = useForm<NewKeyForm>({
     defaultValues: {
       name: "",
-      unlimited: false,
+      // Safe defaults: rate-limited (1000/24h, matching the plugin's global
+      // budget) and no hard total quota — a per-key remaining of 100 with no
+      // refill silently killed keys mid-workflow.
+      unlimited: true,
       remaining: 100,
-      rateLimitEnabled: false,
-      rateLimitMax: 100,
+      rateLimitEnabled: true,
+      rateLimitMax: 1000,
       rateLimitTimeWindow: 86400000,
     }
   });

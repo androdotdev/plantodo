@@ -15,6 +15,7 @@ export const posts = pgTable("posts", {
   title: text("title").notNull().default(""),
   data: jsonb("data").notNull().default("{}"),
   isPrivate: boolean("is_private").notNull().default(false),
+  tokenVersion: integer("token_version").notNull().default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [index("posts_userId_idx").on(table.userId)]);

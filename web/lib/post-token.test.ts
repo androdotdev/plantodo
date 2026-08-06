@@ -23,6 +23,34 @@ describe("post-token", () => {
     expect(payload!.exp).toBeGreaterThan(payload!.iat);
   });
 
+  it("carries the token version and defaults to 1", () => {
+    const payload = verifyToken(signToken("post-123", "user-456"));
+    expect(payload!.v).toBe(1);
+
+    const rotated = verifyToken(signToken("post-123", "user-456", 2));
+    expect(rotated!.v).toBe(2);
+  });
+
+  it("treats legacy tokens (no version) as version 1", async () => {
+    // A token signed before versioning has no `v` field — it must verify
+    // (as v1) until the post's visibility is first toggled.
+    const token = signToken("post-123", "user-456", 1);
+    const parts = token.split(".");
+    const payload = JSON.parse(Buffer.from(parts[0], "base64url").toString());
+    delete payload.v;
+
+    const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+    const { createHmac } = await import("node:crypto");
+    const sig = createHmac("sha256", "test-secret-that-is-at-least-32-chars!!")
+      .update(encoded)
+      .digest("base64url");
+
+    const legacyToken = `${encoded}.${sig}`;
+    const verified = verifyToken(legacyToken);
+    expect(verified).not.toBeNull();
+    expect(verified!.v).toBe(1);
+  });
+
   it("returns null for tampered token (payload changed)", () => {
     const token = signToken("post-123", "user-456");
     const parts = token.split(".");
