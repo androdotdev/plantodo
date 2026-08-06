@@ -9,7 +9,17 @@ export const auth = betterAuth({
     provider: "pg",
     schema: schema,
   }),
-  baseURL: process.env.BETTER_AUTH_URL,
+  // Fall back to localhost so the module can be evaluated without a valid
+  // env (local dev, CI builds). betterAuth throws on an unparseable URL.
+  baseURL: (() => {
+    const url = process.env.BETTER_AUTH_URL ?? ""
+    try {
+      new URL(url)
+      return url
+    } catch {
+      return "http://localhost:3000"
+    }
+  })(),
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,

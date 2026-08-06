@@ -27,6 +27,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",

@@ -6,6 +6,9 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
 
@@ -41,12 +44,4 @@ export const GET = withError(async (request: NextRequest) => {
     .where(eq(posts.userId, userId))
     .orderBy(posts.createdAt)
   return NextResponse.json(list)
-})
-
-export const DELETE = withError(async (request: NextRequest) => {
-  const userId = await getAuthenticatedUserId(request)
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  await db.delete(posts).where(eq(posts.userId, userId))
-  return NextResponse.json({ success: true })
 })

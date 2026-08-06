@@ -5,6 +5,9 @@ import { eq, sql } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 // GET /api/posts/:id/data — public unless post.isPrivate, then owner-only
 export const GET = withError(async (
   request: NextRequest,

@@ -5,6 +5,9 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 export const PATCH = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

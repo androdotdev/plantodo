@@ -36,6 +36,7 @@
     "prepublishOnly": "bun run build",
     "clean": "rm -rf dist",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "lint": "echo \"No linter configured\" && exit 0"
   },
   "devDependencies": {

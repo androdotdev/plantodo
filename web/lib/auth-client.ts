@@ -20,6 +20,18 @@ export interface SessionData {
 }
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL!,
+  // NEXT_PUBLIC_* is inlined at build time; a redacted/absent value must not
+  // crash module evaluation. Fall back to localhost rather than `undefined` —
+  // better-auth then reads process.env.BETTER_AUTH_URL, which is also garbage
+  // in redacted env files.
+  baseURL: (() => {
+    const base = process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? ""
+    try {
+      new URL(base)
+      return base
+    } catch {
+      return "http://localhost:3000"
+    }
+  })(),
   plugins: [adminClient(), apiKeyClient()],
 })

@@ -48,6 +48,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | `title` | TEXT | Optional display name, default `""` |
 | `data` | JSONB | Arbitrary JSON data for partial updates, default `{}` |
 | `is_private` | BOOLEAN | Visibility flag, default false |
+| `token_version` | INTEGER | Capability-token version, default 1; bumped on visibility toggle to revoke old `?key=` tokens |
 | `created_at` | TIMESTAMP | auto-set |
 | `updated_at` | TIMESTAMP | auto-updated |
 
@@ -104,7 +105,7 @@ If you prefer, use your existing API key directly as the `x-api-key` header on `
 **Design notes:**
 - MCP tokens are separate from CLI API keys — revoking one doesn't affect the other
 - Tokens are identified by `mcp_` prefix for recognizability in logs
-- Only one active MCP token per user — regenerate replaces it in place
+- Only one active MCP token per user — generating a new one **server-side revokes the previous** (enforced in `POST /api/keys`, not just the UI)
 - The old `/api/mcp` route with `x-api-key` header remains supported
 - URL path tokens appear in access logs (unlike headers) — dedicated token + easy regenerate is the mitigation
 
@@ -127,7 +128,6 @@ If you prefer, use your existing API key directly as the `x-api-key` header on `
 | GET | `/api/posts/:id` | **public** | Get post with HTML content (share-link model) |
 | DELETE | `/api/posts/:id` | x-api-key / session | Delete one post (owner only) |
 | PATCH | `/api/posts/:id` | x-api-key / session | Replace post HTML (preserves ID/URL) |
-| DELETE | `/api/posts` | x-api-key / session | Delete ALL posts for this user |
 | GET | `/p/:id` | public | Serve post HTML directly from DB |
 | GET | `/api/posts/:id/data` | public | Get post JSON data |
 | PATCH | `/api/posts/:id/data` | x-api-key | Merge JSON data into post (keys override, atomic merge) |
@@ -205,6 +205,8 @@ BETTER_AUTH_URL          — e.g. http://localhost:3000
 NEXT_PUBLIC_BETTER_AUTH_URL
 GOOGLE_CLIENT_ID         — Google OAuth client ID
 GOOGLE_CLIENT_SECRET     — Google OAuth client secret
+POSTS_DOMAIN             — separate origin for /p/:id (cookie isolation); unset in dev
+POST_TOKEN_SECRET        — HMAC secret for private-post capability tokens (openssl rand -hex 32)
 ```
 
 ## CLI Env Vars
@@ -216,31 +218,31 @@ POST_URL                  — Server URL (default https://posthtml.vercel.app)
 
 ## Design System
 
-Design tokens are defined as CSS custom properties in `web/app/globals.css` using Tailwind v4's `@theme inline` directive. Never hardcode hex values in components — always use token names.
+Design tokens are defined as CSS custom properties in `web/app/globals.css` (Tailwind v4 `@theme` block — plain `@theme`, not `inline`, so utilities resolve `var(--color-*)`). Dark theme is **Catppuccin Mocha**; never hardcode hex values in components — always use token names.
 
 ### Token Reference
 
 | Category | Token | Value | Usage |
 |----------|-------|-------|-------|
-| Bg | `bg-bg-base` | `#0a0a0a` | Page background |
-| Bg | `bg-bg-card` | `#111111` | Card/panel backgrounds |
-| Bg | `bg-bg-card-hover` | `#1a1a1a` | Card hover state |
-| Bg | `bg-bg-elevated` | `#1a1a1a` | Elevated surfaces (code blocks, inputs) |
-| Bg | `bg-bg-accent` | `#1a3a2a` | Muted green badge bg |
-| Bg | `bg-bg-danger` | `#3a1a1a` | Muted danger bg |
-| Text | `text-text-primary` | `#e8e8e8` | Primary content |
-| Text | `text-text-secondary` | `#888888` | Secondary/subtle |
-| Text | `text-text-muted` | `#666666` | Muted/disabled |
-| Text | `text-text-accent` | `#00d96a` | Green accent |
-| Text | `text-text-danger` | `#ff4444` | Danger/delete |
-| Border | `border-border-default` | `#333333` | Card borders |
-| Border | `border-border-hover` | `#444444` | Hover border |
-| Border | `border-border-accent` | `#00d96a` | Green border |
-| Border | `border-border-danger` | `#ff4444` | Danger border |
-| Action | `bg-accent` | `#00d96a` | Primary button bg |
-| Action | `bg-accent-hover` | `#00ff7f` | Primary button hover |
-| Action | `text-accent` | `#00d96a` | Green link/icon |
-| Action | `bg-danger` | `#ff4444` | Danger button |
+| Bg | `bg-bg-base` | `#1e1e2e` | Page background |
+| Bg | `bg-bg-card` | `#181825` | Card/panel backgrounds |
+| Bg | `bg-bg-card-hover` | `#313244` | Card hover state |
+| Bg | `bg-bg-elevated` | `#11111b` | Elevated surfaces (code blocks, inputs) |
+| Bg | `bg-bg-accent` | `#302d41` | Muted accent badge bg |
+| Bg | `bg-bg-danger` | `#352024` | Muted danger bg |
+| Text | `text-text-primary` | `#cdd6f4` | Primary content |
+| Text | `text-text-secondary` | `#a6adc8` | Secondary/subtle |
+| Text | `text-text-muted` | `#6c7086` | Muted/disabled |
+| Text | `text-text-accent` | `#cba6f7` | Mauve accent |
+| Text | `text-text-danger` | `#f38ba8` | Danger/delete |
+| Border | `border-border-default` | `#45475a` | Card borders |
+| Border | `border-border-hover` | `#585b70` | Hover border |
+| Border | `border-border-accent` | `#cba6f7` | Mauve border |
+| Border | `border-border-danger` | `#f38ba8` | Danger border |
+| Action | `bg-accent` | `#cba6f7` | Primary button bg |
+| Action | `bg-accent-hover` | `#b4befe` | Primary button hover |
+| Action | `text-accent-text` | `#1e1e2e` | Text on primary buttons |
+| Action | `bg-danger` | `#f38ba8` | Danger button |
 
 ### Radius
 
@@ -253,13 +255,13 @@ The app uses `'Courier New', monospace` for both sans and mono, giving a termina
 
 ### Adding tokens
 
-Add new tokens to the `@theme inline` block in `globals.css`. Use the naming convention:
+Add new tokens to the `@theme` block in `globals.css`. Use the naming convention:
 - `bg-*` for backgrounds
 - `text-*` for text colors
 - `border-*` for border colors
 
 ```css
-@theme inline {
+@theme {
   --color-bg-example: #hex;
   --color-text-example: #hex;
 }
@@ -267,17 +269,22 @@ Add new tokens to the `@theme inline` block in `globals.css`. Use the naming con
 
 ## Migrations
 
-2 migrations (`20260702144151`, `20260704093852`). Apply with:
+Migration folders live in `web/drizzle/` (7 so far, latest: `20260806062500_add_token_version`).
+
+> `drizzle/meta/_journal.json` is absent, so `db:migrate` doesn't run. Schema changes
+> are applied with `db:push`, which diffs `db/schema.ts` against the live database:
 
 ```bash
-bun -C web db:migrate
+bun -C web db:push          # apply schema diff to Neon (current workflow)
 ```
+
+Rebuilding the journal + switching to `db:migrate` is a tracked TODO item.
 
 ## Dev Workflow
 
 ```bash
 bun install
-bun -C web db:migrate        # apply migrations to Neon
+bun -C web db:push          # apply schema diff to Neon
 bun -C web dev               # Next.js dev server on :3000
 bun -C cli build             # build CLI dist/
 bun run test                  # run all tests

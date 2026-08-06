@@ -5,6 +5,9 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 const BASE_URL = (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "")
 const MAX_HTML_SIZE = 524_288 // 512KB
 
@@ -102,6 +105,6 @@ export const PATCH = withError(async (
     id,
     url: `${BASE_URL}/p/${id}`,
     ...(updates.title !== undefined ? { title: updates.title } : {}),
-    ...(updates.isPrivate !== undefined ? { isPrivate: updates.isPrivate } : {}),
+    isPrivate: updates.isPrivate !== undefined ? updates.isPrivate : post.isPrivate,
   })
 })

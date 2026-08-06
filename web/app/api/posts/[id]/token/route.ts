@@ -6,6 +6,9 @@ import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { signToken } from "@/lib/post-token"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 export const POST = withError(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -16,7 +19,7 @@ export const POST = withError(async (
   const { id } = await params
 
   const post = await db
-    .select({ userId: posts.userId })
+    .select({ userId: posts.userId, tokenVersion: posts.tokenVersion })
     .from(posts)
     .where(eq(posts.id, id))
     .then(r => r[0])
@@ -24,6 +27,6 @@ export const POST = withError(async (
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (post.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const token = signToken(id, userId)
+  const token = signToken(id, userId, post.tokenVersion ?? 1)
   return NextResponse.json({ token })
 })
