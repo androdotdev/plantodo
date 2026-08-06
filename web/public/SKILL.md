@@ -40,6 +40,20 @@ post data set <id> --key stars --value '"99"'
 
 The raw data is also injected as `window.__PH_DATA` for any custom JS you write in your own `<script>` tags. The `{{}}` placeholders are replaced server-side — no client runtime needed, no flicker.
 
+## Rendering contract
+
+There is ONE contract, and the server applies BOTH sides of it to **every** post, always:
+
+1. **Static fields** — `{{path}}` (dot paths like `{{user.name}}` work) are resolved **server-side** with post data and HTML-escaped before serving. No client runtime required.
+2. **Dynamic content** — the raw data object is injected as `window.__PH_DATA` (escaped JSON, safe inside `<script>`). Post authors who need JS read it from their own `<script>` tags.
+
+Consequences you must not fight:
+
+- Do NOT pre-render `{{}}` in your template or data before upload — the server does it at view time. Pre-rendered templates break the contract.
+- A placeholder with **no matching data value** is served as the literal `{{path}}` text — the author sees it in the page. That's the missing-data signal; update the data rather than the HTML.
+- `{{}}` values are always escaped — you cannot inject raw HTML through a placeholder. If a post needs custom HTML, that HTML belongs in the template, not the data.
+- Server-side interpolation and `window.__PH_DATA` are independent: a template with no `{{}}` still gets `__PH_DATA` injected, and data-less templates still interpolate (nothing to replace). Never build a post that depends on only one of the two being applied.
+
 ## Rules
 
 - API keys are scoped per key. New keys are **limited by default** (not unlimited) — if a call 429s, the key hit its cap; tell the human to raise it on `/dashboard`.

@@ -4,6 +4,7 @@ import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUserId } from "@/lib/auth-user";
 import { verifyToken } from "@/lib/post-token";
+import { interpolate } from "@/lib/interpolate";
 
 if (!process.env.POSTS_DOMAIN) {
   console.warn(
@@ -43,36 +44,6 @@ const NOT_FOUND_HTML = `<!DOCTYPE html>
 // just the "<" of "</" is sufficient and keeps the JSON otherwise untouched.
 const DATA_SCRIPT = (data: unknown) =>
   `<script>window.__PH_DATA=${JSON.stringify(data ?? {}).replace(/</g, "\\u003c")};</script>`;
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-}
-
-/** Server-side interpolation: resolve {{path}} placeholders with data values.
- *  Values are HTML-escaped by default — safe against XSS.
- *  (If raw-HTML injection from data is ever needed, use {{{path}}} triple-brace syntax.)
- *  HTML arrives fully rendered — no client runtime, no FOUC.
- *  Post authors who need custom JS read window.__PH_DATA. */
-function interpolate(
-  html: string,
-  data: Record<string, unknown>,
-): string {
-  return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path: string) => {
-    const val =
-      path === "this"
-        ? data
-        : path.split(".").reduce<unknown>((o, k) => {
-            if (k === "__proto__" || k === "constructor" || k === "prototype") return undefined
-            return o != null && typeof o === "object" ? (o as Record<string, unknown>)[k] : undefined
-          }, data)
-    return val != null ? escapeHtml(String(val)) : "{{" + path + "}}"
-  })
-}
 
 export async function GET(
   request: NextRequest,

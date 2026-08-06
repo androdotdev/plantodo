@@ -178,6 +178,8 @@ The raw data is also injected as `window.__PH_DATA` for custom JS:
 <script>console.log(window.__PH_DATA)</script>
 ```
 
+Both paths are ALWAYS applied to every served post: `{{}}` interpolation (HTML-escaped, missing values stay as literal `{{path}}`) and `__PH_DATA` injection (escaped JSON). Authors never "pick one" — see SKILL.md "Rendering contract".
+
 ## Page Routes
 
 | Path | Auth | Content |
