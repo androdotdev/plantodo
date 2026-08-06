@@ -111,8 +111,9 @@ post setup --key post_xxx    # pass directly (avoid on shared systems)
 
 | Variable | Default | Description |
 |---|---|---|
-| `POST_URL` | `https://posthtml.vercel.app` | Server base URL (overrides config) |
-| `POST_API_KEY` | — | API key (overrides config, safer than `--key`) |
+| `POST_URL` | `https://posthtml.vercel.app` | Server base URL (used if not set in config file) |
+| `POST_API_KEY` | — | API key (used if no config file exists) |
 | `POSTHTML_API_KEY` | — | Legacy alias for `POST_API_KEY` |
 
 Priority: config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
+`post setup` itself resolves `--key` > `POST_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.

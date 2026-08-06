@@ -24,6 +24,9 @@ jobs:
       - name: Lint (web)
         run: bun run lint
 
+      - name: Typecheck
+        run: bun run typecheck
+
       - name: Build (cli)
         run: bun run build:cli
 
@@ -33,7 +36,6 @@ jobs:
   build-web:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2

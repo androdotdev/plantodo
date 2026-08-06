@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { NextRequest } from "next/server";
 
 // Prevent neon client from throwing during module import in tests
 process.env.DATABASE_URL ??= "postgresql://fake:fake@localhost:5432/test";
@@ -9,13 +10,17 @@ const { fnVerify, fnSession } = vi.hoisted(() => ({
 }));
 
 vi.mock("next/server", () => {
-  const nextResponse = vi.fn(function (body?: unknown, init?: ResponseInit) {
-    return { status: init?.status ?? 200, body, headers: init?.headers }
-  })
-  nextResponse.next = vi.fn((init) => ({ status: 200, _mock: "NextResponse.next", init }))
-  nextResponse.json = vi.fn((data, init) => ({ status: init?.status ?? 200, _json: data }))
-  nextResponse.redirect = vi.fn((url, status) => ({ status: status ?? 302, _mock: "NextResponse.redirect", url }))
-  return { NextResponse: nextResponse,
+  const nextResponse = Object.assign(
+    vi.fn(function (body?: unknown, init?: ResponseInit) {
+      return { status: init?.status ?? 200, body, headers: init?.headers }
+    }),
+    {
+      next: vi.fn((init) => ({ status: 200, _mock: "NextResponse.next", init })),
+      json: vi.fn((data, init) => ({ status: init?.status ?? 200, _json: data })),
+      redirect: vi.fn((url, status) => ({ status: status ?? 302, _mock: "NextResponse.redirect", url })),
+    },
+  )
+  return { NextResponse: nextResponse as unknown as typeof import("next/server").NextResponse,
     NextRequest: vi.fn().mockImplementation(() => ({
       headers: new Map(),
       nextUrl: { pathname: "", search: "" },
@@ -50,11 +55,11 @@ describe("proxy middleware", () => {
     vi.clearAllMocks();
   });
 
-  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): { headers: Map<string, string>; nextUrl: { pathname: string; search: string; searchParams: URLSearchParams } } {
+  function makeRequest(headers: Record<string, string>, pathname = "/api/posts", search = ""): NextRequest {
     return {
       headers: new Map(Object.entries(headers)),
       nextUrl: { pathname, search, searchParams: new URLSearchParams(search) },
-    };
+    } as unknown as NextRequest;
   }
 
   describe("main domain — API auth flow", () => {

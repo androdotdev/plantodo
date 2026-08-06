@@ -18,7 +18,7 @@ const config = loadConfig();
 const API_KEY = config?.api_key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
 const BASE_URL = (config?.url ?? process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
-async function api(path: string, init?: RequestInit) {
+async function api(path: string, init?: RequestInit): Promise<any> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -27,9 +27,21 @@ async function api(path: string, init?: RequestInit) {
       "Content-Type": "application/json",
     },
   });
-  const body = await res.json();
+  // Error bodies aren't always JSON (proxies return HTML) — don't crash on parse
+  let body: any = null;
+  try {
+    body = await res.json();
+  } catch {
+    // leave body null; fall back to status text below
+  }
   if (!res.ok) {
-    console.error(red.bold(`✗ Error ${res.status}:`), body.error ?? body.message ?? JSON.stringify(body));
+    const detail = body?.error ?? body?.message ?? (body !== null ? JSON.stringify(body) : res.statusText);
+    if (res.status === 401) {
+      console.error(red.bold("✗ Error 401: Unauthorized"), detail);
+      console.error(dim(`Get a key at ${BASE_URL}/dashboard, then save it with: post setup`));
+    } else {
+      console.error(red.bold(`✗ Error ${res.status}:`), detail);
+    }
     process.exit(1);
   }
   return body;
@@ -153,6 +165,10 @@ program
   .option("--private", "Make the post private (owner-only access)")
   .option("--public", "Make the post public (default, shareable)")
   .action(async (file: string, options: { data?: string; dataFile?: string; private?: boolean; public?: boolean }) => {
+    if (options.private && options.public) {
+      console.error(red("✗ --private and --public are mutually exclusive"));
+      process.exit(1);
+    }
     const html = readFileSync(resolve(file), "utf-8");
     const data = parseDataOption(options);
 
@@ -224,6 +240,10 @@ program
   .option("--private", "Make the post private (owner-only access)")
   .option("--public", "Make the post public (default, shareable)")
   .action(async (id: string, file: string, options: { private?: boolean; public?: boolean }) => {
+    if (options.private && options.public) {
+      console.error(red("✗ --private and --public are mutually exclusive"));
+      process.exit(1);
+    }
     const html = readFileSync(resolve(file), "utf-8");
 
     let isPrivate: boolean | undefined;

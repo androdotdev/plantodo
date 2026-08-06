@@ -18,7 +18,6 @@ interface PostsState {
   list: PostSummary[];
   /** Full detail keyed by id (from /api/posts) */
   detail: Record<string, PostDetail>;
-  listLoaded: boolean;
 
   setList: (posts: PostSummary[]) => void;
   upsertList: (post: PostSummary) => void;
@@ -33,13 +32,12 @@ interface PostsState {
 export const usePostsStore = create<PostsState>((set, get) => ({
   list: [],
   detail: {},
-  listLoaded: false,
 
-  setList: (posts) => set({ list: posts, listLoaded: true }),
+  setList: (posts) => set({ list: posts }),
   upsertList: (post) =>
     set((s) => {
       const without = s.list.filter((p) => p.id !== post.id);
-      return { list: [post, ...without], listLoaded: true };
+      return { list: [post, ...without] };
     }),
   removeFromList: (id) =>
     set((s) => ({ list: s.list.filter((p) => p.id !== id) })),
