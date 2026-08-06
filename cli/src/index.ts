@@ -159,12 +159,13 @@ const program = new Command()
 
 program
   .command("upload <file>")
-  .description("Upload an HTML post file")
+  .description("Upload an HTML or Markdown post file")
   .option("-d, --data <json>", "JSON data to attach (merged into post.data)")
   .option("--data-file <path>", "JSON file to merge into post.data")
+  .option("--mark", "Treat the file as Markdown (converted to HTML server-side)")
   .option("--private", "Make the post private (owner-only access)")
   .option("--public", "Make the post public (default, shareable)")
-  .action(async (file: string, options: { data?: string; dataFile?: string; private?: boolean; public?: boolean }) => {
+  .action(async (file: string, options: { data?: string; dataFile?: string; mark?: boolean; private?: boolean; public?: boolean }) => {
     if (options.private && options.public) {
       console.error(red("✗ --private and --public are mutually exclusive"));
       process.exit(1);
@@ -182,6 +183,7 @@ program
 
     process.stdout.write(`${dim("→ Uploading to PostHTML...")}\n`);
     const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    if (options.mark) body.type = "markdown";
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api("/api/posts", {
       method: "POST",
@@ -236,10 +238,11 @@ program
 
 program
   .command("replace <id> <file>")
-  .description("Replace a post with a new HTML file (preserves ID)")
+  .description("Replace a post with a new HTML or Markdown file (preserves ID)")
+  .option("--mark", "Treat the file as Markdown (converted to HTML server-side)")
   .option("--private", "Make the post private (owner-only access)")
   .option("--public", "Make the post public (default, shareable)")
-  .action(async (id: string, file: string, options: { private?: boolean; public?: boolean }) => {
+  .action(async (id: string, file: string, options: { mark?: boolean; private?: boolean; public?: boolean }) => {
     if (options.private && options.public) {
       console.error(red("✗ --private and --public are mutually exclusive"));
       process.exit(1);
@@ -256,6 +259,7 @@ program
 
     process.stdout.write(`${dim(`→ Replacing post ${id}...`)}\n`);
     const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    if (options.mark) body.type = "markdown";
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api(`/api/posts/${id}`, {
       method: "PATCH",

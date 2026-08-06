@@ -7,7 +7,7 @@
     },
     "cli": {
       "name": "@androff/posthtml-cli",
-      "version": "0.6.1",
+      "version": "1.0.0-beta.3",
       "bin": {
         "ptd": "./dist/index.js",
       },
@@ -26,7 +26,7 @@
     },
     "web": {
       "name": "@posthtml/web",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "dependencies": {
         "@better-auth/api-key": "^1.6.23",
         "@better-auth/drizzle-adapter": "^1.6.22",
@@ -37,6 +37,7 @@
         "better-auth": "^1.6.22",
         "drizzle-orm": "1.0.0-rc.4",
         "lucide-react": "^1.23.0",
+        "marked": "^18.0.9",
         "monaco-editor": "^0.52.2",
         "nanoid": "^5.1.16",
         "next": "16.2.9",
@@ -1047,6 +1048,8 @@
     "magicast": ["magicast@0.5.3", "", { "dependencies": { "@babel/parser": "^7.29.3", "@babel/types": "^7.29.0", "source-map-js": "^1.2.1" } }, "sha512-pVKE4UdSQ7DvHzivsCIFx2BJn1mHG6KsyrFcaxFx6tONdneEuThrDx0Cj3AMg58KyN4pzYT+LHOotxDQDjNvkw=="],
 
     "make-dir": ["make-dir@4.0.0", "", { "dependencies": { "semver": "^7.5.3" } }, "sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw=="],
+
+    "marked": ["marked@18.0.9", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-/Sa4qiiHZxf0/FQdBBowr9q4r10krCwMvpK48FUBdXdUXScDxiQGR9zCPrFgRVR5LU3iySOiIjy09ZQvADir1w=="],
 
     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
 

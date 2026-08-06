@@ -48,6 +48,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 | `title` | TEXT | Optional display name, default `""` |
 | `data` | JSONB | Arbitrary JSON data for partial updates, default `{}` |
 | `is_private` | BOOLEAN | Visibility flag, default false |
+| `type` | TEXT | Content format: `html` (default) or `markdown`; markdown is converted to HTML at write time, so `html` always holds rendered HTML |
 | `token_version` | INTEGER | Capability-token version, default 1; bumped on visibility toggle to revoke old `?key=` tokens |
 | `created_at` | TIMESTAMP | auto-set |
 | `updated_at` | TIMESTAMP | auto-updated |
@@ -69,8 +70,8 @@ Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop
 **Available MCP tools:**
 - `list_posts` — list your posts
 - `get_post` — get post HTML by ID
-- `upload_post` — create a new post (`{ html, title?, isPrivate? }`)
-- `replace_post` — update post content (`{ id, html, title?, isPrivate? }`)
+- `upload_post` — create a new post (`{ html, title?, type?, isPrivate? }`, `type`: `html`|`markdown`)
+- `replace_post` — update post content (`{ id, html, title?, type?, isPrivate? }`)
 - `delete_post` — delete a post
 - `get_post_data` — get a post's JSON data
 - `set_post_data` — merge JSON data into a post (`{ id, data: {...} }`)
@@ -147,6 +148,7 @@ post data set <id> --file data.json  # merge whole object into data
 post upload index.html
 post upload index.html --data '{"status":"draft"}'   # attach data in the same call
 post upload index.html --data-file meta.json         # or merge a whole JSON file
+post upload README.md --mark                         # Markdown → HTML server-side
 post ls                     # list posts
 post list                   # same
 post delete <post-id>

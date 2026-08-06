@@ -24,11 +24,12 @@ Configuration saved to `~/.post/config.json` (owner read/write only).
 
 ### `post upload <file>`
 
-Upload an HTML file as a new post.
+Upload an HTML or Markdown file as a new post.
 
 ```bash
 post upload index.html
 post upload index.html --private                    # owner-only access
+post upload README.md --mark                        # Markdown → HTML server-side
 post upload index.html --data '{"status":"draft"}'  # attach JSON data
 post upload index.html --data-file meta.json        # merge data from file
 ```
@@ -37,6 +38,7 @@ post upload index.html --data-file meta.json        # merge data from file
 |---|---|
 | `-d, --data <json>` | JSON data string to merge into post.data |
 | `--data-file <path>` | JSON file to merge into post.data |
+| `--mark` | Treat the file as Markdown (converted to HTML server-side) |
 | `--private` | Restrict to owner-only access |
 | `--public` | Make shareable (default) |
 
@@ -51,16 +53,18 @@ post ls
 
 ### `post replace <id> <file>`
 
-Replace an existing post's HTML while preserving its ID and URL.
+Replace an existing post's HTML while preserving its ID and URL. Accepts Markdown with `--mark`.
 
 ```bash
 post replace abc123 index.html
+post replace abc123 README.md --mark
 post replace abc123 index.html --private
 post replace abc123 index.html --public
 ```
 
 | Option | Description |
 |---|---|
+| `--mark` | Treat the file as Markdown (converted to HTML server-side) |
 | `--private` | Restrict to owner-only access |
 | `--public` | Make shareable (default) |
 
