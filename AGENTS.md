@@ -19,7 +19,7 @@ Monorepo (Turbo + Bun workspaces):
 - **ORM:** Drizzle ORM v1.0.0-rc.4 + drizzle-kit v1.0.0-rc.4
 - **Auth:** Better Auth — Google OAuth only (no email/password)
 - **API Keys:** Better Auth `@better-auth/api-key` plugin (rate limiting, expiry, refill)
-- **CLI:** Commander.js, Node.js fetch, published as `post`
+- **CLI:** Commander.js, Node.js fetch, published as `relay`
 - **Package mgr:** Bun
 - **Build:** tsup (cli), Next.js (web)
 - **Language:** TypeScript 6.0.3
@@ -214,6 +214,11 @@ POST_TOKEN_SECRET        — HMAC secret for private-page capability tokens (ope
 NEON_TRANSPORT           — DB transport: unset = WebSocket (drizzle-orm/neon-serverless); "http" = HTTP fallback
 PUBLIC_RATE_LIMIT_MAX    — per-instance public GET rate limit (requests/IP/60s); default 120
 ```
+
+## Database transport & rate limiting
+
+- **Transport:** `web/db/index.ts` uses the WebSocket driver (`@neondatabase/serverless` `Pool` + `drizzle-orm/neon-serverless`) by default — one connection per warm instance, shared across queries, avoiding the per-query HTTP round trip of `neon-http` on multi-query operations. Set `NEON_TRANSPORT=http` to force the HTTP path. Runtimes without a global `WebSocket` (Node <22) automatically fall back to HTTP instead of failing every query.
+- **Public rate limiting:** the public GETs (`/api/posts/:id`, `/api/posts/:id/data`, `/p/:id`) are throttled per instance with an in-memory sliding window (default 120 req/IP/60s, `PUBLIC_RATE_LIMIT_MAX`). Per-instance only — a hard global cap needs an external service (see SECURITY.md).
 
 ## CLI Env Vars
 
