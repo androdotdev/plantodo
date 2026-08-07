@@ -315,7 +315,21 @@ export async function runMcp(request: Request, userId: string) {
   }))
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    return handleToolCall(req.params.name, req.params.arguments as Record<string, unknown> | undefined, userId)
+    try {
+      return await handleToolCall(req.params.name, req.params.arguments as Record<string, unknown> | undefined, userId)
+    } catch (err) {
+      // rc.4's DrizzleQueryError puts the real failure in `cause` and hides it
+      // from `message`; log it server-side and append it to the error so MCP
+      // clients see the actual reason instead of an opaque "Failed query".
+      const cause = (err as { cause?: unknown } | undefined)?.cause
+      console.error("[mcp] tool error:", err, cause ? { cause } : undefined)
+      const base = err instanceof Error ? err.message : String(err)
+      if (cause) {
+        const detail = cause instanceof Error ? cause.message : String(cause)
+        throw new Error(`${base}\n\ncause: ${detail}`)
+      }
+      throw err
+    }
   })
 
   const transport = new WebStandardStreamableHTTPServerTransport({

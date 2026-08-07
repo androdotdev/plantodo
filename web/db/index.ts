@@ -6,9 +6,10 @@ import { schemaRelations } from "./relations"
 // Transport: WebSocket by default — one handshake per warm invocation, then all
 // queries share the connection, avoiding the per-query HTTP round trip of
 // neon-http on multi-query operations (e.g. replace/update flows). Set
-// NEON_TRANSPORT=http to force the per-query HTTP transport (e.g. runtimes
-// without a WebSocket global).
-const useWebSocket = process.env.NEON_TRANSPORT !== "http"
+// NEON_TRANSPORT=http to force the per-query HTTP transport. Runtimes without a
+// global WebSocket (Node <22) can't do the WebSocket transport, so they fall
+// back to HTTP automatically instead of failing every query.
+const useWebSocket = process.env.NEON_TRANSPORT !== "http" && typeof WebSocket !== "undefined"
 
 function getUrl(): string {
   const url = process.env.DATABASE_URL
@@ -18,9 +19,8 @@ function getUrl(): string {
 
 function buildDb(): NeonDatabase {
   if (useWebSocket) {
-    // Node <22 needs an explicit WebSocket constructor; modern runtimes (Node
-    // 22+, Bun, Vercel Node) expose it globally.
-    if (typeof WebSocket !== "undefined") neonConfig.webSocketConstructor = WebSocket
+    // useWebSocket implies a global WebSocket exists (Node 22+, Bun, Vercel
+    // Node 22) — the driver picks it up via neonConfig.webSocketConstructor.
     const pool = new Pool({ connectionString: getUrl() })
     return drizzleWs({ client: pool, relations: schemaRelations })
   }
