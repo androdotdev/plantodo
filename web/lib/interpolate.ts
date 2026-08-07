@@ -18,7 +18,7 @@ export function escapeHtml(s: string): string {
 }
 
 /** Resolve {{path}} placeholders (dot paths, e.g. {{a.b}}) with data values.
- *  `{{this}}` yields the whole data object. Path segments that are
+ *  `{{this}}` yields the whole data object as JSON. Path segments that are
  *  prototype-pollution keys resolve to undefined (defense in depth — the
  *  data comes from post authors, but a hostile value shouldn't reach Object
  *  prototype properties). Missing values stay as the literal placeholder. */
@@ -29,7 +29,7 @@ export function interpolate(
   return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path: string) => {
     const val =
       path === "this"
-        ? data
+        ? JSON.stringify(data)
         : path.split(".").reduce<unknown>((o, k) => {
             if (k === "__proto__" || k === "constructor" || k === "prototype") return undefined
             return o != null && typeof o === "object" ? (o as Record<string, unknown>)[k] : undefined

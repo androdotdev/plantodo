@@ -6,7 +6,7 @@ import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { isRateLimited } from "@/lib/rate-limit"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
-import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
+import { renderPageHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -86,7 +86,7 @@ export const PATCH = withError(async (
     }
     // Convert when html is (re)submitted; `type` labels the source format of
     // the html in this request, so a type-only PATCH just relabels the post.
-    updates.html = renderPostHtml(body.html, body.type)
+    updates.html = renderPageHtml(body.html, body.type)
     if (body.type !== undefined) updates.type = body.type
   } else if (body.type !== undefined) {
     if (!isPostType(body.type)) {

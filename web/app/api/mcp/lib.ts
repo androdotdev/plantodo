@@ -10,7 +10,7 @@ import { and, eq, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { auth } from "@/lib/auth"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
-import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
+import { renderPageHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -166,7 +166,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       const title = typeof args.title === "string" ? args.title : ""
       const type = args.type ?? "html"
       const isPrivate = typeof args.isPrivate === "boolean" ? args.isPrivate : false
-      const rendered = renderPostHtml(args.html, type)
+      const rendered = renderPageHtml(args.html, type)
 
       await db.insert(posts).values({ id, html: rendered, userId, title, type, isPrivate })
 
@@ -202,7 +202,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       }
 
       const type = args.type ?? existing.type ?? "html"
-      const rendered = renderPostHtml(args.html, type)
+      const rendered = renderPageHtml(args.html, type)
 
       await db
         .update(posts)
