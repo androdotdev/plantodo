@@ -28,8 +28,8 @@ describe("interpolate", () => {
     expect(interpolate("{{a.constructor}}", { a: {} })).toBe("{{a.constructor}}")
   })
 
-  it("treats {{this}} as the whole data object", () => {
-    expect(interpolate("{{this}}", { a: 1 })).toBe("[object Object]")
+  it("treats {{this}} as the whole data object as JSON", () => {
+    expect(interpolate("{{this}}", { a: 1, s: "x" })).toBe("{&quot;a&quot;:1,&quot;s&quot;:&quot;x&quot;}")
   })
 
   it("handles whitespace inside braces", () => {

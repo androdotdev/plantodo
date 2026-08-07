@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
-import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
+import { renderPageHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -26,7 +26,7 @@ export const POST = withError(async (request: NextRequest) => {
     return NextResponse.json({ error: `HTML content exceeds 512KB limit` }, { status: 413 })
   }
   const id = nanoid(16)
-  const rendered = renderPostHtml(html, type)
+  const rendered = renderPageHtml(html, type)
   await db.insert(posts).values({
     id,
     html: rendered,
