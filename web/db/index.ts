@@ -1,30 +1,44 @@
-import { drizzle } from "drizzle-orm/neon-http"
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless"
+import { Pool, neon, neonConfig } from "@neondatabase/serverless"
+import { drizzle as drizzleWs, type NeonDatabase } from "drizzle-orm/neon-serverless"
+import { drizzle as drizzleHttp } from "drizzle-orm/neon-http"
 import { schemaRelations } from "./relations"
 
-let client: NeonQueryFunction<false, false> | null = null
+// Transport: WebSocket by default — one handshake per warm invocation, then all
+// queries share the connection, avoiding the per-query HTTP round trip of
+// neon-http on multi-query operations (e.g. replace/update flows). Set
+// NEON_TRANSPORT=http to force the per-query HTTP transport. Runtimes without a
+// global WebSocket (Node <22) can't do the WebSocket transport, so they fall
+// back to HTTP automatically instead of failing every query.
+const useWebSocket = process.env.NEON_TRANSPORT !== "http" && typeof WebSocket !== "undefined"
 
-function getClient(): NeonQueryFunction<false, false> {
-  if (!client) {
-    const url = process.env.DATABASE_URL
-    if (!url) throw new Error("DATABASE_URL is not set")
-    client = neon(url)
+function getUrl(): string {
+  const url = process.env.DATABASE_URL
+  if (!url) throw new Error("DATABASE_URL is not set")
+  return url
+}
+
+function buildDb(): NeonDatabase {
+  if (useWebSocket) {
+    // useWebSocket implies a global WebSocket exists (Node 22+, Bun, Vercel
+    // Node 22) — the driver picks it up via neonConfig.webSocketConstructor.
+    const pool = new Pool({ connectionString: getUrl() })
+    return drizzleWs({ client: pool, relations: schemaRelations })
   }
-  return client
+  // Both drivers expose the same query-builder surface; the HTTP result is
+  // structurally compatible with the WS database type.
+  return drizzleHttp({ client: neon(getUrl()), relations: schemaRelations }) as unknown as NeonDatabase
 }
 
 /**
- * Lazy neon client: constructed on first query, not at import. Lets modules be
+ * Lazy drizzle instance: built on first query, not at import. Lets modules be
  * evaluated without a reachable DATABASE_URL (local dev, CI builds, prerender),
  * and surfaces a clear error if a query actually runs without one.
  */
-const lazyClient = new Proxy(function () {} as unknown as NeonQueryFunction<false, false>, {
-  apply(_target, _thisArg, args: unknown[]) {
-    return Reflect.apply(getClient() as unknown as (...a: unknown[]) => unknown, null, args)
-  },
-  get(_target, prop, receiver) {
-    return Reflect.get(getClient(), prop, receiver)
+let instance: NeonDatabase | null = null
+
+export const db = new Proxy({} as NeonDatabase, {
+  get(_target, prop) {
+    if (!instance) instance = buildDb()
+    return Reflect.get(instance, prop)
   },
 })
-
-export const db = drizzle({ client: lazyClient, relations: schemaRelations })

@@ -4,13 +4,10 @@ import { auth } from "@/lib/auth"
 /**
  * Get the authenticated user ID by directly checking API key or session.
  *
- * This does NOT trust the x-user-id header — it re-verifies auth independently
- * using the original credentials (x-api-key or session cookie). Use on sensitive
- * mutating routes (POST, DELETE, PATCH) for defense-in-depth.
- *
- * Read-only routes (GET) can trust the proxy-set x-user-id header instead —
- * the proxy strips client-supplied x-user-id before forwarding, so the header
- * is always either the verified value or absent entirely.
+ * Every route calls this — GET and mutating alike — and it NEVER trusts the
+ * x-user-id header (the proxy strips any client-supplied value). Because the
+ * proxy no longer re-verifies auth, each request consumes an API key's
+ * rate-limit/remaining counters exactly once.
  */
 export async function getAuthenticatedUserId(
   request: NextRequest,

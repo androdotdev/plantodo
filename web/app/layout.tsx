@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "./theme-provider";
 
 export const metadata: Metadata = {
-  title: "PostHTML — upload HTML posts, get a shareable URL",
+  title: "Relay — publish HTML pages, get a shareable URL",
   icons: {
     icon: [
       { url: "/i.svg", type: "image/svg+xml" },
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   themeColor: "#0a0a0a",
   openGraph: {
-    title: "PostHTML",
-    description: "Give AI agents the ability to upload, edit, and share HTML posts programmatically via CLI.",
+    title: "Relay",
+    description: "Give AI agents the ability to publish, edit, and share HTML pages programmatically via CLI.",
     images: [{ url: "/og.svg", width: 1200, height: 630 }],
   },
 };

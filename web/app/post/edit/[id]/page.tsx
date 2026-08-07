@@ -77,7 +77,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
         setLoading(false);
       } catch {
         // Network error — don't leave the user staring at a spinner forever.
-        if (!cancelled) setLoadError("Couldn't load this post. Check your connection and try again.");
+        if (!cancelled) setLoadError("Couldn't load this page. Check your connection and try again.");
       }
     });
     return () => {
@@ -153,7 +153,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
       });
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error ?? "Failed to save post");
+        throw new Error(body.error ?? "Failed to save page");
       }
       setHtmlSaved(true);
       if (id) usePostsStore.getState().patchDetail(id, { html });
@@ -177,7 +177,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-base">
         <div className="max-w-md space-y-4 text-center">
-          <h1 className="text-sm font-semibold text-text-primary">Couldn&apos;t load this post</h1>
+          <h1 className="text-sm font-semibold text-text-primary">Couldn&apos;t load this page</h1>
           <p className="text-xs text-text-secondary">{loadError}</p>
           <Link
             href="/dashboard"
@@ -203,7 +203,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
               <img src="/i.svg" alt="" className="h-6 w-6" />
-              <span className="font-semibold text-sm">PostHTML</span>
+              <span className="font-semibold text-sm">Relay</span>
             </Link>
             <span className="text-text-muted mx-2">/</span>
             <button
@@ -236,7 +236,7 @@ export default function PostEditPage({ params }: { params: Promise<{ id: string 
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Post title"
+                placeholder="Page title"
                 className="flex-1 bg-transparent text-xl font-semibold text-text-primary placeholder-text-muted focus:outline-none border-b border-transparent focus:border-border-hover pb-1 transition-colors"
               />
             </div>

@@ -1,19 +1,19 @@
-# @androff/posthtml-cli
+# @androff/relay-cli
 
-CLI tool to upload HTML posts and get a shareable URL.
+Relay — CLI tool to publish HTML pages and get a shareable URL.
 
 ```
-npm install -g @androff/posthtml-cli
+npm install -g @androff/relay-cli
 ```
 
 ## Setup
 
 ```bash
 # Interactive — prompts for key, input is hidden
-post setup
+relay setup
 
 # Non-interactive (env var is safer than --key on multi-user systems)
-POST_API_KEY=post_xxx post setup
+POST_API_KEY=post_xxx relay setup
 ```
 
 Get your API key from: [posthtml.vercel.app/dashboard](https://posthtml.vercel.app/dashboard)
@@ -22,78 +22,86 @@ Configuration saved to `~/.post/config.json`. When an OS keyring is available, t
 
 ## Commands
 
-### `post upload <file>`
+### `relay publish <file>`
 
-Upload an HTML or Markdown file as a new post.
+Publish an HTML or Markdown file as a new page.
 
 ```bash
-post upload index.html
-post upload index.html --private                    # owner-only access
-post upload README.md --mark                        # Markdown → HTML server-side
-post upload index.html --data '{"status":"draft"}'  # attach JSON data
-post upload index.html --data-file meta.json        # merge data from file
+relay publish index.html
+relay publish index.html --private                    # owner-only access
+relay publish README.md --mark                        # Markdown → HTML server-side
+relay publish index.html --title "My Page"            # override the extracted title
+relay publish index.html --data '{"status":"draft"}'  # attach JSON data
+relay publish index.html --data-file meta.json        # merge data from file
 ```
 
 | Option | Description |
 |---|---|
 | `-d, --data <json>` | JSON data string to merge into post.data |
 | `--data-file <path>` | JSON file to merge into post.data |
+| `-t, --title <title>` | Override the title extracted from the file |
 | `--mark` | Treat the file as Markdown (converted to HTML server-side) |
 | `--private` | Restrict to owner-only access |
 | `--public` | Make shareable (default) |
 
-### `post list` / `post ls`
+Without `--title`, the title is extracted from the file: the first `# heading` for Markdown, the `<title>` tag for HTML, or the file's basename as a fallback. Extracted titles are trimmed but keep their internal whitespace (no dasherization).
 
-List your posts.
+### `relay list` / `relay ls`
+
+List your pages.
 
 ```bash
-post list
-post ls
+relay list
+relay ls
 ```
 
-### `post replace <id> <file>`
+### `relay update <id> <file>`
 
-Replace an existing post's HTML while preserving its ID and URL. Accepts Markdown with `--mark`.
+Update an existing page's HTML while preserving its ID and URL. Accepts Markdown with `--mark`.
 
 ```bash
-post replace abc123 index.html
-post replace abc123 README.md --mark
-post replace abc123 index.html --private
-post replace abc123 index.html --public
+relay update abc123 index.html
+relay update abc123 README.md --mark
+relay update abc123 index.html --title "Renamed Page"
+relay update abc123 index.html --private
+relay update abc123 index.html --public
 ```
 
 | Option | Description |
 |---|---|
+| `-t, --title <title>` | Override the title extracted from the file |
 | `--mark` | Treat the file as Markdown (converted to HTML server-side) |
 | `--private` | Restrict to owner-only access |
 | `--public` | Make shareable (default) |
 
-### `post delete <id>`
+`--title` and the extraction rules behave exactly as in `relay publish`.
 
-Delete a post.
+### `relay delete <id>`
 
-```bash
-post delete abc123
-```
-
-### `post data get <id>`
-
-Get the JSON data attached to a post.
+Delete a page.
 
 ```bash
-post data get abc123
+relay delete abc123
 ```
 
-### `post data set <id>`
+### `relay data get <id>`
 
-Merge JSON data into a post. Provide either `--key` + `--value` (one key) or `--file` (whole object).
+Get the JSON data attached to a page.
+
+```bash
+relay data get abc123
+```
+
+### `relay data set <id>`
+
+Merge JSON data into a page. Provide either `--key` + `--value` (one key) or `--file` (whole object).
 
 ```bash
 # Set a single key
-post data set abc123 --key status --value '"draft"'
+relay data set abc123 --key status --value '"draft"'
 
 # Merge entire JSON file
-post data set abc123 --file meta.json
+relay data set abc123 --file meta.json
 ```
 
 | Option | Description |
@@ -102,22 +110,23 @@ post data set abc123 --file meta.json
 | `-v, --value <value>` | JSON value (required with `--key`) |
 | `-f, --file <path>` | JSON file to merge (whole object) |
 
-### `post setup`
+### `relay setup`
 
 Save your API key to the OS keyring (or `~/.post/config.json` on keyring-less machines).
 
 ```bash
-post setup
-post setup --key post_xxx    # pass directly (avoid on shared systems)
+relay setup
+relay setup --key post_xxx    # pass directly (avoid on shared systems)
 ```
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `POST_URL` | `https://posthtml.vercel.app` | Server base URL (used if not set in config file) |
-| `POST_API_KEY` | — | API key (used if no config file exists) |
+| `POST_URL` | `https://posthtml.vercel.app` | Server base URL (used when the config file has no `url`) |
+| `POST_API_KEY` | — | API key (used when no key is stored in the keyring or config file) |
 | `POSTHTML_API_KEY` | — | Legacy alias for `POST_API_KEY` |
 
-Priority: OS keyring > config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
-`post setup` itself resolves `--key` > `POST_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.
+API key priority: OS keyring > config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error. A config file that exists but has no `api_key` (e.g. url-only) does not shadow the env vars.
+
+`relay setup` itself resolves `--key` > `POST_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.

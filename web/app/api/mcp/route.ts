@@ -5,8 +5,7 @@ export const dynamic = "force-dynamic"
 
 // ── POST handler: header-based auth (backward compat) ───────────────────────
 
-export async function POST(request: Request) {
-  const apiKey = request.headers.get("x-api-key")
+export async function POST(request: Request) {  const apiKey = request.headers.get("x-api-key")
   if (!apiKey) {
     return new Response(
       JSON.stringify({ error: "Unauthorized — x-api-key header required" }),
@@ -35,4 +34,11 @@ export async function POST(request: Request) {
       { status: 500, headers: { "content-type": "application/json" } },
     )
   }
+}
+
+// ── GET handler: header-based auth (parity with the URL-token route, which
+//    already accepts GET — AGENTS.md documents GET/POST) ─────────────────────
+
+export async function GET(request: Request) {
+  return POST(request)
 }

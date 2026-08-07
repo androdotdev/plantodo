@@ -4,6 +4,7 @@ import { posts } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
+import { isRateLimited } from "@/lib/rate-limit"
 import { BASE_URL, MAX_HTML_SIZE } from "@/lib/constants"
 import { renderPostHtml, isPostType, POST_TYPES } from "@/lib/markdown"
 
@@ -16,6 +17,7 @@ export const GET = withError(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
+  if (isRateLimited(request)) return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   const post = await db
     .select({
       id: posts.id,
@@ -70,6 +72,9 @@ export const PATCH = withError(async (
   }
 
   const updates: Record<string, string | boolean | number> = {}
+  if (body.type !== undefined && !isPostType(body.type)) {
+    return NextResponse.json({ error: `type must be one of: ${POST_TYPES.join(", ")}` }, { status: 400 })
+  }
   if (body.title !== undefined) {
     if (typeof body.title !== "string") return NextResponse.json({ error: "title must be a string" }, { status: 400 })
     updates.title = body.title

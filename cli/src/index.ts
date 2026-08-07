@@ -38,7 +38,7 @@ async function api(path: string, init?: RequestInit): Promise<any> {
     const detail = body?.error ?? body?.message ?? (body !== null ? JSON.stringify(body) : res.statusText);
     if (res.status === 401) {
       console.error(red.bold("✗ Error 401: Unauthorized"), detail);
-      console.error(dim(`Get a key at ${BASE_URL}/dashboard, then save it with: post setup`));
+      console.error(dim(`Get a key at ${BASE_URL}/dashboard, then save it with: relay setup`));
     } else {
       console.error(red.bold(`✗ Error ${res.status}:`), detail);
     }
@@ -47,8 +47,8 @@ async function api(path: string, init?: RequestInit): Promise<any> {
   return body;
 }
 
-function printUploadOutput(url: string, isPrivate?: boolean) {
-  console.log(`\n${dim("Post URL:")} ${cyan(url)}`);
+function printPublishOutput(url: string, isPrivate?: boolean) {
+  console.log(`\n${dim("Page URL:")} ${cyan(url)}`);
   const visibility = isPrivate ? red("[private]") : green("[public]");
   console.log(`${dim("Shareable:")} ${visibility}`);
 }
@@ -118,7 +118,7 @@ async function readSilent(prompt: string): Promise<string> {
 }
 
 /**
- * Parse the --data / --data-file options shared by `upload` and `replace`.
+ * Parse the --data / --data-file options shared by `publish` and `update`.
  * Returns null if neither was passed. Exits with an error on invalid JSON.
  */
 function parseDataOption(options: { data?: string; dataFile?: string }): Record<string, unknown> | null {
@@ -153,19 +153,20 @@ function parseDataOption(options: { data?: string; dataFile?: string }): Record<
 }
 
 const program = new Command()
-  .name("post")
-  .description("PostHTML CLI — upload, list, delete, and replace posts")
+  .name("relay")
+  .description("Relay CLI — publish, list, delete, and update pages")
   .version(version);
 
 program
-  .command("upload <file>")
-  .description("Upload an HTML or Markdown post file")
-  .option("-d, --data <json>", "JSON data to attach (merged into post.data)")
+  .command("publish <file>")
+  .description("Publish an HTML or Markdown page file")
+  .option("-d, --data <json>", "JSON data to attach (merged into page data)")
   .option("--data-file <path>", "JSON file to merge into post.data")
+  .option("-t, --title <title>", "Override the extracted title")
   .option("--mark", "Treat the file as Markdown (converted to HTML server-side)")
-  .option("--private", "Make the post private (owner-only access)")
-  .option("--public", "Make the post public (default, shareable)")
-  .action(async (file: string, options: { data?: string; dataFile?: string; mark?: boolean; private?: boolean; public?: boolean }) => {
+  .option("--private", "Make the page private (owner-only access)")
+  .option("--public", "Make the page public (default, shareable)")
+  .action(async (file: string, options: { data?: string; dataFile?: string; title?: string; mark?: boolean; private?: boolean; public?: boolean }) => {
     if (options.private && options.public) {
       console.error(red("✗ --private and --public are mutually exclusive"));
       process.exit(1);
@@ -181,8 +182,9 @@ program
     const isValid = /<!DOCTYPE html>/i.test(html);
     process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
 
-    process.stdout.write(`${dim("→ Uploading to PostHTML...")}\n`);
-    const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    process.stdout.write(`${dim("→ Publishing...")}\n`);
+    const title = options.title ?? extractTitle(html, file);
+    const body: Record<string, unknown> = { html, title };
     if (options.mark) body.type = "markdown";
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api("/api/posts", {
@@ -199,23 +201,23 @@ program
       process.stdout.write(`${green("✓ Data attached")}\n`);
     }
 
-    process.stdout.write(`${green("✓ Upload complete")}\n`);
-    printUploadOutput(result.url, result.isPrivate);
+    process.stdout.write(`${green("✓ Publish complete")}\n`);
+    printPublishOutput(result.url, result.isPrivate);
   });
 
 program
   .command("list")
   .alias("ls")
-  .description("List your posts")
+  .description("List your pages")
   .action(async () => {
-    process.stdout.write(`${dim("→ Fetching your posts...")}\n`);
+    process.stdout.write(`${dim("→ Fetching your pages...")}\n`);
     const posts = await api("/api/posts");
     if (posts.length === 0) {
-      process.stdout.write(`${dim("No posts found.")}\n`);
+      process.stdout.write(`${dim("No pages found.")}\n`);
       return;
     }
-    process.stdout.write(`${green(`✓ ${posts.length} post${posts.length === 1 ? "" : "s"} loaded`)}\n\n`);
-    const header = `${dim("Post ID")}          ${dim("Title")}                  ${dim("Created")}        ${dim("Access")}`;
+    process.stdout.write(`${green(`✓ ${posts.length} page${posts.length === 1 ? "" : "s"} loaded`)}\n\n`);
+    const header = `${dim("Page ID")}          ${dim("Title")}                  ${dim("Created")}        ${dim("Access")}`;
     const sep = dim("─".repeat(72));
     console.log(`\n${header}\n${sep}`);
     for (const p of posts) {
@@ -229,20 +231,21 @@ program
 
 program
   .command("delete <id>")
-  .description("Delete a post")
+  .description("Delete a page")
   .action(async (id: string) => {
-    process.stdout.write(`${dim("→ Deleting post...")}\n`);
+    process.stdout.write(`${dim("→ Deleting page...")}\n`);
     await api(`/api/posts/${id}`, { method: "DELETE" });
-    process.stdout.write(`${green(`✓ Post ${id} deleted`)}\n`);
+    process.stdout.write(`${green(`✓ Page ${id} deleted`)}\n`);
   });
 
 program
-  .command("replace <id> <file>")
-  .description("Replace a post with a new HTML or Markdown file (preserves ID)")
+  .command("update <id> <file>")
+  .description("Update a page with new HTML or Markdown content (preserves ID)")
+  .option("-t, --title <title>", "Override the extracted title")
   .option("--mark", "Treat the file as Markdown (converted to HTML server-side)")
-  .option("--private", "Make the post private (owner-only access)")
-  .option("--public", "Make the post public (default, shareable)")
-  .action(async (id: string, file: string, options: { mark?: boolean; private?: boolean; public?: boolean }) => {
+  .option("--private", "Make the page private (owner-only access)")
+  .option("--public", "Make the page public (default, shareable)")
+  .action(async (id: string, file: string, options: { title?: string; mark?: boolean; private?: boolean; public?: boolean }) => {
     if (options.private && options.public) {
       console.error(red("✗ --private and --public are mutually exclusive"));
       process.exit(1);
@@ -257,16 +260,17 @@ program
     const isValid = /<!DOCTYPE html>/i.test(html);
     process.stdout.write(isValid ? `${green("✓ Valid markup")}\n\n` : `${yellow("⚠ No DOCTYPE found — continuing")}\n\n`);
 
-    process.stdout.write(`${dim(`→ Replacing post ${id}...`)}\n`);
-    const body: Record<string, unknown> = { html, title: extractTitle(html, file) };
+    process.stdout.write(`${dim(`→ Updating post ${id}...`)}\n`);
+    const title = options.title ?? extractTitle(html, file);
+    const body: Record<string, unknown> = { html, title };
     if (options.mark) body.type = "markdown";
     if (isPrivate !== undefined) body.isPrivate = isPrivate;
     const result = await api(`/api/posts/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    process.stdout.write(`${green("✓ Replacement complete")}\n`);
-    printUploadOutput(result.url, result.isPrivate);
+    process.stdout.write(`${green("✓ Update complete")}\n`);
+    printPublishOutput(result.url, result.isPrivate);
   });
 
 program
@@ -297,7 +301,7 @@ program
 // ── data ────────────────────────────────────────────────────────────────────
 const dataCmd = program
   .command("data")
-  .description("Manage post JSON data");
+  .description("Manage page JSON data");
 
 dataCmd
   .command("get <id>")
@@ -357,7 +361,7 @@ dataCmd
 program.hook("preAction", (thisCommand, actionCommand) => {
   if (actionCommand.name() !== "setup" && !API_KEY) {
     console.error(red.bold("✗ No API key configured."));
-    console.error(dim("Set POST_API_KEY or run 'post setup' to configure your API key."));
+    console.error(dim("Set POST_API_KEY or run 'relay setup' to configure your API key."));
     process.exit(1);
   }
 });

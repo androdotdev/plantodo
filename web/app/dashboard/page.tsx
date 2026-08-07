@@ -118,56 +118,72 @@ export default function Dashboard() {
   }, [router]);
 
   async function fetchKeys() {
-    const res = await fetch("/api/keys");
-    if (res.ok) {
-      const data = await res.json();
-      setKeys(data.keys ?? []);
-    } else {
-      setLoadError("Couldn't load your API keys. Try refreshing the page.");
+    try {
+      const res = await fetch("/api/keys");
+      if (res.ok) {
+        const data = await res.json();
+        setKeys(data.keys ?? []);
+      } else {
+        setLoadError("Couldn't load your API keys. Try refreshing the page.");
+      }
+    } catch {
+      setLoadError("Couldn't reach the server. Check your connection.");
     }
     setLoading(false);
   }
 
   async function fetchPosts() {
-    const res = await fetch("/api/posts");
-    if (res.ok) {
-      const data = await res.json();
-      setPosts(data ?? []);
-      usePostsStore.getState().setList(data ?? []);
-    } else {
-      setLoadError("Couldn't load your posts. Try refreshing the page.");
+    try {
+      const res = await fetch("/api/posts");
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data ?? []);
+        usePostsStore.getState().setList(data ?? []);
+      } else {
+        setLoadError("Couldn't load your pages. Try refreshing the page.");
+      }
+    } catch {
+      setLoadError("Couldn't reach the server. Check your connection.");
     }
     setPostsLoading(false);
   }
 
   async function deletePost(id: string) {
-    if (!confirm("Delete this post? The URL will stop working.")) return;
+    if (!confirm("Delete this page? The URL will stop working.")) return;
     await runBusy(`del-post-${id}`, async () => {
-      const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setPosts((prev) => prev.filter((p) => p.id !== id));
-        usePostsStore.getState().removeFromList(id);
-        usePostsStore.getState().removeDetail(id);
-      } else {
-        setLoadError("Couldn't delete the post. It may already be gone — refresh the list.");
+      try {
+        const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setPosts((prev) => prev.filter((p) => p.id !== id));
+          usePostsStore.getState().removeFromList(id);
+          usePostsStore.getState().removeDetail(id);
+        } else {
+          setLoadError("Couldn't delete the page. It may already be gone — refresh the list.");
+        }
+      } catch {
+        setLoadError("Couldn't reach the server. Check your connection.");
       }
     });
   }
 
   async function togglePrivate(p: Post) {
     await runBusy(`toggle-${p.id}`, async () => {
-      const res = await fetch(`/api/posts/${p.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPrivate: !p.isPrivate }),
-      });
-      if (res.ok) {
-        setPosts((prev) =>
-          prev.map((post) => (post.id === p.id ? { ...post, isPrivate: !p.isPrivate } : post)),
-        );
-        usePostsStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
-      } else {
-        setLoadError("Couldn't update the post's visibility. Try again.");
+      try {
+        const res = await fetch(`/api/posts/${p.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isPrivate: !p.isPrivate }),
+        });
+        if (res.ok) {
+          setPosts((prev) =>
+            prev.map((post) => (post.id === p.id ? { ...post, isPrivate: !p.isPrivate } : post)),
+          );
+          usePostsStore.getState().upsertList({ ...p, isPrivate: !p.isPrivate });
+        } else {
+          setLoadError("Couldn't update the page's visibility. Try again.");
+        }
+      } catch {
+        setLoadError("Couldn't reach the server. Check your connection.");
       }
     });
   }
@@ -217,11 +233,15 @@ export default function Dashboard() {
   async function deleteKey(id: string) {
     if (!confirm("Revoke this key? Any service using it will lose access.")) return;
     await runBusy(`del-key-${id}`, async () => {
-      const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setKeys((prev) => prev.filter((k) => k.id !== id));
-      } else {
-        setLoadError("Couldn't revoke the key. Try again.");
+      try {
+        const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setKeys((prev) => prev.filter((k) => k.id !== id));
+        } else {
+          setLoadError("Couldn't revoke the key. Try again.");
+        }
+      } catch {
+        setLoadError("Couldn't reach the server. Check your connection.");
       }
     });
   }
@@ -241,7 +261,7 @@ export default function Dashboard() {
   const sectionButtons: { id: "api" | "mcp" | "posts"; label: string; Icon: typeof Rocket }[] = [
     { id: "api", label: "Get Started", Icon: Rocket },
     { id: "mcp", label: "MCP Server", Icon: Cable },
-    { id: "posts", label: "Posts", Icon: FileText },
+    { id: "posts", label: "Pages", Icon: FileText },
   ];
 
   const sidebarContent = (
@@ -291,7 +311,7 @@ export default function Dashboard() {
         <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <img src="/i.svg" alt="" className="h-6 w-6" />
-            <span className="font-semibold text-sm">PostHTML</span>
+            <span className="font-semibold text-sm">Relay</span>
             <span className="inline-block px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-bg-accent text-text-accent">BETA</span>
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">
@@ -512,7 +532,7 @@ export default function Dashboard() {
                           )}
                           {k.lastRequest && (
                             <p className="mt-0.5 text-xs text-text-accent">
-                              Last action: post upload via <span className="font-semibold">{k.name || "unnamed"}</span>
+                              Last action: page publish via <span className="font-semibold">{k.name || "unnamed"}</span>
                             </p>
                           )}
                         </div>
@@ -561,9 +581,9 @@ export default function Dashboard() {
                 {/* Posts Section */}
                 <div className="border-b border-border-default pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Posts</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-text-primary">Pages</h2>
                     <p className="mt-1 text-xs text-text-secondary">
-                      Your uploaded HTML posts. Deleting a post breaks its URL.
+                      Your published HTML pages. Deleting a page breaks its URL.
                     </p>
                   </div>
                   <button
@@ -573,7 +593,7 @@ export default function Dashboard() {
                         const res = await fetch("/api/posts", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Post</title></head>\n<body>\n\n</body>\n</html>" }),
+                          body: JSON.stringify({ html: "<!DOCTYPE html>\n<html>\n<head><title>Page</title></head>\n<body>\n\n</body>\n</html>" }),
                         });
                         if (res.ok) {
                           const { id } = await res.json();
@@ -584,7 +604,7 @@ export default function Dashboard() {
                     disabled={busy["new-post"]}
                     className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-text hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    {busy["new-post"] ? <Loader2 size={16} className="animate-spin" /> : "New Post"}
+                    {busy["new-post"] ? <Loader2 size={16} className="animate-spin" /> : "New Page"}
                   </button>
                 </div>
 
@@ -595,7 +615,7 @@ export default function Dashboard() {
                     </div>
                   ) : posts.length === 0 ? (
                     <div className="rounded-md border border-border-default p-10 text-center">
-                      <p className="text-sm text-text-secondary">No posts yet. Click &ldquo;New Post&rdquo; to create one.</p>
+                      <p className="text-sm text-text-secondary">No pages yet. Click &ldquo;New Page&rdquo; to create one.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">

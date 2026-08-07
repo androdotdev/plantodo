@@ -8,14 +8,14 @@ import { eq } from "drizzle-orm"
 
 const NOT_A_POST_HTML = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>PostHTML</title>
+<head><meta charset="utf-8"><title>Relay</title>
 <style>body{font-family:ui-monospace,monospace;background:#0a0a0a;color:#e8e8e8;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}main{text-align:center;padding:2rem}svg{opacity:.5}h1{font-size:1.25rem;margin:.75rem 0 .5rem}.msg{color:#888;max-width:22rem;font-size:.85rem}.home{border:1px solid #333;color:#888;padding:.5rem 1rem;border-radius:2px;text-decoration:none;display:inline-block;margin-top:1rem}.home:hover{color:#e8e8e8;border-color:#444}</style>
 </head>
 <body><main>
 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M14 4v6h6"/></svg>
-<h1>This domain only shows posts</h1>
-<p class="msg">postshare.andro42.qzz.io serves individual posts at /p/:id. Looking for the dashboard?</p>
-<a class="home" href="__MAIN_URL__">Go to PostHTML</a>
+<h1>This domain only shows pages</h1>
+<p class="msg">postshare.andro42.qzz.io serves individual pages at /p/:id. Looking for the dashboard?</p>
+<a class="home" href="__MAIN_URL__">Go to Relay</a>
 </main></body></html>`;
 
 // Explicit route table for the /p/ namespace — the posts domain resolves ONLY
@@ -73,15 +73,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // API auth — only for /api/posts/* on the main domain
+  // API auth — routes own verification. The proxy previously re-verified the
+  // API key here to forward x-user-id, but every route verifies auth itself
+  // via getAuthenticatedUserId, so the proxy's verify double-consumed an API
+  // key's rate-limit counters. All that remains is stripping a client-supplied
+  // x-user-id so no route can ever trust a spoofed header.
   if (!path.startsWith("/api/posts")) {
     return NextResponse.next()
   }
 
-  const userId = await getAuthenticatedUserId(request)
   const headers = new Headers(request.headers)
   headers.delete("x-user-id")
-  if (userId) headers.set("x-user-id", userId)
   return NextResponse.next({ request: { headers } })
 }
 

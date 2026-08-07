@@ -129,7 +129,7 @@ export default function McpSection() {
               <Cable size={16} /> MCP Server
             </h1>
             <p className="mt-1 text-xs text-text-secondary">
-              Use this URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
+              Use this URL to connect Relay to any MCP-compatible client (Claude Desktop, Cursor, etc.).
             </p>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function McpSection() {
             <Cable size={16} /> MCP Server
           </h1>
           <p className="mt-1 text-xs text-text-secondary">
-            Use this URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
+            Use this URL to connect Relay to any MCP-compatible client (Claude Desktop, Cursor, etc.).
           </p>
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function McpSection() {
             <pre className="rounded-sm border border-border-default bg-bg-elevated p-3 text-xs text-text-primary overflow-x-auto">
 {`{
   "mcpServers": {
-    "posthtml": {
+    "relay": {
       "url": "${newUrl}"
     }
   }

@@ -38,9 +38,9 @@ export default function Home() {
         {/* Hero */}
         <div className="text-center border-b border-border-default pb-8 mb-12">
           <div className="flex items-center justify-center gap-3">
-            <img src="/i.svg" alt="PostHTML logo" className="h-10 w-10" />
+            <img src="/i.svg" alt="Relay logo" className="h-10 w-10" />
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              PostHTML
+              Relay
             </h1>
             <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent ml-1">
               BETA
@@ -50,7 +50,7 @@ export default function Home() {
             The HTML sharing tool for AI agents
           </p>
           <p className="mt-3 text-xs text-text-muted max-w-lg mx-auto leading-relaxed">
-            Give your agent the ability to upload, share, and manage HTML posts
+            Give your agent the ability to publish, share, and manage HTML pages
             with a single CLI command.
           </p>
         </div>
@@ -62,8 +62,8 @@ export default function Home() {
             <span className="text-xs text-text-secondary uppercase tracking-wider">Install</span>
           </div>
           <div className="font-mono text-sm leading-relaxed">
-            <p><span className="text-text-muted">$</span> <span className="text-text-primary">npm i -g @androff/posthtml-cli</span></p>
-            <p className="mt-1"><span className="text-text-muted">$</span> <span className="text-text-primary">post upload <span className="text-text-accent">index.html</span></span></p>
+            <p><span className="text-text-muted">$</span> <span className="text-text-primary">npm i -g @androff/relay-cli</span></p>
+            <p className="mt-1"><span className="text-text-muted">$</span> <span className="text-text-primary">relay publish <span className="text-text-accent">index.html</span></span></p>
           </div>
         </div>
 
@@ -74,19 +74,19 @@ export default function Home() {
               num: "01",
               title: "Get an API key",
               desc: "Sign in with Google to generate a key for your agent.",
-              code: "post setup --key post_xxx",
+              code: "relay setup --key post_xxx",
             },
             {
               num: "02",
               title: "Configure your agent",
-              desc: "Save the key with `post setup`, or set it as an environment variable.",
-              code: 'post setup --key post_xxx',
+              desc: "Save the key with `relay setup`, or set it as an environment variable.",
+              code: 'relay setup --key post_xxx',
             },
             {
               num: "03",
-              title: "Upload & share posts",
-              desc: "Your agent can now upload HTML posts and get shareable URLs instantly.",
-              code: "post upload post.html",
+              title: "Publish & share pages",
+              desc: "Your agent can now publish HTML pages and get shareable URLs instantly.",
+              code: "relay publish post.html",
             },
           ].map((step, i) => (
             <div key={i} className="flex gap-5">
@@ -107,12 +107,12 @@ export default function Home() {
         {/* Execution output */}
         <div className="rounded-md border border-border-default bg-bg-card p-6 mb-12">
           <div className="font-mono text-xs leading-relaxed space-y-1.5">
-            <p><span className="text-text-muted">$</span> <span className="text-text-primary">post upload <span className="text-text-accent">workflow.html</span></span></p>
+            <p><span className="text-text-muted">$</span> <span className="text-text-primary">relay publish <span className="text-text-accent">workflow.html</span></span></p>
             <p className="text-text-muted">→ Validating HTML structure...</p>
             <p className="text-text-accent">✓ Valid markup</p>
-            <p className="text-text-muted">→ Uploading to PostHTML...</p>
-            <p className="text-text-accent">✓ Upload complete</p>
-            <p className="mt-2"><span className="text-text-accent">Post URL:</span> <span className="text-text-primary">https://posthtml.vercel.app/p/xyz789</span></p>
+            <p className="text-text-muted">→ Publishing to Relay...</p>
+            <p className="text-text-accent">✓ Publish complete</p>
+            <p className="mt-2"><span className="text-text-accent">Page URL:</span> <span className="text-text-primary">https://posthtml.vercel.app/p/xyz789</span></p>
             <p><span className="text-text-accent">Shareable:</span> <span className="inline-block px-2 py-0.5 rounded-sm text-[11px] font-semibold bg-bg-accent text-text-accent ml-1">public</span></p>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function Home() {
                 Go to Dashboard
               </button>
               <p className="mt-3 text-xs text-text-muted">
-                Manage your API keys and posts.
+                Manage your API keys and pages.
               </p>
             </>
           ) : (

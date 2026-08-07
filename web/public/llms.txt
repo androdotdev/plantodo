@@ -1,13 +1,13 @@
-# PostHTML
+# Relay
 
 > **BETA** — APIs and behavior may change.
 
-Publishing API for AI agents. Upload HTML templates with `{{placeholder}}` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
+Publishing API for AI agents. Publish HTML templates with `{{placeholder}}` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
 
 ## Stack
 - Next.js 16 App Router, Drizzle ORM, Neon Postgres
 - Better Auth (Google OAuth only) + `@better-auth/api-key` plugin
-- CLI: `post` (`@androff/posthtml-cli`)
+- CLI: `relay` (`@androff/relay-cli`)
 - MCP (Model Context Protocol): `/api/mcp` (header auth) or `/api/mcp/{token}` (URL auth)
 
 ## Key files
@@ -18,12 +18,12 @@ Publishing API for AI agents. Upload HTML templates with `{{placeholder}}` synta
 - `web/app/api/mcp/route.ts` — header-based MCP route (backward compat)
 - `web/app/api/mcp/[token]/route.ts` — URL-based MCP proxy route
 - `web/app/dashboard/components/McpSection.tsx` — MCP dashboard UI
-- `web/app/dashboard/page.tsx` — dashboard (API keys, MCP, posts)
+- `web/app/dashboard/page.tsx` — dashboard (API keys, MCP, pages)
 - `cli/src/index.ts` — CLI entrypoint (commander)
 
 ## Template interpolation
 
-The core feature: upload HTML with `{{placeholder}}` syntax, values are filled from the post's JSON data at serve time. HTML-escaped by default (safe against XSS).
+The core feature: publish HTML with `{{placeholder}}` syntax, values are filled from the page's JSON data at serve time. HTML-escaped by default (safe against XSS).
 
 ```html
 <h1>{{title}}</h1>
@@ -31,7 +31,7 @@ The core feature: upload HTML with `{{placeholder}}` syntax, values are filled f
 <script>console.log(window.__PH_DATA)</script>
 ```
 
-Update data anytime via `set_post_data` (MCP) or `post data set` (CLI) — same URL, fresh output.
+Update data anytime via `set_post_data` (MCP) or `relay data set` (CLI) — same URL, fresh output.
 
 ## Auth flow
 1. User signs in with Google via landing page
@@ -44,7 +44,7 @@ Update data anytime via `set_post_data` (MCP) or `post data set` (CLI) — same 
 - Generate from dashboard sidebar → MCP Server → Generate URL
 - No `x-api-key` header needed — auth is in the URL path
 - Old `/api/mcp` with `x-api-key` header still works
-- Available tools: `list_posts`, `get_post`, `upload_post`, `replace_post`, `delete_post`,
+- Available tools: `list_posts`, `get_post`, `publish_page`, `update_page`, `delete_post`,
   `get_post_data`, `set_post_data`
 
 ## API auth
@@ -57,12 +57,12 @@ Update data anytime via `set_post_data` (MCP) or `post data set` (CLI) — same 
 
 ### CLI
 ```bash
-npm install -g @androff/posthtml-cli
+npm install -g @androff/relay-cli
 ```
 
 Configure your API key:
 ```bash
-post setup --key <your-key>
+relay setup --key <your-key>
 # or set env vars:
 export POST_API_KEY=***
 export POST_URL=https://posthtml.vercel.app
@@ -70,22 +70,22 @@ export POST_URL=https://posthtml.vercel.app
 
 ### Commands
 ```bash
-post upload index.html                              # upload a post
-post upload index.html --data '{"status":"draft"}'   # upload + attach JSON data
-post upload index.html --data-file meta.json         # or merge a whole JSON file
-post upload index.html --private                     # create as private (owner-only)
-post upload index.html --public                      # create as public (default)
-post replace <id> file.html --private                # update + set private (preserves URL)
-post replace <id> file.html --public                 # update + set public
-post list                                            # list your posts
-post delete <id>                                     # delete a post
-post replace <id> file.html                          # update post content (preserves URL)
-post data get <id>                                   # read a post's JSON data
-post data set <id> --key <k> --value '<json>'        # merge one key into a post's JSON data
-post data set <id> --file data.json                  # merge a whole JSON file into a post's data
+relay publish index.html                              # publish a page
+relay publish index.html --data '{"status":"draft"}'   # publish + attach JSON data
+relay publish index.html --data-file meta.json         # or merge a whole JSON file
+relay publish index.html --private                     # create as private (owner-only)
+relay publish index.html --public                      # create as public (default)
+relay update <id> file.html --private                # update + set private (preserves URL)
+relay update <id> file.html --public                 # update + set public
+relay list                                            # list your pages
+relay delete <id>                                     # delete a page
+relay update <id> file.html                          # update page content (preserves URL)
+relay data get <id>                                   # read a page's JSON data
+relay data set <id> --key <k> --value '<json>'        # merge one key into a page's JSON data
+relay data set <id> --file data.json                  # merge a whole JSON file into a page's data
 ```
 
 ## Quick test
 ```bash
-POST_URL=https://posthtml.vercel.app POST_API_KEY=*** post list
+POST_URL=https://posthtml.vercel.app POST_API_KEY=*** relay list
 ```

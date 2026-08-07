@@ -2,14 +2,14 @@
 
 ## Overview
 
-Give AI agents the ability to upload, edit, and share HTML posts programmatically via CLI. Manage drafts via CLI or API.
+Give AI agents the ability to publish, edit, and share HTML pages programmatically via CLI. Manage pages via CLI or API.
 
 ## Architecture
 
-Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
+Monorepo (Turbo + Bun workspaces):
 
-- **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public post viewer.
-- **cli/** — `@posthtml/cli` — npm package (`post`). `upload`/`list`/`delete`/`replace`/`setup`.
+- **web/** — `@posthtml/web` — Next.js 16 (App Router). API routes + dashboard + public page viewer.
+- **cli/** — `@androff/relay-cli` — npm package (`relay`). `publish`/`list`/`delete`/`update`/`setup`.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 - **ORM:** Drizzle ORM v1.0.0-rc.4 + drizzle-kit v1.0.0-rc.4
 - **Auth:** Better Auth — Google OAuth only (no email/password)
 - **API Keys:** Better Auth `@better-auth/api-key` plugin (rate limiting, expiry, refill)
-- **CLI:** Commander.js, Node.js fetch, published as `post`
+- **CLI:** Commander.js, Node.js fetch, published as `relay`
 - **Package mgr:** Bun
 - **Build:** tsup (cli), Next.js (web)
 - **Language:** TypeScript 6.0.3
@@ -68,13 +68,13 @@ Monorepo (Turbo + Bun workspaces, `@posthtml` scope):
 Use the MCP URL to connect PostHTML to any MCP-compatible client (Claude Desktop, Cursor, etc.).
 
 **Available MCP tools:**
-- `list_posts` — list your posts
-- `get_post` — get post HTML by ID
-- `upload_post` — create a new post (`{ html, title?, type?, isPrivate? }`, `type`: `html`|`markdown`)
-- `replace_post` — update post content (`{ id, html, title?, type?, isPrivate? }`)
-- `delete_post` — delete a post
-- `get_post_data` — get a post's JSON data
-- `set_post_data` — merge JSON data into a post (`{ id, data: {...} }`)
+- `list_posts` — list your pages
+- `get_post` — get page HTML by ID
+- `publish_page` — create a new page (`{ html, title?, type?, isPrivate? }`, `type`: `html`|`markdown`)
+- `update_page` — update page content (`{ id, html, title?, type?, isPrivate? }`)
+- `delete_post` — delete a page
+- `get_post_data` — get a page's JSON data
+- `set_post_data` — merge JSON data into a page (`{ id, data: {...} }`)
 
 MCP works two ways:
 
@@ -124,43 +124,43 @@ If you prefer, use your existing API key directly as the `x-api-key` header on `
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/posts` | x-api-key / session | Upload post HTML, returns `{ id, url }` |
-| GET | `/api/posts` | x-api-key / session | List posts for this user |
-| GET | `/api/posts/:id` | **public** | Get post with HTML content (share-link model) |
-| DELETE | `/api/posts/:id` | x-api-key / session | Delete one post (owner only) |
-| PATCH | `/api/posts/:id` | x-api-key / session | Replace post HTML (preserves ID/URL) |
-| GET | `/p/:id` | public | Serve post HTML directly from DB |
-| GET | `/api/posts/:id/data` | public | Get post JSON data |
-| PATCH | `/api/posts/:id/data` | x-api-key | Merge JSON data into post (keys override, atomic merge) |
+| POST | `/api/posts` | x-api-key / session | Publish page HTML, returns `{ id, url }` |
+| GET | `/api/posts` | x-api-key / session | List pages for this user |
+| GET | `/api/posts/:id` | **public** | Get page with HTML content (share-link model) |
+| DELETE | `/api/posts/:id` | x-api-key / session | Delete one page (owner only) |
+| PATCH | `/api/posts/:id` | x-api-key / session | Update page HTML (preserves ID/URL) |
+| GET | `/p/:id` | public | Serve page HTML directly from DB |
+| GET | `/api/posts/:id/data` | public | Get page JSON data |
+| PATCH | `/api/posts/:id/data` | x-api-key | Merge JSON data into page (keys override, atomic merge) |
 
 ## CLI Usage
 
 ```bash
-npm i -g @androff/posthtml-cli
+npm i -g @androff/relay-cli
 
-post setup                  # save API key from dashboard
-post setup --key post_xxx    # or pass directly
+relay setup                  # save API key from dashboard
+relay setup --key post_xxx    # or pass directly
 
-post data get <id>           # get post json data
-post data set <id> --key <k> --value '<json>'  # set one key in data
-post data set <id> --file data.json  # merge whole object into data
+relay data get <id>           # get page json data
+relay data set <id> --key <k> --value '<json>'  # set one key in data
+relay data set <id> --file data.json  # merge whole object into data
 
-post upload index.html
-post upload index.html --data '{"status":"draft"}'   # attach data in the same call
-post upload index.html --data-file meta.json         # or merge a whole JSON file
-post upload README.md --mark                         # Markdown → HTML server-side
-post ls                     # list posts
-post list                   # same
-post delete <post-id>
-post replace <post-id> <file.html>
+relay publish index.html
+relay publish index.html --data '{"status":"draft"}'   # attach data in the same call
+relay publish index.html --data-file meta.json         # or merge a whole JSON file
+relay publish README.md --mark                         # Markdown → HTML server-side
+relay ls                     # list pages
+relay list                   # same
+relay delete <page-id>
+relay update <page-id> <file.html>
 ```
 
 Configuration saved to `~/.post/config.json`. When an OS keyring is available (Windows Credential Manager, macOS Keychain, libsecret), the API key is stored there instead and the file keeps only non-secret options; keyring-less machines fall back to the plaintext file at `0600`. Key resolution priority: OS keyring > config file > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
 
 ## Template interpolation
 
-When serving `/p/:id`, PostHTML resolves `{{path}}` placeholders in the post HTML
-with values from the post's `data` JSON object. Values are HTML-escaped — safe against XSS.
+When serving `/p/:id`, Relay resolves `{{path}}` placeholders in the page HTML
+with values from the page's `data` JSON object. Values are HTML-escaped — safe against XSS.
 
 ```html
 <!-- Upload this HTML -->
@@ -186,7 +186,7 @@ Both paths are ALWAYS applied to every served post: `{{}}` interpolation (HTML-e
 |------|------|---------|
 | `/` | public | Hero + Google sign-in + agent docs links |
 | `/dashboard` | session | Get Started (API keys + agent prompt), MCP setup, post management |
-| `/p/:id` | public | Serves uploaded post HTML (with server-side data interpolation)
+| `/p/:id` | public | Serves uploaded page HTML (with server-side data interpolation) |
 
 ## Auth Flow
 
@@ -210,13 +210,21 @@ NEXT_PUBLIC_BETTER_AUTH_URL
 GOOGLE_CLIENT_ID         — Google OAuth client ID
 GOOGLE_CLIENT_SECRET     — Google OAuth client secret
 POSTS_DOMAIN             — separate origin for /p/:id (cookie isolation); unset in dev
-POST_TOKEN_SECRET        — HMAC secret for private-post capability tokens (openssl rand -hex 32)
+POST_TOKEN_SECRET        — HMAC secret for private-page capability tokens (openssl rand -hex 32)
+NEON_TRANSPORT           — DB transport: unset = WebSocket (drizzle-orm/neon-serverless); "http" = HTTP fallback
+PUBLIC_RATE_LIMIT_MAX    — per-instance public GET rate limit (requests/IP/60s); default 120
 ```
+
+## Database transport & rate limiting
+
+- **Transport:** `web/db/index.ts` uses the WebSocket driver (`@neondatabase/serverless` `Pool` + `drizzle-orm/neon-serverless`) by default — one connection per warm instance, shared across queries, avoiding the per-query HTTP round trip of `neon-http` on multi-query operations. Set `NEON_TRANSPORT=http` to force the HTTP path. Runtimes without a global `WebSocket` (Node <22) automatically fall back to HTTP instead of failing every query.
+- **Public rate limiting:** the public GETs (`/api/posts/:id`, `/api/posts/:id/data`, `/p/:id`) are throttled per instance with an in-memory sliding window (default 120 req/IP/60s, `PUBLIC_RATE_LIMIT_MAX`). Per-instance only — a hard global cap needs an external service (see SECURITY.md).
 
 ## CLI Env Vars
 
 ```
 POST_API_KEY              — API key (fallback if not in config file)
+POSTHTML_API_KEY          — legacy alias for POST_API_KEY (deprecated, still honored)
 POST_URL                  — Server URL (default https://posthtml.vercel.app)
 ```
 
@@ -273,16 +281,23 @@ Add new tokens to the `@theme` block in `globals.css`. Use the naming convention
 
 ## Migrations
 
-Migration folders live in `web/drizzle/` (7 so far, latest: `20260806062500_add_token_version`).
+Migration folders live in `web/drizzle/` (8, latest: `20260806070744_add_post_type`).
 
-> `drizzle/meta/_journal.json` is absent, so `db:migrate` doesn't run. Schema changes
-> are applied with `db:push`, which diffs `db/schema.ts` against the live database:
+> Drizzle Kit 1.0.0-rc.4 uses **folder-style migrations without a journal**:
+> `drizzle-kit migrate` enumerates `out/*/snapshot.json` folders directly, and
+> a `meta/_journal.json` is treated as an outdated v2 artifact
+> (`MigrationsOutdatedCliError`). Do NOT regenerate a journal — it would break
+> `db:migrate`. (A duplicate migration folder, `20260806075335_known_major_mapleleaf`,
+> was removed on the Relay branch because it re-added the `type`/`token_version`
+> columns and failed on fresh databases.)
+
+Apply migrations with `drizzle-kit migrate` (requires a Neon/Vercel Postgres/Supabase
+connection — rc.4 connects over WebSocket only). Schema changes are also applied with
+`db:push`, which diffs `db/schema.ts` against the live database:
 
 ```bash
 bun -C web db:push          # apply schema diff to Neon (current workflow)
 ```
-
-Rebuilding the journal + switching to `db:migrate` is a tracked TODO item.
 
 ## Dev Workflow
 
