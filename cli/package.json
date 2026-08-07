@@ -1,13 +1,13 @@
 {
-  "name": "@androff/posthtml-cli",
+  "name": "@androff/relay-cli",
   "version": "1.0.0-beta.7",
-  "description": "PostHTML — CLI tool to upload/delete/list posts",
+  "description": "Relay — CLI tool to publish/update/list pages",
   "license": "MIT",
   "keywords": [
     "plantodo",
-    "posthtml",
     "plans",
-    "html"
+    "html",
+    "relay"
   ],
   "homepage": "https://posthtml.vercel.app",
   "repository": {
@@ -16,7 +16,7 @@
   },
   "type": "module",
   "bin": {
-    "post": "./dist/index.js"
+    "relay": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

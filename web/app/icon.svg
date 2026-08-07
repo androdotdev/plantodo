@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#1e1e2e"/>
+  <g fill="#cba6f7">
+    <!-- stem + bowl bulge -->
+    <path d="M37 100V28h18c11 0 19 7 19 17.5 0 10.5-8 17.5-19 17.5V100z"/>
+    <!-- leg -->
+    <path d="M58 60h12l22 40h-20L58 60z"/>
+  </g>
+</svg>

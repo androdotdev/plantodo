@@ -4,6 +4,7 @@ import { posts } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 import { withError } from "@/lib/with-error"
 import { getAuthenticatedUserId } from "@/lib/auth-user"
+import { isRateLimited } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -14,6 +15,7 @@ export const GET = withError(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params
+  if (isRateLimited(request)) return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   const row = await db
     .select({ data: posts.data, isPrivate: posts.isPrivate, userId: posts.userId })
     .from(posts)

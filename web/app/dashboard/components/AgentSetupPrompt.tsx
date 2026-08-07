@@ -10,14 +10,14 @@ export default function AgentSetupPrompt({ apiKey }: AgentSetupPromptProps) {
   const keyText = apiKey || "YOUR_API_KEY_HERE";
   const [copied, setCopied] = useState(false);
 
-  const prompt = `You have access to PostHTML — a publishing API for AI agents. Upload HTML templates with \`{{placeholder}}\` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
+  const prompt = `You have access to Relay — a publishing API for AI agents. Publish HTML templates with \`{{placeholder}}\` syntax, attach JSON data, and the server renders them together at view time. Update the data anytime — same URL, fresh output.
 
 ## Setup
 The human has provided you with an API key.
 
 ### Option A: CLI setup (recommended)
-npm i -g @androff/posthtml-cli
-post setup --key ${keyText}
+npm i -g @androff/relay-cli
+relay setup --key ${keyText}
 
 The key is stored in the OS keyring (falls back to ~/.post/config.json).
 
@@ -27,13 +27,13 @@ POST_API_KEY=${keyText}
 The env var is only used if no stored key is found.
 
 ## CLI commands
-- post upload <file> [--data '<json>' | --data-file x.json] [--private|--public]  — upload, get {id,url}
-- post list / post ls            — list posts
-- post delete <id>             — delete a post
-- post replace <id> <file>      — update content (same URL)
-- post data get <id>            — read a post's JSON data
-- post data set <id> --key <k> --value '<json>'   — merge one key
-- post data set <id> --file x.json                — merge whole file
+- relay publish <file> [--data '<json>' | --data-file x.json] [--private|--public]  — publish, get {id,url}
+- relay list / relay ls            — list pages
+- relay delete <id>             — delete a page
+- relay update <id> <file>      — update content (same URL)
+- relay data get <id>            — read a page's JSON data
+- relay data set <id> --key <k> --value '<json>'   — merge one key
+- relay data set <id> --file x.json                — merge whole file
 
 ## Reference docs
 >>> MANDATORY: read /SKILL.md before performing any action. It is the authoritative guide (privacy, data merge, rate limits).`;

@@ -29,72 +29,72 @@ function getToolDefs() {
   return [
     {
       name: "list_posts",
-      description: "List all posts for the authenticated user",
+      description: "List all pages for the authenticated user",
       inputSchema: { type: "object", properties: {} },
     },
     {
       name: "get_post",
-      description: "Get post HTML content by ID",
+      description: "Get page HTML content by ID",
       inputSchema: {
         type: "object",
-        properties: { id: { type: "string", description: "Post ID" } },
+        properties: { id: { type: "string", description: "Page ID" } },
         required: ["id"],
       },
     },
     {
-      name: "upload_post",
-      description: "Create a new post from HTML or Markdown content. Supports {{placeholder}} syntax — values are filled from post data at view time.",
+      name: "publish_page",
+      description: "Publish a new page from HTML or Markdown content. Supports {{placeholder}} syntax — values are filled from page data at view time.",
       inputSchema: {
         type: "object",
         properties: {
           html: { type: "string", description: "Full HTML content (or Markdown when type is 'markdown')" },
           title: { type: "string", description: "Optional display title" },
           type: { type: "string", enum: [...POST_TYPES], description: "Content format: 'html' (default) or 'markdown'" },
-          isPrivate: { type: "boolean", description: "Hide the post from public view (default false)" },
+          isPrivate: { type: "boolean", description: "Hide the page from public view (default false)" },
         },
         required: ["html"],
       },
     },
     {
-      name: "replace_post",
-      description: "Replace an existing post's HTML while preserving its ID and URL",
+      name: "update_page",
+      description: "Update an existing page's HTML while preserving its ID and URL",
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Post ID to replace" },
+          id: { type: "string", description: "Page ID to update" },
           html: { type: "string", description: "New HTML content (or Markdown when type is 'markdown')" },
           title: { type: "string", description: "Optional new title" },
           type: { type: "string", enum: [...POST_TYPES], description: "Content format: 'html' (default) or 'markdown'" },
-          isPrivate: { type: "boolean", description: "Update the post's visibility" },
+          isPrivate: { type: "boolean", description: "Update the page's visibility" },
         },
         required: ["id", "html"],
       },
     },
     {
       name: "delete_post",
-      description: "Delete a post by ID",
+      description: "Delete a page by ID",
       inputSchema: {
         type: "object",
-        properties: { id: { type: "string", description: "Post ID to delete" } },
+        properties: { id: { type: "string", description: "Page ID to delete" } },
         required: ["id"],
       },
     },
     {
       name: "get_post_data",
-      description: "Get the JSON data attached to a post — these values fill {{placeholder}} in the HTML template at view time",
+      description: "Get the JSON data attached to a page — these values fill {{placeholder}} in the HTML template at view time",
       inputSchema: {
         type: "object",
-        properties: { id: { type: "string", description: "Post ID" } },
+        properties: { id: { type: "string", description: "Page ID" } },
         required: ["id"],
       },
     },
     {
       name: "set_post_data",
-      description: "Merge a JSON object into a post's data. Changes what viewers see at the post URL — values replace {{placeholder}} in the HTML template on next view.",
+      description: "Merge a JSON object into a page's data. Changes what viewers see at the page URL — values replace {{placeholder}} in the HTML template on next view.",
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Post ID" },
+          id: { type: "string", description: "Page ID" },
           data: { type: "object", description: "JSON data to merge (top-level keys override existing)" },
         },
         required: ["id", "data"],
@@ -137,7 +137,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .limit(1))[0]
 
       if (!post) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Page not found" }) }], isError: true }
       }
 
       return {
@@ -151,7 +151,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       }
     }
 
-    case "upload_post": {
+    case "publish_page": {
       if (!args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "html is required" }) }], isError: true }
       }
@@ -180,7 +180,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
       }
     }
 
-    case "replace_post": {
+    case "update_page": {
       if (!args?.id || typeof args.id !== "string" || !args?.html || typeof args.html !== "string") {
         return { content: [{ type: "text" as const, text: JSON.stringify({ error: "id and html are required" }) }], isError: true }
       }
@@ -198,7 +198,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .limit(1))[0]
 
       if (!existing) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Page not found" }) }], isError: true }
       }
 
       const type = args.type ?? existing.type ?? "html"
@@ -232,7 +232,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .limit(1))[0]
 
       if (!existing) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Page not found" }) }], isError: true }
       }
 
       await db.delete(posts).where(eq(posts.id, args.id))
@@ -255,7 +255,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .then(r => r[0])
 
       if (!row) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Page not found" }) }], isError: true }
       }
 
       return {
@@ -279,7 +279,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
         .then(r => r[0])
 
       if (!existing) {
-        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Post not found" }) }], isError: true }
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Page not found" }) }], isError: true }
       }
 
       const fragment = JSON.stringify(args.data)
@@ -306,7 +306,7 @@ async function handleToolCall(name: string, args: Record<string, unknown> | unde
 
 export async function runMcp(request: Request, userId: string) {
   const server = new Server(
-    { name: "PostHTML", version: "0.1.0" },
+    { name: "Relay", version: "0.1.0" },
     { capabilities: { tools: {} } },
   )
 

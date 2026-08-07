@@ -14,13 +14,13 @@ You should receive a response within 48 hours. If you don't, follow up via the s
 
 The following are in scope:
 - Authentication bypass (Google OAuth, API keys)
-- Unauthorized access to plans
+- Unauthorized access to pages
 - Server-side code execution
 - Data exposure via API endpoints
-- XSS in plan HTML rendering
+- XSS in page HTML rendering
 
 The following are **out of scope**:
-- Missing rate limiting (tracked as a regular issue)
+- Global/cross-instance rate limiting (per-instance in-memory limiting is enforced on public GET endpoints; a hard global cap requires an external service)
 - Missing CSP headers (tracked as a regular issue)
 - Dependency vulnerabilities (covered by Dependabot)
 

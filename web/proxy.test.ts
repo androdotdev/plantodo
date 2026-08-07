@@ -62,71 +62,32 @@ describe("proxy middleware", () => {
     } as unknown as NextRequest;
   }
 
-  describe("main domain — API auth flow", () => {
+  describe("main domain — API paths", () => {
     beforeEach(() => {
       // Ensure POSTS_DOMAIN is NOT set for these tests (no redirect)
       delete process.env.POSTS_DOMAIN
     })
 
-    it("sets x-user-id from a valid API key", async () => {
-      fnVerify.mockResolvedValueOnce({
-        valid: true,
-        key: { referenceId: "user-123" },
-      });
-
+    it("passes /api/posts through without re-verifying auth", async () => {
       await proxy(makeRequest({ "x-api-key": "post_valid_key" }));
 
-      expect(fnVerify).toHaveBeenCalledWith({ body: { key: "post_valid_key" } });
+      expect(fnVerify).not.toHaveBeenCalled();
+      expect(fnSession).not.toHaveBeenCalled();
       expect(NextResponse.next).toHaveBeenCalled();
-      const call = vi.mocked(NextResponse.next).mock.calls[0];
-      expect(call[0]?.request?.headers?.get("x-user-id")).toBe("user-123");
     });
 
-    it("does not set x-user-id when API key is invalid", async () => {
-      fnVerify.mockResolvedValueOnce({ valid: false, key: null });
-
-      await proxy(makeRequest({ "x-api-key": "post_invalid" }));
-
-      expect(fnVerify).toHaveBeenCalled();
-      const call = vi.mocked(NextResponse.next).mock.calls[0];
-      expect(call[0]?.request?.headers?.has("x-user-id")).toBe(false);
-    });
-
-    it("falls back to session when no API key is present", async () => {
-      fnSession.mockResolvedValueOnce({
-        user: { id: "user-session-456" },
-        session: { id: "sess-1" },
-      });
-
-      await proxy(makeRequest({}));
-
-      expect(fnSession).toHaveBeenCalled();
-      const call = vi.mocked(NextResponse.next).mock.calls[0];
-      expect(call[0]?.request?.headers?.get("x-user-id")).toBe("user-session-456");
-    });
-
-    it("strips client-supplied x-user-id when no auth at all", async () => {
-      fnSession.mockResolvedValueOnce(null);
-
+    it("strips client-supplied x-user-id", async () => {
       await proxy(makeRequest({ "x-user-id": "fake-user-999" }));
 
       const call = vi.mocked(NextResponse.next).mock.calls[0];
       expect(call[0]?.request?.headers?.has("x-user-id")).toBe(false);
     });
 
-    it("strips client-supplied x-user-id even when auth succeeds", async () => {
-      fnVerify.mockResolvedValueOnce({
-        valid: true,
-        key: { referenceId: "real-user-456" },
-      });
-
-      await proxy(makeRequest({
-        "x-api-key": "post_valid",
-        "x-user-id": "fake-user-999",
-      }));
+    it("does not add x-user-id for API paths", async () => {
+      await proxy(makeRequest({}));
 
       const call = vi.mocked(NextResponse.next).mock.calls[0];
-      expect(call[0]?.request?.headers?.get("x-user-id")).toBe("real-user-456");
+      expect(call[0]?.request?.headers?.has("x-user-id")).toBe(false);
     });
 
     it("skips auth overhead for non-API paths on main domain", async () => {
@@ -189,15 +150,10 @@ describe("proxy middleware", () => {
     });
 
     it("does not redirect /api/* paths", async () => {
-      fnVerify.mockResolvedValueOnce({
-        valid: true,
-        key: { referenceId: "user-123" },
-      });
-
       await proxy(makeRequest({ "x-api-key": "valid" }, "/api/posts"));
 
       expect(NextResponse.redirect).not.toHaveBeenCalled();
-      expect(fnVerify).toHaveBeenCalled();
+      expect(fnVerify).not.toHaveBeenCalled();
     });
   });
 
@@ -221,7 +177,7 @@ describe("proxy middleware", () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/api/posts"));
 
       expect(NextResponse).toHaveBeenCalledWith(
-        expect.stringContaining("This domain only shows posts"),
+        expect.stringContaining("This domain only shows pages"),
         expect.objectContaining({ status: 404 }),
       );
     });
@@ -230,7 +186,7 @@ describe("proxy middleware", () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/dashboard"));
 
       expect(NextResponse).toHaveBeenCalledWith(
-        expect.stringContaining("This domain only shows posts"),
+        expect.stringContaining("This domain only shows pages"),
         expect.objectContaining({ status: 404 }),
       );
     });
@@ -239,7 +195,7 @@ describe("proxy middleware", () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/"));
 
       expect(NextResponse).toHaveBeenCalledWith(
-        expect.stringContaining("This domain only shows posts"),
+        expect.stringContaining("This domain only shows pages"),
         expect.objectContaining({ status: 404 }),
       );
     });
@@ -248,7 +204,7 @@ describe("proxy middleware", () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/p/foo/bar"));
 
       expect(NextResponse).toHaveBeenCalledWith(
-        expect.stringContaining("This domain only shows posts"),
+        expect.stringContaining("This domain only shows pages"),
         expect.objectContaining({ status: 404 }),
       );
     });
@@ -257,7 +213,7 @@ describe("proxy middleware", () => {
       await proxy(makeRequest({ host: "postshare.andro42.qzz.io" }, "/p/"));
 
       expect(NextResponse).toHaveBeenCalledWith(
-        expect.stringContaining("This domain only shows posts"),
+        expect.stringContaining("This domain only shows pages"),
         expect.objectContaining({ status: 404 }),
       );
     });
