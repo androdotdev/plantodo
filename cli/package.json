@@ -4,19 +4,20 @@
   "description": "Relay — CLI tool to publish/update/list pages",
   "license": "MIT",
   "keywords": [
-    "plantodo",
-    "plans",
+    "relay",
     "html",
-    "relay"
+    "pages",
+    "cli",
+    "mcp"
   ],
   "homepage": "https://posthtml.vercel.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/androdotdev/plantodo.git"
+    "url": "git+https://github.com/androdotdev/relay.git"
   },
   "type": "module",
   "bin": {
-    "relay": "./dist/index.js"
+    "relay": "dist/index.js"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
