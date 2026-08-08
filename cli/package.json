@@ -1,6 +1,6 @@
 {
   "name": "@androff/relay-cli",
-  "version": "1.0.0-beta.8",
+  "version": "1.0.0-beta.9",
   "description": "Relay — CLI tool to publish/update/list pages",
   "license": "MIT",
   "keywords": [
