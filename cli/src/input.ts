@@ -1,7 +1,12 @@
 import * as readline from "node:readline"
 
-/** A relay API key shape: known prefix + base64url body. */
-export const KEY_SHAPE = /^(post|ptd|mcp)_[A-Za-z0-9_-]{30,50}$/
+/**
+ * A relay API key shape: known prefix + base64url body.
+ * Better Auth generates 64-char bodies (verified: real keys are
+ * post_ + 64 chars = 69 total); the range keeps slack while still
+ * rejecting doubled pastes (128+ chars).
+ */
+export const KEY_SHAPE = /^(post|ptd|mcp)_[A-Za-z0-9_-]{50,70}$/
 
 /**
  * Collapse k-fold exact repetitions. Terminals sometimes deliver a pasted
@@ -133,5 +138,5 @@ function readMaskedLine(stdin: NodeJS.ReadStream, stdout: NodeJS.WriteStream): P
 
 function dimWarning(value: string): string {
   const head = value.slice(0, 12)
-  return `Warning: "${head}…" (${value.length} chars) doesn't look like a relay API key (expected post_/ptd_/mcp_ + ~39 chars). Press Ctrl+C to cancel, or try again:`
+  return `Warning: "${head}…" (${value.length} chars) doesn't look like a relay API key (expected post_/ptd_/mcp_ + ~64 chars). Press Ctrl+C to cancel, or try again:`
 }

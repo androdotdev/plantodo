@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { dedupePaste, KEY_SHAPE, escapeStep } from "./input.js";
 
+/** A realistic relay key: post_ + 64-char body (verified against prod). */
+const key = "post_" + "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abCdEfGhIjKlMnOpQrStUvWxYz0123456789ab";
+
 /** Walk a byte stream through the escape state machine; returns the kept chars. */
 function keepOnly(chars: string): string {
   let out = ""
@@ -33,30 +36,24 @@ describe("escapeStep", () => {
   });
 
   it("keeps normal input untouched", () => {
-    expect(keepOnly("post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab")).toBe(
-      "post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab",
-    );
+    expect(keepOnly(key)).toBe(key);
   });
 });
 
 describe("dedupePaste", () => {
   it("leaves a normal key untouched", () => {
-    const key = "post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab";
     expect(dedupePaste(key)).toBe(key);
   });
 
   it("collapses a doubled paste", () => {
-    const key = "post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab";
     expect(dedupePaste(key + key)).toBe(key);
   });
 
   it("collapses a tripled paste", () => {
-    const key = "post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab";
     expect(dedupePaste(key.repeat(3))).toBe(key);
   });
 
   it("does not collapse a near-repetition", () => {
-    const key = "post_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab";
     expect(dedupePaste(key + key.slice(0, -1))).toBe(key + key.slice(0, -1));
   });
 
@@ -68,16 +65,21 @@ describe("dedupePaste", () => {
 });
 
 describe("KEY_SHAPE", () => {
-  it("accepts post_, ptd_ and mcp_ keys", () => {
-    expect(KEY_SHAPE.test("post_" + "a".repeat(39))).toBe(true);
-    expect(KEY_SHAPE.test("ptd_" + "a".repeat(39))).toBe(true);
-    expect(KEY_SHAPE.test("mcp_" + "a".repeat(39))).toBe(true);
+  it("accepts real post_, ptd_ and mcp_ keys", () => {
+    expect(KEY_SHAPE.test("post_" + "a".repeat(64))).toBe(true);
+    expect(KEY_SHAPE.test("ptd_" + "a".repeat(64))).toBe(true);
+    expect(KEY_SHAPE.test("mcp_" + "a".repeat(64))).toBe(true);
   });
 
-  it("rejects garbage lengths and prefixes", () => {
+  it("accepts the user's verified prod key", () => {
+    expect(KEY_SHAPE.test("post_YNWYSydVvdSSaCzRPxfYePYgQYYikoIOnlnIKVMnLlMzQrnKRRLZlctBcZbXKhLK")).toBe(true);
+  });
+
+  it("rejects garbage lengths, prefixes, and doubled pastes", () => {
     expect(KEY_SHAPE.test("post_ab")).toBe(false);
-    expect(KEY_SHAPE.test("key_" + "a".repeat(39))).toBe(false);
+    expect(KEY_SHAPE.test("key_" + "a".repeat(64))).toBe(false);
     expect(KEY_SHAPE.test("a".repeat(60))).toBe(false);
     expect(KEY_SHAPE.test("")).toBe(false);
+    expect(KEY_SHAPE.test("post_" + "a".repeat(64) + "post_" + "a".repeat(64))).toBe(false); // doubled paste
   });
 });
