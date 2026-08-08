@@ -6,7 +6,7 @@ import type { Entry as KeyringEntry } from "@napi-rs/keyring";
 // The dependency is optional (see package.json) and imported lazily so a
 // missing/unloadable native module degrades to the same fallback.
 
-const SERVICE = "posthtml";
+const SERVICE = "relay";
 const USERNAME = "api_key";
 
 async function keyringEntry(): Promise<KeyringEntry | null> {

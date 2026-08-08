@@ -22,7 +22,7 @@ relay setup --key ${keyText}
 The key is stored in the OS keyring (falls back to ~/.post/config.json).
 
 ### Option B: Environment variables (fallback)
-POST_API_KEY=${keyText}
+RELAY_API_KEY=${keyText}
 
 The env var is only used if no stored key is found.
 

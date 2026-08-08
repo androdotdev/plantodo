@@ -155,7 +155,7 @@ relay delete <page-id>
 relay update <page-id> <file.html>
 ```
 
-Configuration saved to `~/.post/config.json`. When an OS keyring is available (Windows Credential Manager, macOS Keychain, libsecret), the API key is stored there instead and the file keeps only non-secret options; keyring-less machines fall back to the plaintext file at `0600`. Key resolution priority: OS keyring > config file > `POST_API_KEY` > `POSTHTML_API_KEY` > error.
+Configuration saved to `$XDG_CONFIG_HOME/.relay/config.json` (default `~/.config/.relay/config.json`, legacy `~/.post/config.json` auto-migrated on first read). When an OS keyring is available (Windows Credential Manager, macOS Keychain, libsecret), the API key is stored there instead and the file keeps only non-secret options; keyring-less machines fall back to the plaintext file at `0600`. Key resolution priority: OS keyring > config file > `RELAY_API_KEY` > `POSTHTML_API_KEY` (legacy alias, deprecated) > error.
 
 ## Template interpolation
 
@@ -223,9 +223,9 @@ PUBLIC_RATE_LIMIT_MAX    — per-instance public GET rate limit (requests/IP/60s
 ## CLI Env Vars
 
 ```
-POST_API_KEY              — API key (fallback if not in config file)
-POSTHTML_API_KEY          — legacy alias for POST_API_KEY (deprecated, still honored)
-POST_URL                  — Server URL (default https://posthtml.vercel.app)
+RELAY_API_KEY              — API key (fallback if not in config file)
+POSTHTML_API_KEY           — legacy alias for RELAY_API_KEY (deprecated, still honored)
+POST_URL                   — Server URL (default https://posthtml.vercel.app)
 ```
 
 ## Design System

@@ -4,7 +4,7 @@ import * as readline from "node:readline";
 import { Command } from "commander";
 import chalk from "chalk";
 
-import { loadConfig, saveConfig } from "./config.js";
+import { loadConfig, saveConfig, configFilePath } from "./config.js";
 import { extractTitle } from "./title.js";
 import { version } from "../package.json";
 
@@ -15,7 +15,7 @@ const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
 const config = await loadConfig();
-const API_KEY = config?.api_key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
+const API_KEY = config?.api_key ?? process.env.RELAY_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
 const BASE_URL = (config?.url ?? process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
 async function api(path: string, init?: RequestInit): Promise<any> {
@@ -275,10 +275,10 @@ program
 
 program
   .command("setup")
-  .description("Save API key (OS keyring, or ~/.post/config.json when unavailable)")
+  .description("Save API key (OS keyring, or config file when unavailable)")
   .option("-k, --key <key>", "API key (prompts if omitted)")
   .action(async (opts: { key?: string }) => {
-    let key = opts.key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY;
+    let key = opts.key ?? process.env.RELAY_API_KEY ?? process.env.POSTHTML_API_KEY;
     if (!key) {
       console.log(dim(`Get your API key from: ${BASE_URL}/dashboard`));
       key = await readSilent("Enter your API key: ");
@@ -294,7 +294,7 @@ program
     console.log(
       stored === "keyring"
         ? `${green("✓")} ${dim("saved to the OS keyring")}`
-        : `${green("✓")} ${dim("saved to ~/.post/config.json")}`,
+        : `${green("✓")} ${dim(`saved to ${configFilePath()}`)}`,
     );
   });
 
@@ -361,7 +361,7 @@ dataCmd
 program.hook("preAction", (thisCommand, actionCommand) => {
   if (actionCommand.name() !== "setup" && !API_KEY) {
     console.error(red.bold("✗ No API key configured."));
-    console.error(dim("Set POST_API_KEY or run 'relay setup' to configure your API key."));
+    console.error(dim("Set RELAY_API_KEY or run 'relay setup' to configure your API key."));
     process.exit(1);
   }
 });

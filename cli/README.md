@@ -13,12 +13,12 @@ npm install -g @androff/relay-cli
 relay setup
 
 # Non-interactive (env var is safer than --key on multi-user systems)
-POST_API_KEY=post_xxx relay setup
+RELAY_API_KEY=post_xxx relay setup
 ```
 
 Get your API key from: [posthtml.vercel.app/dashboard](https://posthtml.vercel.app/dashboard)
 
-Configuration saved to `~/.post/config.json`. When an OS keyring is available, the API key is stored there instead (the file keeps only non-secret options); keyring-less machines fall back to the plaintext file at `0600`.
+Configuration saved to `$XDG_CONFIG_HOME/.relay/config.json` (default `~/.config/.relay/config.json`, legacy `~/.post/config.json` auto-migrated on first read). When an OS keyring is available, the API key is stored there instead (the file keeps only non-secret options); keyring-less machines fall back to the plaintext file at `0600`.
 
 ## Commands
 
@@ -112,7 +112,7 @@ relay data set abc123 --file meta.json
 
 ### `relay setup`
 
-Save your API key to the OS keyring (or `~/.post/config.json` on keyring-less machines).
+Save your API key to the OS keyring (or the config file on keyring-less machines).
 
 ```bash
 relay setup
@@ -124,9 +124,9 @@ relay setup --key post_xxx    # pass directly (avoid on shared systems)
 | Variable | Default | Description |
 |---|---|---|
 | `POST_URL` | `https://posthtml.vercel.app` | Server base URL (used when the config file has no `url`) |
-| `POST_API_KEY` | — | API key (used when no key is stored in the keyring or config file) |
-| `POSTHTML_API_KEY` | — | Legacy alias for `POST_API_KEY` |
+| `RELAY_API_KEY` | — | API key (used when no key is stored in the keyring or config file) |
+| `POSTHTML_API_KEY` | — | Legacy alias for `RELAY_API_KEY` (deprecated, still honored) |
 
-API key priority: OS keyring > config file (`~/.post/config.json`) > `POST_API_KEY` > `POSTHTML_API_KEY` > error. A config file that exists but has no `api_key` (e.g. url-only) does not shadow the env vars.
+API key priority: OS keyring > config file > `RELAY_API_KEY` > `POSTHTML_API_KEY` > error. A config file that exists but has no `api_key` (e.g. url-only) does not shadow the env vars.
 
-`relay setup` itself resolves `--key` > `POST_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.
+`relay setup` itself resolves `--key` > `RELAY_API_KEY` > `POSTHTML_API_KEY` > interactive prompt.
