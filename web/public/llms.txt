@@ -64,7 +64,7 @@ Configure your API key:
 ```bash
 relay setup --key <your-key>
 # or set env vars:
-export POST_API_KEY=***
+export RELAY_API_KEY=***
 export POST_URL=https://posthtml.vercel.app
 ```
 
@@ -87,5 +87,5 @@ relay data set <id> --file data.json                  # merge a whole JSON file 
 
 ## Quick test
 ```bash
-POST_URL=https://posthtml.vercel.app POST_API_KEY=*** relay list
+POST_URL=https://posthtml.vercel.app RELAY_API_KEY=*** relay list
 ```

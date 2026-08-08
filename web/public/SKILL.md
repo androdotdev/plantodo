@@ -120,5 +120,5 @@ Use `{{this}}` to reference the entire data object as a JSON string.
 If you're connected via MCP, available tools: `list_posts`, `get_post`, `publish_page`, `update_page`, `delete_post`, `get_post_data`, `set_post_data`.
 
 ## Env overrides
-- `POST_API_KEY` — API key (fallback if not in config file)
+- `RELAY_API_KEY` — API key (fallback if not in config file)
 - `POST_URL` — server URL (default https://posthtml.vercel.app)

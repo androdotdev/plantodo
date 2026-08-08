@@ -1,10 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import * as readline from "node:readline";
 import { Command } from "commander";
 import chalk from "chalk";
 
-import { loadConfig, saveConfig } from "./config.js";
+import { loadConfig, saveConfig, configFilePath } from "./config.js";
 import { extractTitle } from "./title.js";
 import { version } from "../package.json";
 
@@ -15,7 +14,7 @@ const cyan = chalk.cyan;
 const yellow = chalk.yellow;
 
 const config = await loadConfig();
-const API_KEY = config?.api_key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
+const API_KEY = config?.api_key ?? process.env.RELAY_API_KEY ?? process.env.POSTHTML_API_KEY ?? "";
 const BASE_URL = (config?.url ?? process.env.POST_URL ?? "https://posthtml.vercel.app").replace(/\/+$/, "");
 
 async function api(path: string, init?: RequestInit): Promise<any> {
@@ -53,69 +52,7 @@ function printPublishOutput(url: string, isPrivate?: boolean) {
   console.log(`${dim("Shareable:")} ${visibility}`);
 }
 
-/**
- * Read a line from stdin without echoing to terminal.
- * On TTY uses raw mode (no echo). On pipe falls back to readline.
- */
-async function readSilent(prompt: string): Promise<string> {
-  const { promise, resolve } = Promise.withResolvers<string>();
-  if (process.stdin.isTTY) {
-      const stdin = process.stdin;
-      const stdout = process.stdout;
-
-      stdout.write(prompt);
-      stdin.setRawMode(true);
-      stdin.resume();
-
-      let input = "";
-      const onData = (chunk: Buffer) => {
-        const c = chunk.toString();
-        if (c === "\r" || c === "\n") {
-          stdin.removeListener("data", onData);
-          stdin.setRawMode(false);
-          stdin.pause();
-          stdout.write("\n");
-          // A paste can carry a trailing/embedded newline, and some terminals
-          // deliver the pasted buffer twice — collapse to the first line and
-          // drop exact duplicates so a double-pasted key doesn't get saved twice.
-          let clean = input.split("\r")[0].split("\n")[0];
-          if (clean.length % 2 === 0) {
-            const half = clean.length / 2;
-            if (clean.slice(0, half) === clean.slice(half)) clean = clean.slice(0, half);
-          }
-          resolve(clean);
-        } else if (c === "\x7f" || c === "\x08") {
-          if (input.length > 0) {
-            input = input.slice(0, -1);
-            stdout.write("\b \b");
-          }
-        } else if (c === "\x03") {
-          stdin.removeListener("data", onData);
-          stdin.setRawMode(false);
-          stdin.pause();
-          process.exit(1);
-        } else {
-          input += c;
-          stdout.write("*");
-        }
-      };
-
-      stdin.on("data", onData);
-    } else {
-      // Piped input — no echo risk, use readline
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-        terminal: false,
-      });
-      rl.question(prompt, (answer) => {
-        rl.close();
-        resolve(answer.trim());
-      });
-    }
-
-  return promise;
-}
+import { readSecret } from "./input.js";
 
 /**
  * Parse the --data / --data-file options shared by `publish` and `update`.
@@ -275,13 +212,13 @@ program
 
 program
   .command("setup")
-  .description("Save API key (OS keyring, or ~/.post/config.json when unavailable)")
+  .description("Save API key (OS keyring, or config file when unavailable)")
   .option("-k, --key <key>", "API key (prompts if omitted)")
   .action(async (opts: { key?: string }) => {
-    let key = opts.key ?? process.env.POST_API_KEY ?? process.env.POSTHTML_API_KEY;
+    let key = opts.key ?? process.env.RELAY_API_KEY ?? process.env.POSTHTML_API_KEY;
     if (!key) {
       console.log(dim(`Get your API key from: ${BASE_URL}/dashboard`));
-      key = await readSilent("Enter your API key: ");
+      key = await readSecret("Enter your API key: ");
     }
     if (!key) {
       console.error(red("No API key provided"));
@@ -294,7 +231,7 @@ program
     console.log(
       stored === "keyring"
         ? `${green("✓")} ${dim("saved to the OS keyring")}`
-        : `${green("✓")} ${dim("saved to ~/.post/config.json")}`,
+        : `${green("✓")} ${dim(`saved to ${configFilePath()}`)}`,
     );
   });
 
@@ -361,7 +298,7 @@ dataCmd
 program.hook("preAction", (thisCommand, actionCommand) => {
   if (actionCommand.name() !== "setup" && !API_KEY) {
     console.error(red.bold("✗ No API key configured."));
-    console.error(dim("Set POST_API_KEY or run 'relay setup' to configure your API key."));
+    console.error(dim("Set RELAY_API_KEY or run 'relay setup' to configure your API key."));
     process.exit(1);
   }
 });

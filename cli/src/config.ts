@@ -1,11 +1,13 @@
 import { homedir } from "node:os";
-import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { saveToKeyring, readFromKeyring, deleteFromKeyring } from "./keyring.js";
 
-// Config file lives at ~/.post/config.json (0600). On machines with an OS
-// keyring, the API key is stored there instead and the file keeps only the
-// non-secret options. Paths are resolved per call so tests can swap HOME.
+// Config file lives at $XDG_CONFIG_HOME/.relay/config.json (0600), falling
+// back to ~/.config/.relay/config.json when XDG_CONFIG_HOME is unset. On
+// machines with an OS keyring, the API key is stored there instead and the
+// file keeps only the non-secret options. Paths are resolved per call so
+// tests can swap HOME / XDG_CONFIG_HOME.
 
 export interface PtdConfig {
   api_key?: string;
@@ -13,11 +15,30 @@ export interface PtdConfig {
 }
 
 function configPaths() {
-  const dir = resolve(homedir(), ".post");
+  const base = process.env.XDG_CONFIG_HOME || resolve(homedir(), ".config");
+  const dir = resolve(base, ".relay");
   return { dir, file: resolve(dir, "config.json") };
 }
 
+/** Absolute path to the config file — used for user-facing messages. */
+export function configFilePath(): string {
+  return configPaths().file;
+}
+
+// One-time move from the pre-XDG location (~/.post/config.json). Runs only
+// when the XDG file doesn't exist yet; copies then removes the old file.
+function migrateLegacyConfig(): void {
+  const { dir, file } = configPaths();
+  if (existsSync(file)) return;
+  const legacy = resolve(homedir(), ".post", "config.json");
+  if (!existsSync(legacy)) return;
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  writeFileSync(file, readFileSync(legacy, "utf-8"), { mode: 0o600 });
+  rmSync(legacy, { force: true });
+}
+
 function readFileConfig(): PtdConfig | null {
+  migrateLegacyConfig();
   const { file } = configPaths();
   if (!existsSync(file)) return null;
   try {

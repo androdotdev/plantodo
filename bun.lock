@@ -6,10 +6,10 @@
       "name": "posthtml",
     },
     "cli": {
-      "name": "@androff/posthtml-cli",
-      "version": "1.0.0-beta.7",
+      "name": "@androff/relay-cli",
+      "version": "1.0.0-beta.8",
       "bin": {
-        "post": "./dist/index.js",
+        "relay": "dist/index.js",
       },
       "dependencies": {
         "chalk": "5",
@@ -70,7 +70,7 @@
   "packages": {
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
 
-    "@androff/posthtml-cli": ["@androff/posthtml-cli@workspace:cli"],
+    "@androff/relay-cli": ["@androff/relay-cli@workspace:cli"],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
